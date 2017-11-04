@@ -1,18 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, Post} from '@nestjs/common';
 import * as slug from 'slug';
 
-import { CreateCategoryDto } from './create-category.dto';
-import { CategoriesService } from './categories.service';
-import { Category } from './category.interface';
-import { EntriesService } from '../entries/entries.service';
-import { Entry } from '../entries/entry.interface';
+import {CreateCategoryDto} from './create-category.dto';
+import {CategoriesService} from './categories.service';
+import {Category} from './category.interface';
 
 @Controller('categories')
 export class CategoriesController {
 
   constructor(
     private readonly categoriesService: CategoriesService,
-    private readonly entriesService: EntriesService,
   ) { }
 
   @Get()
@@ -32,9 +29,9 @@ export class CategoriesController {
   delete( @Param('categoryId') categoryId) {
     return this.categoriesService.deleteOne(categoryId);
   }
-
-  @Get(':categoryId/entries')
-  findEntriesByCategory( @Param('categoryId') categoryId): Promise<Entry[]> {
-    return this.entriesService.findEntriesByCategory(categoryId);
-  }
+  //
+    // @Get(':categoryId/entries')
+    // findEntriesByCategory( @Param('categoryId') categoryId): Promise<Entry[]> {
+    //   return this.entriesService.findEntriesByCategory(categoryId);
+    // }
 }

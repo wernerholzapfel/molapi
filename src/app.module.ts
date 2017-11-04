@@ -1,10 +1,13 @@
-import { Module } from '@nestjs/common';
+import {Module} from '@nestjs/common';
 
-import { EntriesModule } from './entries/entries.module';
-import { AuthorsModule } from './authors/authors.module';
-import { CategoriesModule } from './categories/categories.module';
+import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
+import {DeelnemersModule} from './deelnemers/deelnemers.module';
+import {CategoriesModule} from './categories/categories.module';
+import {MollenModule} from './mollen/mollen.module';
+
 @Module({
-    modules: [EntriesModule, AuthorsModule, CategoriesModule],
+    modules: [VoorspellingenModule, DeelnemersModule, CategoriesModule, MollenModule],
 })
 
-export class ApplicationModule { }
+export class ApplicationModule {
+}

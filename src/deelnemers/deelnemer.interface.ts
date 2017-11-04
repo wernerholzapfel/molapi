@@ -1,4 +1,4 @@
-export interface Author {
+export interface Deelnemer {
   // TODO transform ID types to number? or specific type
   id: string;
   display_name: string;

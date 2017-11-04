@@ -1,7 +1,7 @@
 {
-  "name": "rest-nestjs-postgres",
+  "name": "molapi",
   "version": "1.0.0",
-  "description": "CrudJS implemented as a REST API, using Nest and Postgres",
+  "description": "Mol API",
   "scripts": {
     "dev": "nodemon",
     "prestart:prod": "tsc",
@@ -15,12 +15,12 @@
     "url": "git+https://github.com/crudjs/rest-nestjs-postgres.git"
   },
   "keywords": [],
-  "author": "David Guijarro <guijarro.dav@gmail.com>",
+  "author": "Werner Holzapfel <werner.holzapfel@gmail.com>",
   "license": "Apache 2.0",
   "bugs": {
-    "url": "https://github.com/crudjs/rest-nestjs-postgres/issues"
+    "url": "https://github.com/wernerholzapfel/molapp/issues"
   },
-  "homepage": "https://github.com/crudjs/rest-nestjs-postgres#readme",
+  "homepage": "https://github.com/wernerholzapfel/molapp#readme",
   "dependencies": {
     "@nestjs/common": "^4.0.0",
     "@nestjs/core": "^4.0.0",
@@ -34,7 +34,7 @@
     "reflect-metadata": "^0.1.10",
     "rxjs": "^5.4.0",
     "slug": "^0.9.1",
-    "typeorm": "^0.1.0",
+    "typeorm": "^0.1.1",
     "typescript": "^2.5.2"
   },
   "devDependencies": {

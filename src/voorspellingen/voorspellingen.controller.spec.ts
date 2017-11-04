@@ -1,19 +1,19 @@
 import { Test } from '@nestjs/testing';
 
-import { PostsController } from './entries.controller';
-import { EntriesService } from './entries.service';
+import { PostsController } from './voorspellingen.controller';
+import { VoorspellingenService } from './voorspellingen.service';
 
 describe('PostsController', () => {
   let postsController: PostsController;
-  let postsService: EntriesService;
+  let postsService: VoorspellingenService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [PostsController],
-      components: [EntriesService],
+      components: [VoorspellingenService],
     }).compile();
 
-    postsService = module.get<EntriesService>(EntriesService);
+    postsService = module.get<VoorspellingenService>(VoorspellingenService);
     postsController = module.get<PostsController>(PostsController);
   });
 
