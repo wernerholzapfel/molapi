@@ -5,6 +5,6 @@ import {Mol} from '../mollen/mol.entity';
 export class CreateVoorspellingDto {
     readonly id: string;
     @IsNumber() readonly aflevering: number;
-    @IsString() readonly mol: Mol;
-    @IsString() readonly deelnemer: Deelnemer;
+    readonly mol: Mol;
+    readonly deelnemer: Deelnemer;
 }

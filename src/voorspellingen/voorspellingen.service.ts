@@ -1,11 +1,15 @@
-import {Component, Inject} from '@nestjs/common';
-import {getConnection, Repository} from 'typeorm';
+import {Component, HttpStatus, Inject} from '@nestjs/common';
+import {Logger} from '@nestjs/common/services/logger.service';
+import {Repository} from 'typeorm';
 
 import {Voorspelling} from './voorspelling.entity';
 
 @Component()
 export class VoorspellingenService {
+    private readonly logger = new Logger('voorspellingenService', true);
+
     constructor(@Inject('VoorspellingRepositoryToken') private readonly voorspellingRepository: Repository<Voorspelling>) {
+
     }
 
     async findAll(): Promise<Voorspelling[]> {
@@ -26,39 +30,27 @@ export class VoorspellingenService {
         }
     }
 
-    async create(voorspelling: Voorspelling) {
-        try {
-            // return await this.voorspellingRepository.save(voorspelling);
-            return await getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(Voorspelling)
-                .values([
-                    {
-                        aflevering: voorspelling.aflevering,
-                        mol: voorspelling.mol,
-                        deelnemer: voorspelling.deelnemer,
-                        created_at: voorspelling.created_at,
-                    },
-                ])
-                .execute();
-        } catch (err) {
-            return err;
-        }
+    async create(voorspelling: Voorspelling, res: any) {
+        await this.voorspellingRepository.save(voorspelling).then(response => {
+                return res.status(HttpStatus.CREATED).json(response).send();
+            },
+            error => {
+                return res.status(HttpStatus.FORBIDDEN).json(error).send();
+            });
     }
 
-    async deleteOne(voorspellingId: string) {
-        try {
-            return await this.voorspellingRepository.removeById(voorspellingId);
-        } catch (err) {
-            return err;
-        }
-    }
-
-    //
-    // async findVoorspellingenByDeelnemer(deelnemerId: string): Promise<Voorspelling[]> {
+    // async deleteOne(voorspellingId: string) {
     //     try {
-    //         return await this.voorspellingRepository.find({deelnemerId});
+    //         return await this.voorspellingRepository.removeById(voorspellingId);
+    //     } catch (err) {
+    //         return err;
+    //     }
+    // }
+
+
+    // async findVoorspellingenByDeelnemer(deelnemer: Deelnemer): Promise<Voorspelling[]> {
+    //     try {
+    //         return await this.voorspellingRepository.find({deelnemer});
     //     } catch (err) {
     //         return err;
     //     }
