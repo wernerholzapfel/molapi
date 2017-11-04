@@ -9,7 +9,7 @@ export class Deelnemer {
     @Column()
     display_name: string;
 
-    @Column()
+    @Column({ select: false })
     email: string;
 
     @OneToMany(type => Voorspelling, voorspelling => voorspelling.deelnemer)
