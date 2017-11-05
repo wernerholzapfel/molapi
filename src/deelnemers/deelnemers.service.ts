@@ -11,14 +11,14 @@ export class DeelnemersService {
     async findAll(): Promise<Deelnemer[]> {
         try {
             return await this.deelnemerRepository.find(
-                {
-                    join: {
-                        alias: 'deelnemer',
-                        leftJoinAndSelect: {
-                            voorspellingen: 'deelnemer.voorspellingen',
-                        },
-                    },
-                },
+                // {
+                //     join: {
+                //         alias: 'deelnemer',
+                //         leftJoinAndSelect: {
+                //             voorspellingen: 'deelnemer.voorspellingen',
+                //         },
+                //     },
+                // },
             );
         } catch (err) {
             return err;

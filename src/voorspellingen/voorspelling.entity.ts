@@ -18,7 +18,7 @@ export class Voorspelling {
     @ManyToOne(type => Deelnemer, deelnemer => deelnemer.voorspellingen)
     deelnemer: Deelnemer;
 
-    @Column()
+    @Column({ select: false })
     created_at: Date;
 
 }
