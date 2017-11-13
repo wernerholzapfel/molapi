@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "description": "Mol API",
   "scripts": {
+    "typings": "typings install",
+    "build": "tsc",
     "dev": "nodemon",
     "prestart:prod": "tsc",
+    "prestart": "npm run build",
+    "prepublish": "npm run typings && npm run build",
     "start": "node dist/server.js",
     "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'",
     "pretest": "npm run lint",
     "test": "jest"
   },
   "engines": {
-    "node": "8.6.0"
+    "node": "8.6.0",
+    "npm": "5.3.0"
   },
   "repository": {
     "type": "git",
