@@ -8,30 +8,24 @@ import {Category} from './category.interface';
 @Controller('categories')
 export class CategoriesController {
 
-  constructor(
-    private readonly categoriesService: CategoriesService,
-  ) { }
+    constructor(private readonly categoriesService: CategoriesService,) {
+    }
 
-  @Get()
-  findAll(): Promise<Category[]> {
-    return this.categoriesService.findAll();
-  }
+    @Get()
+    findAll(): Promise<Category[]> {
+        return this.categoriesService.findAll();
+    }
 
-  @Post()
-  async create( @Body() createCategoryDto: CreateCategoryDto) {
-    const newCategory = Object.assign({}, createCategoryDto, {
-      id: slug(createCategoryDto.name, { lower: true }),
-    });
-    await this.categoriesService.create(newCategory);
-  }
+    @Post()
+    async create(@Body() createCategoryDto: CreateCategoryDto) {
+        const newCategory = Object.assign({}, createCategoryDto, {
+            id: slug(createCategoryDto.name, {lower: true}),
+        });
+        await this.categoriesService.create(newCategory);
+    }
 
-  @Delete(':categoryId')
-  delete( @Param('categoryId') categoryId) {
-    return this.categoriesService.deleteOne(categoryId);
-  }
-  //
-    // @Get(':categoryId/entries')
-    // findEntriesByCategory( @Param('categoryId') categoryId): Promise<Entry[]> {
-    //   return this.entriesService.findEntriesByCategory(categoryId);
-    // }
+    @Delete(':categoryId')
+    delete(@Param('categoryId') categoryId) {
+        return this.categoriesService.deleteOne(categoryId);
+    }
 }

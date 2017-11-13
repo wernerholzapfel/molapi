@@ -9,7 +9,7 @@ import {Deelnemer} from '../deelnemers/deelnemer.entity';
 export class VoorspellingenService {
     private readonly logger = new Logger('voorspellingenService', true);
 
-    constructor(@Inject('VoorspellingRepositoryToken') private readonly voorspellingRepository: Repository<Voorspelling>,) {
+    constructor(@Inject('VoorspellingRepositoryToken') private readonly voorspellingRepository: Repository<Voorspelling>) {
     }
 
     async findAll(): Promise<Voorspelling[]> {
@@ -55,13 +55,7 @@ export class VoorspellingenService {
     // }
 
 
-    // async findVoorspellingenByDeelnemer(deelnemer: Deelnemer): Promise<Voorspelling[]> {
-    //     try {
-    //         return await this.voorspellingRepository.find({deelnemer});
-    //     } catch (err) {
-    //         return err;
-    //     }
-    // }
+
     //
     // async findVoorspellingenByMol(molId: string): Promise<Voorspelling[]> {
     //     try {

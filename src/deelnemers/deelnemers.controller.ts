@@ -29,9 +29,9 @@ export class DeelnemersController {
     return this.deelnemersService.deleteOne(deelnemerId);
   }
 
-  // @Get(':deelnemerId/entries')
-  // findEntriesByCategory( @Param('deelnemerId') deelnemerId): Promise<Entry[]> {
-  //   return this.entriesService.findEntriesByDeelnemer(deelnemerId);
-  // }
+  @Get(':deelnemerId/voorspellingen')
+  findEntriesByCategory( @Param('deelnemerId') deelnemerId): Promise<Deelnemer> {
+    return this.deelnemersService.findVoorspellingen(deelnemerId);
+  }
 
 }

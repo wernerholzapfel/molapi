@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Req, Res} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Param, Post, Req, Res} from '@nestjs/common';
 
 import {CreateVoorspellingDto} from './create-voorspelling.dto';
 import {VoorspellingenService} from './voorspellingen.service';
@@ -58,11 +58,10 @@ export class VoorspellingenController {
         }
     }
 
-// @Delete(':voorspellingId')
-// delete( @Param('voorspellingId') voorspellingId) {
-//   return this.voorspellingenService.deleteOne(voorspellingId);
-// }
-//     }
+    // @Get('deelnemer/:deelnemerId')
+    // async findVoorspellingByDeelnemer( @Param('deelnemerId') deelnemerId): Promise<Voorspelling[]> {
+    //   return this.voorspellingenService.findVoorspellingenByDeelnemer(  deelnemerId);
+    // }
 
     getToken = headers => {
         if (headers && headers.authorization) {

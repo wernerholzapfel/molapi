@@ -40,4 +40,12 @@ export class DeelnemersService {
             return err;
         }
     }
+
+    async findVoorspellingen(deelnemerId: string) {
+        try {
+            return await this.deelnemerRepository.findOneById(deelnemerId);
+        } catch (err) {
+            return err;
+        }
+    }
 }

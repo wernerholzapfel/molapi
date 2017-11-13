@@ -1,4 +1,4 @@
-import {Column, Index, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
@@ -11,13 +11,22 @@ export class Voorspelling {
     @Column()
     aflevering: number;
 
-    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat)
+    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat, {
+        eager: true,
+    })
+    @JoinTable()
     mol: Kandidaat;
 
-    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat)
+    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat, {
+        eager: true,
+    })
+    @JoinTable()
     afvaller: Kandidaat;
 
-    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat)
+    @ManyToOne(type => Kandidaat, kandidaat => Kandidaat, {
+        eager: true,
+    })
+    @JoinTable()
     winnaar: Kandidaat;
 
     @ManyToOne(type => Deelnemer, deelnemer => deelnemer.voorspellingen)
