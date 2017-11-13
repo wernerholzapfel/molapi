@@ -4,8 +4,7 @@ import * as bodyParser from 'body-parser';
 import {ApplicationModule} from './app.module';
 import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
-
-// dotenv.config();
+import 'reflect-metadata';
 
 async function bootstrap() {
 

@@ -1,10 +1,10 @@
 import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import {Index} from 'typeorm/decorator';
+// import {Index} from 'typeorm/decorator';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
 @Entity()
-@Index(['aflevering', 'deelnemer'], {unique: true})
+// @Index(['aflevering', 'deelnemer'], {unique: true})
 export class Voorspelling {
     @PrimaryGeneratedColumn('uuid')
     id: string;
