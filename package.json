@@ -10,17 +10,20 @@
     "pretest": "npm run lint",
     "test": "jest"
   },
+  "engines": {
+    "node": "8.0.28"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/crudjs/rest-nestjs-postgres.git"
+    "url": "git+https://github.com/wernerholzapfel/molapi.git"
   },
   "keywords": [],
   "author": "Werner Holzapfel <werner.holzapfel@gmail.com>",
   "license": "Apache 2.0",
   "bugs": {
-    "url": "https://github.com/wernerholzapfel/molapp/issues"
+    "url": "https://github.com/wernerholzapfel/molapi/issues"
   },
-  "homepage": "https://github.com/wernerholzapfel/molapp#readme",
+  "homepage": "https://github.com/wernerholzapfel/molapi#readme",
   "dependencies": {
     "@nestjs/common": "^4.0.0",
     "@nestjs/core": "^4.0.0",
