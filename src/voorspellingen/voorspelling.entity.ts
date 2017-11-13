@@ -4,6 +4,7 @@ import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
 @Entity()
+// todo fix index import on heroku
 // @Index(['aflevering', 'deelnemer'], {unique: true})
 export class Voorspelling {
     @PrimaryGeneratedColumn('uuid')
