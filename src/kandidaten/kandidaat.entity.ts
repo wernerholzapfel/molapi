@@ -1,7 +1,7 @@
 import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 
 @Entity()
-export class Mol {
+export class Kandidaat {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 

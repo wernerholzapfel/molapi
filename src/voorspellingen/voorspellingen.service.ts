@@ -5,10 +5,6 @@ import {getRepository, Repository} from 'typeorm';
 import {Voorspelling} from './voorspelling.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 
-// todo remove to parent?
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 @Component()
 export class VoorspellingenService {
     private readonly logger = new Logger('voorspellingenService', true);
@@ -25,6 +21,8 @@ export class VoorspellingenService {
                         leftJoinAndSelect: {
                             deelnemer: 'voorspelling.deelnemer',
                             mol: 'voorspelling.mol',
+                            afvaller: 'voorspelling.afvaller',
+                            winnaar: 'voorspelling.winnaar',
                         },
                     },
                 },

@@ -1,4 +1,4 @@
-export interface Mol {
+export interface Kandidaat {
     id: string;
     display_name: string;
     winner?: boolean;

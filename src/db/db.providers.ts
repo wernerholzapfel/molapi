@@ -3,7 +3,9 @@ import {createConnection} from 'typeorm';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Category} from '../categories/category.entity';
-import {Mol} from '../mollen/mol.entity';
+import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
+import {Aflevering} from '../afleveringen/aflevering.entity';
+import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
 export const dbProvider =
     {
@@ -18,7 +20,9 @@ export const dbProvider =
                 Voorspelling,
                 Deelnemer,
                 Category,
-                Mol,
+                Kandidaat,
+                Afleveringpunten,
+                Aflevering,
             ],
             synchronize: true, // DEV only, do not use on PROD!
         }),

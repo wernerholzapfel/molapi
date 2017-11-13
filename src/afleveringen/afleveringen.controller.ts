@@ -1,8 +1,7 @@
 import {Body, Controller, Get, Logger, Post, Req, Res} from '@nestjs/common';
-
-import {CreateVoorspellingDto} from './create-voorspelling.dto';
-import {VoorspellingenService} from './voorspellingen.service';
-import {Voorspelling} from './voorspelling.entity';
+import {AfleveringenService} from './afleveringen.service';
+import {Aflevering} from './aflevering.entity';
+import {CreateAfleveringDto} from './create-aflevering.dto';
 import {ManagementClient} from 'auth0';
 import * as async from 'async';
 import * as jwt_decode from 'jwt-decode';
@@ -11,24 +10,25 @@ import 'dotenv/config';
 const auth0Token = process.env.AUTH0_TOKEN;
 const auth0Domain = process.env.AUTH0_DOMAIN;
 
-@Controller('voorspellingen')
-export class VoorspellingenController {
-    private readonly logger = new Logger('voorspellingenController', true);
+@Controller('afleveringen')
+export class AfleveringenController {
+    private readonly logger = new Logger('afleveringenController', true);
     private management = new ManagementClient({
         domain: auth0Domain,
         token: auth0Token,
     });
 
-    constructor(private readonly voorspellingenService: VoorspellingenService) {
+    constructor(private readonly afleveringenService: AfleveringenService) {
     }
 
     @Get()
-    async findAll(): Promise<Voorspelling[]> {
-        return this.voorspellingenService.findAll();
+    async findAll(): Promise<Aflevering[]> {
+        return this.afleveringenService.findAll();
     }
 
     @Post()
-    async create(@Res() res, @Req() req, @Body() createVoorspellingDto: CreateVoorspellingDto) {
+    async create(@Res() res, @Req() req, @Body() createAfleveringDto: CreateAfleveringDto) {
+        this.logger.log('post aflevering');
         const extractedToken = this.getToken(req.headers);
         if (extractedToken) {
             async.waterfall([
@@ -44,25 +44,17 @@ export class VoorspellingenController {
                         if (err) {
                             this.logger.log(err.message);
                         }
-                        if (!user.email_verified) return res.status(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
+                        if (!user.app_metadata.hasOwnProperty('admin')) return res.status(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
                         callback(null, user);
                     });
                 },
                 (user, callback) => {
                     this.logger.log('hier is emailadres: ' + user.email);
-                    const newVoorspelling = Object.assign({}, createVoorspellingDto, {
-                        created_at: new Date(),
-                    });
-                    this.voorspellingenService.create(newVoorspelling, user.email, res);
+                    const newAflevering = Object.assign({}, createAfleveringDto);
+                    this.afleveringenService.create(newAflevering, res);
                 }]);
         }
     }
-
-// @Delete(':voorspellingId')
-// delete( @Param('voorspellingId') voorspellingId) {
-//   return this.voorspellingenService.deleteOne(voorspellingId);
-// }
-//     }
 
     getToken = headers => {
         if (headers && headers.authorization) {

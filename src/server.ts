@@ -3,9 +3,9 @@ import * as bodyParser from 'body-parser';
 
 import {ApplicationModule} from './app.module';
 import {ValidationPipe} from './validation.pipe';
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
 
-dotenv.config();
+// dotenv.config();
 
 async function bootstrap() {
 
