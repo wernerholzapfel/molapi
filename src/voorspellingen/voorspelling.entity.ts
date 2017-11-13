@@ -1,7 +1,7 @@
 import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
-import {Index} from 'typeorm/browser/decorator';
+import {Index} from 'typeorm/decorator';
 
 @Entity()
 // todo fix index import on heroku
