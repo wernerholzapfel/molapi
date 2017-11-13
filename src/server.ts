@@ -6,10 +6,25 @@ import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
 import 'reflect-metadata';
 
+let allowCrossDomain = function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+        res.send(200);
+    }
+    else {
+        next();
+    }
+};
+
 async function bootstrap() {
 
     const app = await NestFactory.create(ApplicationModule);
     app.use(bodyParser.json());
+    app.use(allowCrossDomain);
     app.useGlobalPipes(new ValidationPipe());
     app.setGlobalPrefix('api/v1');
     const port = parseInt(process.env.PORT, 10) || 3000;
