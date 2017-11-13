@@ -12,11 +12,13 @@ export const dbProvider =
         provide: 'DbConnectionToken',
         useFactory: async () => await createConnection({
             type: 'postgres',
-            host: process.env.DB_HOST,
-            database: process.env.DB_DATABASE,
-            port: parseInt(process.env.DB_PORT, 10),
-            username: process.env.DB_USER,
-            password: process.env.DB_PW,
+            url: process.env.DB_URL,
+            ssl: process.env.DB_SSL,
+            // host: process.env.DB_HOST,
+            // database: process.env.DB_DATABASE,
+            // port: parseInt(process.env.DB_PORT, 10),
+            // username: process.env.DB_USER,
+            // password: process.env.DB_PW,
             entities: [
                 Voorspelling,
                 Deelnemer,
