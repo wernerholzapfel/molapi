@@ -1,10 +1,11 @@
-import {Mol} from '../mollen/mol.entity';
+
+import {Kandidaat} from '../kandidaten/kandidaat.interface';
 
 export interface Aflevering {
     id: string;
     aflevering: number;
-    afvaller: Mol;
-    winnaar: Mol;
-    finalist: Mol;
+    afvaller: Kandidaat;
+    winnaar: Kandidaat;
+    finalist: Kandidaat;
     laatseAflevering: boolean;
 }
