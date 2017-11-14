@@ -1,4 +1,4 @@
-import {Column, Entity, Index, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index, JoinTable, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Entity()
@@ -16,6 +16,9 @@ export class Deelnemer {
     @Column({select: false})
     email: string;
 
-    @OneToMany(type => Voorspelling, voorspelling => voorspelling.deelnemer)
+    @OneToMany(type => Voorspelling, voorspelling => voorspelling.deelnemer, {
+        eager: true,
+    })
+    @JoinTable()
     voorspellingen: Voorspelling[];
 }

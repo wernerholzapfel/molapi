@@ -29,10 +29,7 @@ export class Voorspelling {
     @JoinTable()
     winnaar: Kandidaat;
 
-    @ManyToOne(type => Deelnemer, deelnemer => deelnemer.voorspellingen, {
-        eager: true,
-    })
-    @JoinTable()
+    @ManyToOne(type => Deelnemer, deelnemer => deelnemer.voorspellingen)
     deelnemer: Deelnemer;
 
     @Column({select: false})

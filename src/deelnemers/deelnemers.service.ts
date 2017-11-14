@@ -38,14 +38,7 @@ export class DeelnemersService {
     async findVoorspellingen(deelnemerId: string) {
         try {
             this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
-            return await this.deelnemerRepository.findOneById(deelnemerId, {
-                join: {
-                    alias: 'deelnemer',
-                    leftJoinAndSelect: {
-                        voorspellingen: 'deelnemer.voorspellingen',
-                    },
-                },
-            });
+            return await this.deelnemerRepository.findOneById(deelnemerId);
         } catch (err) {
             return err;
         }
