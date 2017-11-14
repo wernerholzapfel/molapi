@@ -53,7 +53,7 @@ export class VoorspellingenController {
                     const newVoorspelling = Object.assign({}, createVoorspellingDto, {
                         created_at: new Date(),
                     });
-                    this.voorspellingenService.create(newVoorspelling, res);
+                    this.voorspellingenService.create(newVoorspelling, user.user_id, res);
                 }]);
         }
     }

@@ -32,8 +32,8 @@ export class VoorspellingenService {
         }
     }
 
-    async create(voorspelling: Voorspelling, res: any) {
-        await getRepository(Deelnemer).findOneById(voorspelling.deelnemer.id).then(deelnemer => {
+    async create(voorspelling: Voorspelling, auth0Identifier: string, res: any) {
+        await getRepository(Deelnemer).findOne({auth0Identifier}).then(deelnemer => {
             if (deelnemer.id !== voorspelling.deelnemer.id) {
                 return res.status(HttpStatus.UNAUTHORIZED).json(deelnemer.id + ' probeert voorspellingen van ' + voorspelling.deelnemer.id + ' op te slaan').send();
             }
@@ -54,13 +54,13 @@ export class VoorspellingenService {
     //     }
     // }
 
-    // async findVoorspellingenByDeelnemer(deelnemerId: string): Promise<Voorspelling[]> {
-    //     try {
-    //         this.logger.log('find voorspelling by deelnemer: ' + deelnemerId);
-    //         return await this.voorspellingRepository.find({where: {deelnemer:  deelnemerId}});
-    //     } catch (err) {
-    //         return err;
-    //     }
-    // }
+    async findVoorspellingenByDeelnemer(deelnemerId: string): Promise<Voorspelling[]> {
+        try {
+            this.logger.log('find voorspelling by deelnemer: ' + deelnemerId);
+            return await this.voorspellingRepository.find({where: {deelnemer:  deelnemerId}});
+        } catch (err) {
+            return err;
+        }
+    }
 
 }
