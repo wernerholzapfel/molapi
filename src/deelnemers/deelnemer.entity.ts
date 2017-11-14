@@ -1,7 +1,8 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Entity()
+@Index(['auth0Identifier'], {unique: true})
 export class Deelnemer {
     @PrimaryGeneratedColumn('uuid')
     id: string;
