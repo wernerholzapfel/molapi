@@ -10,7 +10,7 @@ export class Deelnemer {
     @Column()
     display_name: string;
 
-    @Column()
+    @Column({select: false})
     auth0Identifier: string;
 
     @Column({select: false})
