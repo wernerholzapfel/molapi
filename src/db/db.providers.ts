@@ -22,6 +22,7 @@ export const dbProvider =
                 Afleveringpunten,
                 Aflevering,
             ],
+            logging: true,
             synchronize: true, // DEV only, do not use on PROD!
         }),
     };
