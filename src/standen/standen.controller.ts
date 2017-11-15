@@ -1,4 +1,4 @@
-import {Controller, Get} from '@nestjs/common';
+import {Controller, Get, Param} from '@nestjs/common';
 import {StandenService} from './standen.service';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 
@@ -11,5 +11,10 @@ export class StandenController {
     @Get()
     async findAll(): Promise<Afleveringpunten[]> {
         return this.standenService.findAll();
+    }
+
+    @Get(':deelnemerId')
+    async findByDeelnemer(@Param('deelnemerId') deelnemerId): Promise<Afleveringpunten[]> {
+        return this.standenService.findByDeelnemer(deelnemerId);
     }
 }

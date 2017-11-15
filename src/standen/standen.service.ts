@@ -28,6 +28,10 @@ export class StandenService {
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
                 totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten'),
             }))
-            .value().sort((a, b) =>  b.totaalpunten - a.totaalpunten);
+            .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+    }
+
+    async findByDeelnemer(deelnemerId): Promise<Afleveringpunten[]> {
+        return await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}});
     }
 }
