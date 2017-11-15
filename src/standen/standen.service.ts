@@ -27,7 +27,7 @@ export class StandenService {
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
                 totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten'),
-            })).sortBy(!'totaalpunten')
-            .value();
+            }))
+            .value().sort((a, b) =>  b.totaalpunten - a.totaalpunten);
     }
 }

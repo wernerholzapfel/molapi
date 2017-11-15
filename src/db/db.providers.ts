@@ -12,8 +12,8 @@ export const dbProvider =
         provide: 'DbConnectionToken',
         useFactory: async () => await createConnection({
             type: 'postgres',
-            url: process.env.DB_URL,
-            ssl: process.env.DATABASE_URL,
+            url: process.env.DATABASE_URL,
+            ssl: process.env.DB_SSL,
             entities: [
                 Voorspelling,
                 Deelnemer,
