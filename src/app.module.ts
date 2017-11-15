@@ -7,9 +7,10 @@ import {AuthenticationMiddleware} from './authentication.middleware';
 import {MiddlewaresConsumer} from '@nestjs/common/interfaces/middlewares';
 import {AfleveringenModule} from './afleveringen/afleveringen.module';
 import {KandidatenModule} from './kandidaten/kandidaten.module';
+import {StandenModule} from './standen/standen.module';
 
 @Module({
-    modules: [VoorspellingenModule, DeelnemersModule, CategoriesModule, KandidatenModule, AfleveringenModule],
+    modules: [VoorspellingenModule, StandenModule, DeelnemersModule, CategoriesModule, KandidatenModule, AfleveringenModule],
 })
 
 export class ApplicationModule implements NestModule {
