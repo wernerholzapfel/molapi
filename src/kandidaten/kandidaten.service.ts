@@ -55,6 +55,7 @@ export class KandidatenService {
                 molpunten: await this.determineMolPunten(deelnemer, voorspellingen, kandidaat),
                 winnaarpunten: await this.determineWinnaarPunten(deelnemer, voorspellingen, kandidaat),
                 deelnemer: {id: deelnemer.id},
+                voorspelling: {id: await this.determineVoorspellingId(deelnemer, voorspellingen, kandidaat)},
             });
         });
     }
@@ -85,6 +86,12 @@ export class KandidatenService {
             }).length * this.winnaarPunten;
         }
         return 0;
+    }
 
+    determineVoorspellingId(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
+            return voorspellingen.find(voorspelling => {
+                return voorspelling.deelnemer.id === deelnemer.id &&
+                    voorspelling.aflevering === kandidaat.elimination_round;
+            }).id;
     }
 }
