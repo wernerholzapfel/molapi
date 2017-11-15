@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, Post} from '@nestjs/common';
 import {Kandidaat} from './kandidaat.entity';
 import {CreateKandidaatDTO} from './create-kandidaat.dto';
 import {KandidatenService} from './kandidaten.service';
@@ -18,11 +18,9 @@ export class KandidatenController {
     async create(@Body() createKandidaatDto: CreateKandidaatDTO) {
         const newEntry = Object.assign({}, createKandidaatDto, {});
         await this.kandidatenService.create(newEntry);
-    }
-
-    @Delete(':kandidaatId')
-    delete(@Param('molId') kandidaatId) {
-        return this.kandidatenService.deleteOne(kandidaatId);
+        //     .then(success => {
+        //     this.calculateAflevering(newEntry);
+        // });
     }
 
     //
@@ -31,4 +29,34 @@ export class KandidatenController {
     //   return this.entriesService.findEntriesBymol(molId);
     // }
 
+    // calculateAflevering(kandidaat: Kandidaat) {
+    //     this.voorspellingRepository.find({where: {aflevering: kandidaat.elimination_round}})
+    //         .then(voorspellingen => {
+    //             voorspellingen.filter(voorspelling => {
+    //                 return voorspelling.afvaller === kandidaat;
+    //             }).forEach(correcteVoorspelling => {
+    //                 this.afleveringPuntenRepository.save({
+    //                     aflevering: correcteVoorspelling.aflevering,
+    //                     afvallerpunten: 25,
+    //                     deelnemer: correcteVoorspelling.deelnemer,
+    //                 });
+    //             });
+    //         });
+    // }
 }
+
+//
+// @OneToMany(type => Deelnemer, deelnemer => deelnemer.id)
+// deelnemer: Deelnemer;
+//
+// @Column()
+// aflevering: number;
+//
+// @Column()
+// molpunten: number;
+//
+// @Column()
+// afvallerpunten: number;
+//
+// @Column()
+// winnaarpunten: number;
