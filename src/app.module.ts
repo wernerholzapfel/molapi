@@ -9,9 +9,10 @@ import {AfleveringenModule} from './afleveringen/afleveringen.module';
 import {KandidatenModule} from './kandidaten/kandidaten.module';
 import {StandenModule} from './standen/standen.module';
 import {QuizvragenModule} from './quizvragen/quizvragen.module';
+import {QuizresultatenModule} from './quizresultaten/quizresultaten.module';
 
 @Module({
-    modules: [QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, CategoriesModule, KandidatenModule, AfleveringenModule],
+    modules: [QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, CategoriesModule, KandidatenModule, AfleveringenModule],
 })
 
 export class ApplicationModule implements NestModule {
