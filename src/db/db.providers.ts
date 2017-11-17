@@ -6,6 +6,8 @@ import {Category} from '../categories/category.entity';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
+import {Quizvraag} from '../quizvragen/quizvraag.entity';
+import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 
 export const dbProvider =
     {
@@ -21,6 +23,8 @@ export const dbProvider =
                 Kandidaat,
                 Afleveringpunten,
                 Aflevering,
+                Quizvraag,
+                Quizantwoord,
             ],
             logging: true,
             synchronize: true, // DEV only, do not use on PROD!
