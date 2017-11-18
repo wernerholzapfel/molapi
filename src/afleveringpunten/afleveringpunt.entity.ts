@@ -1,9 +1,9 @@
-import {Column, Entity, ManyToOne, OneToMany, Index, PrimaryGeneratedColumn, OneToOne, JoinTable} from 'typeorm';
+import {Column, Entity, Index, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Entity()
-@Index(['aflevering', 'deelnemer'], {unique: true})
+@Index(['aflevering', 'deelnemer', 'afleveringstand'], {unique: true})
 
 export class Afleveringpunten {
     @PrimaryGeneratedColumn('uuid')
@@ -23,6 +23,12 @@ export class Afleveringpunten {
 
     @Column()
     winnaarpunten: number;
+
+    @Column({nullable: true})
+    quizpunten: number;
+
+    @Column({nullable: true})
+    afleveringstand: number;
 
     @ManyToOne(type => Voorspelling, voorspelling => voorspelling.id, {
         eager: true,
