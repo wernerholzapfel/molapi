@@ -24,11 +24,21 @@ export class AfleveringenController {
         return this.afleveringenService.findAll();
     }
 
+    @Get('latest')
+    async getLatestAflevering(): Promise<Aflevering> {
+        return this.afleveringenService.getLatestAflevering();
+    }
+
+    @Get('current')
+    async getCurrentAflevering(): Promise<Aflevering> {
+        return this.afleveringenService.getCurrentAflevering();
+    }
+
     @Post()
-    async create(@Res() res, @Req() req, @Body() createAfleveringDto: CreateAfleveringDto) {
+    async create(@Req() req, @Body() createAfleveringDto: CreateAfleveringDto) {
         this.logger.log('post aflevering');
         const newAflevering = Object.assign({}, createAfleveringDto);
-        return await this.afleveringenService.create(newAflevering, res);
+        return await this.afleveringenService.create(newAflevering);
     }
 
 }
