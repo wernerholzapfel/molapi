@@ -11,6 +11,8 @@ import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 export class KandidatenService {
     private readonly logger = new Logger('deelnemersController', true);
 
+    molStrafpunten: number = -5;
+    winnaarStrafpunten: number = -5;
     molPunten: number = 20;
     winnaarPunten: number = 5;
     vragenPunten: number = 10;
@@ -102,11 +104,13 @@ export class KandidatenService {
     }
 
     determineAfvallerPunten(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
-        return voorspellingen.filter(voorspelling => {
-            return voorspelling.deelnemer.id === deelnemer.id &&
-                voorspelling.aflevering === kandidaat.aflevering &&
-                voorspelling.afvaller.id === kandidaat.id;
-        }).length > 0 ? 25 : 0;
+        if (kandidaat.afgevallen) {
+            return voorspellingen.filter(voorspelling => {
+                return voorspelling.deelnemer.id === deelnemer.id &&
+                    voorspelling.aflevering === kandidaat.aflevering &&
+                    voorspelling.afvaller.id === kandidaat.id;
+            }).length > 0 ? 25 : 0;
+        }
     }
 
     determineMolPunten(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
@@ -116,6 +120,12 @@ export class KandidatenService {
                     voorspelling.mol.id === kandidaat.id;
             }).length * this.molPunten;
         }
+        if (kandidaat.afgevallen &&
+            voorspellingen.find(voorspelling => {
+                return voorspelling.deelnemer.id === deelnemer.id &&
+                    voorspelling.aflevering === kandidaat.aflevering &&
+                    voorspelling.mol.id === kandidaat.id;
+            })) return this.molStrafpunten;
         return 0;
     }
 
@@ -126,6 +136,12 @@ export class KandidatenService {
                     voorspelling.winnaar.id === kandidaat.id;
             }).length * this.winnaarPunten;
         }
+        if (kandidaat.afgevallen &&
+            voorspellingen.find(voorspelling => {
+                return voorspelling.deelnemer.id === deelnemer.id &&
+                    voorspelling.aflevering === kandidaat.aflevering &&
+                    voorspelling.winnaar.id === kandidaat.id;
+            })) return this.winnaarStrafpunten;
         return 0;
     }
 
