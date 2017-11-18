@@ -14,7 +14,8 @@ export class StandenService {
     async findAll(): Promise<any[]> {
         const latestAflevering = await this.getLatestAflevering();
         const puntenlijst = await this.getPuntenVoorAflevering(latestAflevering.aflevering);
-        const previouspuntenlijst = await this.getPuntenVoorAflevering(latestAflevering.aflevering - 1);
+        const previouspuntenlijst = await this.getPuntenVoorAflevering(
+            latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1);
 
         const previousStand = await _(previouspuntenlijst).groupBy('deelnemer.id')
             .map((objs, key) => ({
