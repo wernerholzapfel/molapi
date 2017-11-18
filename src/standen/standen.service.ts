@@ -51,13 +51,20 @@ export class StandenService {
     async findByDeelnemer(deelnemerId): Promise<Afleveringpunten[]> {
         const latestAflevering: Aflevering = await this.getLatestAflevering();
 
-        return await getRepository(Afleveringpunten)
-            .createQueryBuilder('Afleveringpunten')
-            .where('Afleveringpunten.deelnemer = :deelnemerId', {deelnemerId})
-            .andWhere('Afleveringpunten.afleveringstand = :aflevering', {aflevering: latestAflevering.aflevering})
-            .getMany();
+        return await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}})
+            .then(afleveringpunten => {
+            return afleveringpunten.filter(afleveringpunt => {
+                return afleveringpunt.afleveringstand === latestAflevering.aflevering;});
+            });
+        }
 
-    }
+        // const latestAflevering: Aflevering = await this.getLatestAflevering();
+        //
+        // return await getRepository(Afleveringpunten)
+        //     .createQueryBuilder('Afleveringpunten')
+        //     .where('Afleveringpunten.deelnemer = :deelnemerId', {deelnemerId})
+        //     .andWhere('Afleveringpunten.afleveringstand = :aflevering', {aflevering: latestAflevering.aflevering})
+        //     .getMany();
 
     async getPuntenVoorAflevering(aflevering: number) {
         return await this.afleveringpuntRepository.find({
