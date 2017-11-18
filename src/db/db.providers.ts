@@ -2,7 +2,6 @@ import {createConnection} from 'typeorm';
 
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import {Category} from '../categories/category.entity';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
@@ -20,7 +19,6 @@ export const dbProvider =
             entities: [
                 Voorspelling,
                 Deelnemer,
-                Category,
                 Kandidaat,
                 Afleveringpunten,
                 Aflevering,

@@ -18,35 +18,10 @@ export class KandidatenService {
     constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>) {
     }
 
-    async findAll(): Promise<any[]> {
-        const kandidaten = await getRepository(Kandidaat).find();
-        const mol = kandidaten.filter(kandidaat => {
-            return kandidaat.mol;
-        });
-        if (mol.length > 0) {
-            this.logger.log('dit is de mol: ' + mol[0].display_name);
-            const answers = await getRepository(Quizantwoord).find(
-                {
-                    join: {
-                        alias: 'quizantwoord',
-                        leftJoinAndSelect: {
-                            kandidaten: 'quizantwoord.kandidaten',
-                        },
-                    },
-                },
-            );
-            const correctAnswers = answers.filter(answer => {
-                return answer.kandidaten.find(
-                    kandidaat => {
-                        return kandidaat.id === mol[0].id;
-                    });
-            });
-            this.logger.log('aantal vragen met mol: ' + correctAnswers.length);
-            return correctAnswers;
-        }
+    async findAll(): Promise<Kandidaat[]> {
+        return await this.kandidaatRepository.find();
     }
 
-    // todo alleen admin mag posten
     async create(kandidaat: Kandidaat) {
         this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.elimination_round);
         await this.kandidaatRepository.save(kandidaat);

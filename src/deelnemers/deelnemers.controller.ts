@@ -29,12 +29,12 @@ export class DeelnemersController {
     @Post()
     async create(@Body() createDeelnemerDto: CreateDeelnemerDto) {
         const newEntry = Object.assign({}, createDeelnemerDto, {});
-        await this.deelnemersService.create(newEntry);
+        return await this.deelnemersService.create(newEntry);
     }
 
     @Get(':deelnemerId/voorspellingen')
-    findEntriesByCategory(@Param('deelnemerId') deelnemerId): Promise<Deelnemer> {
-        return this.deelnemersService.findVoorspellingen(deelnemerId);
+    async findVoorspelllingenByDeelnemerId(@Param('deelnemerId') deelnemerId): Promise<Deelnemer> {
+        return await this.deelnemersService.findVoorspellingen(deelnemerId);
     }
 
     @Get('loggedIn')
@@ -47,12 +47,12 @@ export class DeelnemersController {
             this.management.getUser({
                 id: decoded.sub,
             }).then(async user => {
-                this.deelnemersService.findLoggedInDeelnemer(user.user_id, res);
+               return await this.deelnemersService.findLoggedInDeelnemer(user.user_id, res);
             });
         }
     }
 
-    // todo remove upperclass
+    // todo remove to upperclass
     getToken = headers => {
         if (headers && headers.authorization) {
             const parted = headers.authorization.split(' ');
@@ -64,5 +64,5 @@ export class DeelnemersController {
         } else {
             return null;
         }
-    };
+    }
 }

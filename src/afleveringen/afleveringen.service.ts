@@ -15,12 +15,14 @@ export class AfleveringenService {
         }
     }
 
+    // todo fout afhandeling
     async create(aflevering: Aflevering, res: any) {
-        await this.afleveringRepository.save(aflevering).then(response => {
-            return res.status(HttpStatus.CREATED).json(response).send();
-        }, error => {
-            return res.status(HttpStatus.FORBIDDEN).json(error).send();
-        });
+        await this.afleveringRepository.save(aflevering);
+            // .then(response => {
+            // return res.status(HttpStatus.CREATED).json(response).send();
+        // }, error => {
+        //     return res.status(HttpStatus.FORBIDDEN).json(error).send();
+        // });
     }
 
 }

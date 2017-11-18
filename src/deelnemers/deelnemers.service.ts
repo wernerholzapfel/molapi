@@ -12,7 +12,7 @@ export class DeelnemersService {
 
     async findAll(): Promise<Deelnemer[]> {
         try {
-            return await this.deelnemerRepository.find(
+            await this.deelnemerRepository.find(
                 {
                     join: {
                         alias: 'deelnemer',
@@ -38,7 +38,7 @@ export class DeelnemersService {
     async findVoorspellingen(deelnemerId: string) {
         try {
             this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
-            return await this.deelnemerRepository.findOneById(deelnemerId);
+            await this.deelnemerRepository.findOneById(deelnemerId);
         } catch (err) {
             return err;
         }

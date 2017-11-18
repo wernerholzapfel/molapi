@@ -45,22 +45,4 @@ export class VoorspellingenService {
                 });
         });
     }
-
-    // async deleteOne(voorspellingId: string) {
-    //     try {
-    //         return await this.voorspellingRepository.removeById(voorspellingId);
-    //     } catch (err) {
-    //         return err;
-    //     }
-    // }
-
-    async findVoorspellingenByDeelnemer(deelnemerId: string): Promise<Voorspelling[]> {
-        try {
-            this.logger.log('find voorspelling by deelnemer: ' + deelnemerId);
-            return await this.voorspellingRepository.find({where: {deelnemer:  deelnemerId}});
-        } catch (err) {
-            return err;
-        }
-    }
-
 }

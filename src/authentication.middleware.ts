@@ -30,18 +30,37 @@ export class AdminMiddleware implements NestMiddleware {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
-                // this.logger.log('start decoding');
                 const decoded: any = jwt_decode(extractedToken);
-                // this.logger.log(decoded.sub);
                 management.getUser({
                     id: decoded.sub,
                 }).then(async user => {
-                    if (user.app_metadata && user.app_metadata.hasOwnProperty('admin')){
+                    if (user.app_metadata && user.app_metadata.hasOwnProperty('admin')) {
                         next();
                     }
                     else {
-                        logger.log('ik zit in de else');
                         return res.status(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
+                    }
+                });
+            }
+        };
+    }
+}
+
+@Middleware()
+export class IsEmailVerifiedMiddleware implements NestMiddleware {
+    resolve(): ExpressMiddleware {
+        return (req, res, next) => {
+            const extractedToken = getToken(req.headers);
+            if (extractedToken) {
+                logger.log('start decoding');
+                const decoded: any = jwt_decode(extractedToken);
+                logger.log(decoded.sub);
+                management.getUser({
+                    id: decoded.sub,
+                }).then(async user => {
+                    if (user.email_verified) next();
+                    else {
+                        return res.status(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
                     }
                 });
             }

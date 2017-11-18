@@ -1,10 +1,11 @@
-import {Column, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, JoinTable, Index, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Entity} from 'typeorm/decorator/entity/Entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizvraag} from '../quizvragen/quizvraag.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 
 @Entity()
+@Index(['deelnemer', 'vraag'], {unique: true})
 
 export class Quizresultaat {
     @PrimaryGeneratedColumn('uuid')
