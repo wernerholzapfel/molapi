@@ -18,14 +18,30 @@ export class KandidatenService {
     constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>) {
     }
 
-    async findAll(): Promise<Kandidaat[]> {
-        return await this.kandidaatRepository.find();
+    async findAll(): Promise<any> {
+        const answers = await getRepository(Quizantwoord).find(
+            {
+                join: {
+                    alias: 'quizantwoord',
+                    leftJoinAndSelect: {
+                        kandidaten: 'quizantwoord.kandidaten',
+                    },
+                },
+            },
+        );
+        const correctAnswers: Quizantwoord[] = answers.filter(answer => {
+            return answer.kandidaten.every(
+                kandidaat => {
+                    return !kandidaat.afgevallen && !kandidaat.winner;
+                });
+        });
+        return correctAnswers;
     }
 
     async create(kandidaat: Kandidaat) {
-        this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.elimination_round);
+        this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.aflevering);
         await this.kandidaatRepository.save(kandidaat);
-        await getRepository(Afleveringpunten).delete({aflevering: kandidaat.elimination_round});
+        await getRepository(Afleveringpunten).delete({aflevering: kandidaat.aflevering});
         const deelnemers = await getRepository(Deelnemer).find();
         const voorspellingen = await getRepository(Voorspelling).find({
             join: {
@@ -40,12 +56,9 @@ export class KandidatenService {
         });
         await this.logger.log(voorspellingen.length.toString() + 'aantal voorspellingen');
         this.logger.log(kandidaat.id + ' is het id van de kandidaat');
-        const correcteVoorspellingen = await voorspellingen.filter(voorspelling => {
-            return voorspelling.afvaller.id === kandidaat.id && voorspelling.aflevering === kandidaat.elimination_round;
-        });
         await deelnemers.forEach(async deelnemer => {
             await getRepository(Afleveringpunten).save({
-                aflevering: kandidaat.elimination_round,
+                aflevering: kandidaat.aflevering,
                 afvallerpunten: await this.determineAfvallerPunten(deelnemer, voorspellingen, kandidaat),
                 molpunten: await this.determineMolPunten(deelnemer, voorspellingen, kandidaat),
                 winnaarpunten: await this.determineWinnaarPunten(deelnemer, voorspellingen, kandidaat),
@@ -57,50 +70,41 @@ export class KandidatenService {
     }
 
     async updateQuizResultaten() {
-        const kandidaten = await getRepository(Kandidaat).find();
-        const mol = kandidaten.find(kandidaat => {
-            return kandidaat.mol;
-        });
-        if (mol) {
-            this.logger.log('dit is de mol: ' + mol.display_name);
-            const answers = await getRepository(Quizantwoord).find(
-                {
-                    join: {
-                        alias: 'quizantwoord',
-                        leftJoinAndSelect: {
-                            kandidaten: 'quizantwoord.kandidaten',
-                        },
+
+        const answers = await getRepository(Quizantwoord).find(
+            {
+                join: {
+                    alias: 'quizantwoord',
+                    leftJoinAndSelect: {
+                        kandidaten: 'quizantwoord.kandidaten',
                     },
                 },
-            );
-            const correctAnswers: Quizantwoord[] = answers.filter(answer => {
-                return answer.kandidaten.find(
-                    kandidaat => {
-                        return kandidaat.id === mol.id;
-                    });
-            });
-            this.logger.log('aantal vragen met mol: ' + correctAnswers.length);
-
-            const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
-            await quizresultaten.forEach(async quizresultaat => {
-                if (correctAnswers.find(correctAnswer => {
-                        this.logger.log('correctantwoord ' + correctAnswer.id + '-' + quizresultaat.antwoord.id);
-                        return correctAnswer.id === quizresultaat.antwoord.id;
-                    })) {
-                    quizresultaat.punten = this.vragenPunten;
-                }
-                else {
-                    quizresultaat.punten = 0;
-                }
-                await getRepository(Quizresultaat).save(quizresultaat);
-            });
-        }
+            },
+        );
+        const possibleCorrectAnswers: Quizantwoord[] = answers.filter(answer => {
+            return answer.kandidaten.every(
+                kandidaat => {
+                    return !kandidaat.afgevallen && !kandidaat.winner;
+                });
+        });
+        const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
+        await quizresultaten.forEach(async quizresultaat => {
+            if (possibleCorrectAnswers.find(correctAnswer => {
+                    return correctAnswer.id === quizresultaat.antwoord.id;
+                })) {
+                quizresultaat.punten = this.vragenPunten;
+            }
+            else {
+                quizresultaat.punten = 0;
+            }
+            await getRepository(Quizresultaat).save(quizresultaat);
+        });
     }
 
     determineAfvallerPunten(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
         return voorspellingen.filter(voorspelling => {
             return voorspelling.deelnemer.id === deelnemer.id &&
-                voorspelling.aflevering === kandidaat.elimination_round &&
+                voorspelling.aflevering === kandidaat.aflevering &&
                 voorspelling.afvaller.id === kandidaat.id;
         }).length > 0 ? 25 : 0;
     }
@@ -128,7 +132,7 @@ export class KandidatenService {
     determineVoorspellingId(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
         return voorspellingen.find(voorspelling => {
             return voorspelling.deelnemer.id === deelnemer.id &&
-                voorspelling.aflevering === kandidaat.elimination_round;
+                voorspelling.aflevering === kandidaat.aflevering;
         }).id;
     }
 }

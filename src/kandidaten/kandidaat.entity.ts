@@ -21,5 +21,8 @@ export class Kandidaat {
     finalist: boolean;
 
     @Column({nullable: true})
-    elimination_round: number;
+    afgevallen: boolean;
+
+    @Column({nullable: true})
+    aflevering: number;
 }

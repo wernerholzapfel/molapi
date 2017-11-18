@@ -4,5 +4,6 @@ export interface Kandidaat {
     winner?: boolean;
     mol?: boolean;
     finalist?: boolean;
-    elimination_round?: number;
+    afgevallen?: boolean;
+    aflevering?: number;
 }
