@@ -41,26 +41,13 @@ export class DeelnemersController {
     async findLoggedInDeelnemer(@Req() req, @Res() res) {
         const extractedToken = this.getToken(req.headers);
         if (extractedToken) {
-            // async.waterfall([
-            //     callback => {
             this.logger.log('start decoding');
             const decoded: any = jwt_decode(extractedToken);
             this.logger.log(decoded.sub);
-            // callback(null, decoded);
-            // },
-            // (decodedUser, callback) => {
             this.management.getUser({
                 id: decoded.sub,
-                // if (!user.email_verified) return res.status(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
-                // callback(null, user);
-                // });
-                // },
-                // (user, callback) => {
-                //     return this.deelnemersService.findLoggedInDeelnemer('auth0|57b326157d6c918d6a161d77');
-                // },
-                // ]);
             }).then(async user => {
-                this.deelnemersService.findLoggedInDeelnemer(user.user_id,res);
+                this.deelnemersService.findLoggedInDeelnemer(user.user_id, res);
             });
         }
     }
