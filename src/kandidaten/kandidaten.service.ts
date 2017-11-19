@@ -15,6 +15,7 @@ export class KandidatenService {
 
     molStrafpunten: number = -5;
     winnaarStrafpunten: number = -5;
+    afvallerPunten: number = 25;
     molPunten: number = 20;
     winnaarPunten: number = 5;
     vragenPunten: number = 10;
@@ -29,12 +30,14 @@ export class KandidatenService {
     async create(kandidaat: Kandidaat) {
         this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.aflevering);
         await this.kandidaatRepository.save(kandidaat);
-        await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
         await getRepository(Quizpunt).delete({afleveringstand: kandidaat.aflevering});
-        const deelnemers = await getRepository(Deelnemer).find();
-
         await this.updateQuizResultaten(kandidaat.aflevering);
 
+        await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
+        await this.updateAfleveringPunten(kandidaat);
+    }
+
+    async updateAfleveringPunten(kandidaat: Kandidaat) {
         const voorspellingen = await getRepository(Voorspelling).find({
             join: {
                 alias: 'voorspelling',
@@ -50,32 +53,23 @@ export class KandidatenService {
                 return vl.aflevering <= kandidaat.aflevering;
             });
         });
-        await this.logger.log(voorspellingen.length.toString() + 'aantal voorspellingen');
-        this.calclogger.log(kandidaat.id + ' is het id van de kandidaat');
         const kandidatenlijst = await getRepository(Kandidaat).find();
-        const afgevallenKandidatenLijst = kandidatenlijst.filter(item => {
-            return item.aflevering <= kandidaat.aflevering && item.aflevering > 0 && item.afgevallen;
+        const uitgespeeldeKandidatenLijst = kandidatenlijst.filter(item => {
+            return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
         });
-        this.calclogger.log('afgevallenKandidatenLijst length: ' + afgevallenKandidatenLijst.length);
-        await afgevallenKandidatenLijst.forEach(async afgevallenkandidaat => {
-            this.calclogger.log('afgevallenkandidaat aflevering: ' + afgevallenkandidaat.aflevering);
-            const filtedVoorspellingen = voorspellingen.filter( voorspelling => {
-                return voorspelling.aflevering === afgevallenkandidaat.aflevering;
-            });
-            this.calclogger.log('filtedVoorspellingen: ' + filtedVoorspellingen.length);
 
-            await filtedVoorspellingen.forEach(async voorspelling => {
-                await getRepository(Afleveringpunten).save({
-                    aflevering: voorspelling.aflevering,
-                    afvallerpunten: await this.determineAfvallerPunten(voorspelling, voorspellingen, afgevallenkandidaat),
-                    molpunten: await this.determineMolPunten(voorspelling, voorspellingen, afgevallenkandidaat),
-                    winnaarpunten: await this.determineWinnaarPunten(voorspelling, voorspellingen, afgevallenkandidaat),
-                    deelnemer: {id: voorspelling.deelnemer.id},
-                    voorspelling: {id: voorspelling.id},
-                    afleveringstand: kandidaat.aflevering,
-                });
+        await voorspellingen.forEach(async voorspelling => {
+            await getRepository(Afleveringpunten).save({
+                aflevering: voorspelling.aflevering,
+                afvallerpunten: await this.determineAfvallerPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
+                molpunten: await this.determineMolPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
+                winnaarpunten: await this.determineWinnaarPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
+                deelnemer: {id: voorspelling.deelnemer.id},
+                voorspelling: {id: voorspelling.id},
+                afleveringstand: kandidaat.aflevering,
             });
         });
+
     }
 
     async updateQuizResultaten(afleveringstand) {
@@ -95,6 +89,7 @@ export class KandidatenService {
                     return !kandidaat.afgevallen && !kandidaat.winner;
                 });
         });
+
         this.calclogger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
 
         const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
@@ -117,40 +112,31 @@ export class KandidatenService {
         });
     }
 
-    determineAfvallerPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
-        if (kandidaat.afgevallen && (
-                voorspelling.aflevering === kandidaat.aflevering &&
-                voorspelling.afvaller.id === kandidaat.id)) {
-            return 25;
+    determineAfvallerPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
+            return this.afvallerPunten;
         }
         return 0;
     }
 
-    determineMolPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
-        if (kandidaat.mol) {
-            return voorspellingen.filter(voorspellingItem => {
-                return voorspellingItem.deelnemer.id === voorspellingItem.deelnemer.id &&
-                    voorspellingItem.mol.id === kandidaat.id;
-            }).length * this.molPunten;
+    determineMolPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+        if (kandidaten.find(kandidaat => voorspelling.mol.id === kandidaat.id && kandidaat.mol)) {
+            return this.molPunten;
         }
-        if (kandidaat.afgevallen &&
-            voorspelling.aflevering === kandidaat.aflevering &&
-            voorspelling.mol.id === kandidaat.id) {
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
             return this.molStrafpunten;
         }
         return 0;
     }
 
-    determineWinnaarPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
-        if (kandidaat.winner) {
-            return voorspellingen.filter(voorspellingItem => {
-                return voorspellingItem.deelnemer.id === voorspelling.deelnemer.id &&
-                    voorspellingItem.winnaar.id === kandidaat.id;
-            }).length * this.winnaarPunten;
+    determineWinnaarPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+        if (kandidaten.find(kandidaat => voorspelling.winnaar.id === kandidaat.id && kandidaat.winner)) {
+            return this.winnaarPunten;
         }
-        if (kandidaat.afgevallen &&
-            voorspelling.aflevering === kandidaat.aflevering &&
-            voorspelling.winnaar.id === kandidaat.id) {
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
             return this.winnaarStrafpunten;
         }
         return 0;
