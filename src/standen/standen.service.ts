@@ -3,6 +3,7 @@ import {getRepository, Repository} from 'typeorm';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import * as _ from 'lodash';
 import {Aflevering} from '../afleveringen/aflevering.entity';
+import {Quizpunt} from '../quizpunten/quizpunt.entity';
 
 @Component()
 export class StandenService {
@@ -13,9 +14,28 @@ export class StandenService {
 
     async findAll(): Promise<any[]> {
         const latestAflevering = await this.getLatestAflevering();
+        this.logger.log('latestAflevering: ' + latestAflevering.aflevering);
         const puntenlijst = await this.getPuntenVoorAflevering(latestAflevering.aflevering);
         const previouspuntenlijst = await this.getPuntenVoorAflevering(
             latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1);
+
+        const quizPuntenlijst = await this.getPuntenVoorQuiz(latestAflevering.aflevering);
+        const QuizPreviouspuntenlijst = await this.getPuntenVoorQuiz(
+            latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1);
+
+        const previousQuizStand = await _(QuizPreviouspuntenlijst).groupBy('deelnemer.id')
+            .map((objs, key) => ({
+                deelnemerId: key,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+            }))
+            .value();
+
+        const quizStand = await _(quizPuntenlijst).groupBy('deelnemer.id')
+            .map((objs, key) => ({
+                deelnemerId: key,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+            }))
+            .value();
 
         const previousStand = await _(previouspuntenlijst).groupBy('deelnemer.id')
             .map((objs, key) => ({
@@ -24,28 +44,29 @@ export class StandenService {
                 previous_molpunten: _.sumBy(objs, 'molpunten'),
                 previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                previous_quizpunten: _.sumBy(objs, 'quizpunten'),
+                previous_quizpunten: previousQuizStand.find(item => item.deelnemerId === key).quizpunten,
                 previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-        return _(puntenlijst).groupBy('deelnemer.id')
+        return await _(puntenlijst).groupBy('deelnemer.id')
             .map((objs, key) => ({
                 deelnemerId: key,
                 display_name: _.head(objs).deelnemer.display_name,
                 molpunten: _.sumBy(objs, 'molpunten'),
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                quizpunten: _.sumBy(objs, 'quizpunten'),
+                quizpunten: quizStand.find(item => item.deelnemerId === key).quizpunten,
                 totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
                 delta_molpunten: _.sumBy(objs, 'molpunten') - previousStand.find(item => item.deelnemerId === key).previous_molpunten,
                 delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten,
                 delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - previousStand.find(item => item.deelnemerId === key).previous_winnaarpunten,
-                delta_quizpunten: _.sumBy(objs, 'quizpunten') - previousStand.find(item => item.deelnemerId === key).previous_quizpunten,
+                delta_quizpunten: quizStand.find(item => item.deelnemerId === key).quizpunten - previousStand.find(item => item.deelnemerId === key).previous_quizpunten,
                 delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten') -
                 previousStand.find(item => item.deelnemerId === key).previous_totaalpunten,
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+
     }
 
     async findByDeelnemer(deelnemerId): Promise<Afleveringpunten[]> {
@@ -53,19 +74,20 @@ export class StandenService {
 
         return await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}})
             .then(afleveringpunten => {
-            return afleveringpunten.filter(afleveringpunt => {
-                return afleveringpunt.afleveringstand === latestAflevering.aflevering; })
-                .sort((a, b) => a.aflevering - b.aflevering);
+                return afleveringpunten.filter(afleveringpunt => {
+                    return afleveringpunt.afleveringstand === latestAflevering.aflevering;
+                })
+                    .sort((a, b) => a.aflevering - b.aflevering);
             });
-        }
+    }
 
-        // const latestAflevering: Aflevering = await this.getLatestAflevering();
-        //
-        // return await getRepository(Afleveringpunten)
-        //     .createQueryBuilder('Afleveringpunten')
-        //     .where('Afleveringpunten.deelnemer = :deelnemerId', {deelnemerId})
-        //     .andWhere('Afleveringpunten.afleveringstand = :aflevering', {aflevering: latestAflevering.aflevering})
-        //     .getMany();
+    // const latestAflevering: Aflevering = await this.getLatestAflevering();
+    //
+    // return await getRepository(Afleveringpunten)
+    //     .createQueryBuilder('Afleveringpunten')
+    //     .where('Afleveringpunten.deelnemer = :deelnemerId', {deelnemerId})
+    //     .andWhere('Afleveringpunten.afleveringstand = :aflevering', {aflevering: latestAflevering.aflevering})
+    //     .getMany();
 
     async getPuntenVoorAflevering(aflevering: number) {
         return await this.afleveringpuntRepository.find({
@@ -73,6 +95,21 @@ export class StandenService {
                 alias: 'afleveringpunten',
                 leftJoinAndSelect: {
                     deelnemer: 'afleveringpunten.deelnemer',
+                },
+            },
+        }).then(response => {
+            return response.filter(item => {
+                return item.afleveringstand === aflevering;
+            });
+        });
+    }
+
+    async getPuntenVoorQuiz(aflevering: number) {
+        return await getRepository(Quizpunt).find({
+            join: {
+                alias: 'quizpunten',
+                leftJoinAndSelect: {
+                    deelnemer: 'quizpunten.deelnemer',
                 },
             },
         }).then(response => {
