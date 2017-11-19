@@ -123,7 +123,7 @@ export class StandenService {
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-         await _(puntenlijst).groupBy('aflevering')
+         return await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
@@ -143,7 +143,6 @@ export class StandenService {
                 this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
-         return puntenlijst;
     }
 
     determinePreviousMolpunten(previousQuizStand, key) {
