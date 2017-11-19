@@ -1,9 +1,10 @@
-import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {QuizvragenService} from './quizvragen.service';
 import {CreateQuizvraagDto} from './create-quizvraag.dto';
 import {getRepository} from 'typeorm';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
+import {Quizvraag} from './quizvraag.entity';
 
 @Controller('quizvragen')
 export class QuizvragenController {
@@ -13,8 +14,13 @@ export class QuizvragenController {
     }
 
     @Get()
-    async findAll(): Promise<Afleveringpunten[]> {
+    async findAll(): Promise<Quizvraag[]> {
         return this.quizvragenService.findAll();
+    }
+
+    @Get(':afleveringId')
+    async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {
+        return this.quizvragenService.getQuizVoorAflevering(afleveringId);
     }
 
     @Post()

@@ -20,6 +20,21 @@ export class QuizvragenService {
         });
     }
 
+    async getQuizVoorAflevering(afleveringId): Promise<Quizvraag[]> {
+        return await this.quizvraagRepository.find({
+            join: {
+                alias: 'quizvraag',
+                leftJoinAndSelect: {
+                    antwoorden: 'quizvraag.antwoorden',
+                },
+            },
+        }).then(response => {
+            return response.filter(item => {
+                return item.aflevering.toString() === afleveringId;
+            });
+        });
+    }
+
     async create(quizvraag: Quizvraag) {
         return await this.quizvraagRepository.save(quizvraag);
     }
