@@ -123,12 +123,13 @@ export class StandenService {
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-        return await _(puntenlijst).groupBy('aflevering')
+         await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
                 deelnemer: _.head(objs).deelnemer,
                 display_name: _.head(objs).deelnemer.display_name,
+                voorspelling: _.head(objs).voorspelling,
                 molpunten: _.sumBy(objs, 'molpunten'),
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
@@ -142,6 +143,7 @@ export class StandenService {
                 this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
+         return puntenlijst;
     }
 
     determinePreviousMolpunten(previousQuizStand, key) {
