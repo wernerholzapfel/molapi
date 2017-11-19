@@ -11,6 +11,7 @@ import {Quizpunt} from '../quizpunten/quizpunt.entity';
 @Component()
 export class KandidatenService {
     private readonly logger = new Logger('deelnemersController', true);
+    private readonly calclogger = new Logger('calculatieLogger', true);
 
     molStrafpunten: number = -5;
     winnaarStrafpunten: number = -5;
@@ -50,14 +51,20 @@ export class KandidatenService {
             });
         });
         await this.logger.log(voorspellingen.length.toString() + 'aantal voorspellingen');
-        this.logger.log(kandidaat.id + ' is het id van de kandidaat');
+        this.calclogger.log(kandidaat.id + ' is het id van de kandidaat');
         const kandidatenlijst = await getRepository(Kandidaat).find();
-        const afgevalenKandidatenLijst = kandidatenlijst.filter(item => {
-            return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
+        const afgevallenKandidatenLijst = kandidatenlijst.filter(item => {
+            return item.aflevering <= kandidaat.aflevering && item.aflevering > 0 && item.afgevallen;
         });
-        this.logger.log('afgevalenKandidatenLijst length: ' + afgevalenKandidatenLijst.length);
-        await afgevalenKandidatenLijst.forEach(async afgevallenkandidaat => {
-            await voorspellingen.forEach(async voorspelling => {
+        this.calclogger.log('afgevallenKandidatenLijst length: ' + afgevallenKandidatenLijst.length);
+        await afgevallenKandidatenLijst.forEach(async afgevallenkandidaat => {
+            this.calclogger.log('afgevallenkandidaat aflevering: ' + afgevallenkandidaat.aflevering);
+            const filtedVoorspellingen = voorspellingen.filter( voorspelling => {
+                return voorspelling.aflevering === afgevallenkandidaat.aflevering;
+            });
+            this.calclogger.log('filtedVoorspellingen: ' + filtedVoorspellingen.length);
+
+            await filtedVoorspellingen.forEach(async voorspelling => {
                 await getRepository(Afleveringpunten).save({
                     aflevering: voorspelling.aflevering,
                     afvallerpunten: await this.determineAfvallerPunten(voorspelling, voorspellingen, afgevallenkandidaat),
@@ -88,7 +95,7 @@ export class KandidatenService {
                     return !kandidaat.afgevallen && !kandidaat.winner;
                 });
         });
-        this.logger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
+        this.calclogger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
 
         const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
         await quizresultaten.forEach(async quizresultaat => {
@@ -126,7 +133,8 @@ export class KandidatenService {
                     voorspellingItem.mol.id === kandidaat.id;
             }).length * this.molPunten;
         }
-        if (kandidaat.afgevallen && voorspelling.aflevering === kandidaat.aflevering &&
+        if (kandidaat.afgevallen &&
+            voorspelling.aflevering === kandidaat.aflevering &&
             voorspelling.mol.id === kandidaat.id) {
             return this.molStrafpunten;
         }

@@ -3,7 +3,7 @@ import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Entity()
-@Index(['aflevering', 'deelnemer', 'afleveringstand'], {unique: true})
+@Index(['aflevering', 'deelnemer', 'afleveringstand', 'voorspelling'], {unique: true})
 export class Afleveringpunten {
     @PrimaryGeneratedColumn('uuid')
     id: string;
