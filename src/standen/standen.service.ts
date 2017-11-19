@@ -69,16 +69,62 @@ export class StandenService {
 
     }
 
-    async findByDeelnemer(deelnemerId): Promise<Afleveringpunten[]> {
-        const latestAflevering: Aflevering = await this.getLatestAflevering();
+    async findByDeelnemer(deelnemerId): Promise<any[]> {
+        const latestAflevering = await this.getLatestAflevering();
 
-        return await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}})
-            .then(afleveringpunten => {
-                return afleveringpunten.filter(afleveringpunt => {
-                    return afleveringpunt.afleveringstand === latestAflevering.aflevering;
-                })
-                    .sort((a, b) => a.aflevering - b.aflevering);
-            });
+        // const afleveringpuntenResponse = await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}})
+        //     .then(afleveringpunten => {
+        //         return afleveringpunten.filter(afleveringpunt => {
+        //             return afleveringpunt.afleveringstand === latestAflevering.aflevering;
+        //         })
+        //             .sort((a, b) => a.aflevering - b.aflevering);
+        //     });
+
+        this.logger.log('latestAflevering: ' + latestAflevering.aflevering);
+        const puntenlijst = await this.getPuntenVoorAfleveringVoorDeelnemer(latestAflevering.aflevering, deelnemerId);
+        const previouspuntenlijst = await this.getPuntenVoorAfleveringVoorDeelnemer(
+            latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1, deelnemerId);
+
+        const quizPuntenlijst = await this.getPuntenVoorQuizVoorDeelnemer(latestAflevering.aflevering, deelnemerId);
+        const QuizPreviouspuntenlijst = await this.getPuntenVoorQuizVoorDeelnemer(
+            latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1, deelnemerId);
+
+        const previousQuizStand = await _(QuizPreviouspuntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                deelnemerId: _.head(objs).deelnemer.id,
+                deelnemer: _.head(objs).deelnemer,
+                afleveringstand: _.head(objs).afleveringstand,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+            }))
+            .value();
+
+        const quizStand = await _(quizPuntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                deelnemerId: _.head(objs).deelnemer.id,
+                deelnemer: _.head(objs).deelnemer,
+                afleveringstand: _.head(objs).afleveringstand,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+                deltaquizpunten: this.determineDeltaQuizPunten(key, previousQuizStand, objs),
+            }))
+            .value();
+        return quizStand;
+    }
+
+    determineDeltaQuizPunten(key, previousQuizStand: any[], objs) {
+        // this.logger.log('max: ' + _.maxBy(previousQuizStand, 'aflevering').aflevering);
+        // this.logger.log('ik ga de key loggen');
+        // this.logger.log(key);
+        // this.logger.log((parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 'mislukt' : previousQuizStand.find(item => {
+        //     return item.aflevering === 1;
+        // }).quizpunten);
+        if (previousQuizStand.length > 0) {
+            return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : _.sumBy(objs, 'quizpunten') - previousQuizStand.find(item => {
+                return item.aflevering === (parseInt(key, 10));
+            }).quizpunten;
+        }
+        return 0;
     }
 
     // const latestAflevering: Aflevering = await this.getLatestAflevering();
@@ -104,6 +150,21 @@ export class StandenService {
         });
     }
 
+    async getPuntenVoorAfleveringVoorDeelnemer(aflevering: number, deelnemerId: string) {
+        return await this.afleveringpuntRepository.find({
+            join: {
+                alias: 'afleveringpunten',
+                leftJoinAndSelect: {
+                    deelnemer: 'afleveringpunten.deelnemer',
+                },
+            },
+        }).then(response => {
+            return response.filter(item => {
+                return item.afleveringstand === aflevering && item.deelnemer.id === deelnemerId;
+            });
+        });
+    }
+
     async getPuntenVoorQuiz(aflevering: number) {
         return await getRepository(Quizpunt).find({
             join: {
@@ -115,6 +176,22 @@ export class StandenService {
         }).then(response => {
             return response.filter(item => {
                 return item.afleveringstand === aflevering;
+            });
+        });
+    }
+
+    async getPuntenVoorQuizVoorDeelnemer(aflevering: number, deelnemerId: string) {
+        return await getRepository(Quizpunt).find({
+            join: {
+                alias: 'quizpunten',
+                leftJoinAndSelect: {
+                    deelnemer: 'quizpunten.deelnemer',
+                },
+            },
+        }).then(response => {
+            return response.filter(item => {
+                return item.afleveringstand === aflevering &&
+                    item.deelnemer.id === deelnemerId;
             });
         });
     }
