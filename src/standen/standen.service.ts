@@ -54,7 +54,7 @@ export class StandenService {
         return await this.afleveringpuntRepository.find({where: {deelnemer: deelnemerId}})
             .then(afleveringpunten => {
             return afleveringpunten.filter(afleveringpunt => {
-                return afleveringpunt.afleveringstand === latestAflevering.aflevering;});
+                return afleveringpunt.afleveringstand === latestAflevering.aflevering; });
             });
         }
 

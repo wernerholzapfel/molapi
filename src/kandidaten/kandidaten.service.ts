@@ -6,6 +6,7 @@ import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
+import {Quizpunt} from '../quizpunten/quizpunt.entity';
 
 @Component()
 export class KandidatenService {
@@ -28,7 +29,11 @@ export class KandidatenService {
         this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.aflevering);
         await this.kandidaatRepository.save(kandidaat);
         await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
+        await getRepository(Quizpunt).delete({afleveringstand: kandidaat.aflevering});
         const deelnemers = await getRepository(Deelnemer).find();
+
+        await this.updateQuizResultaten(kandidaat.aflevering);
+
         const voorspellingen = await getRepository(Voorspelling).find({
             join: {
                 alias: 'voorspelling',
@@ -64,11 +69,9 @@ export class KandidatenService {
                 });
             });
         });
-        await this.updateQuizResultaten();
     }
 
-    async updateQuizResultaten() {
-
+    async updateQuizResultaten(afleveringstand) {
         const answers = await getRepository(Quizantwoord).find(
             {
                 join: {
@@ -85,6 +88,8 @@ export class KandidatenService {
                     return !kandidaat.afgevallen && !kandidaat.winner;
                 });
         });
+        this.logger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
+
         const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
         await quizresultaten.forEach(async quizresultaat => {
             if (possibleCorrectAnswers.find(correctAnswer => {
@@ -95,7 +100,13 @@ export class KandidatenService {
             else {
                 quizresultaat.punten = 0;
             }
-            await getRepository(Quizresultaat).save(quizresultaat);
+            await getRepository(Quizpunt).save({
+                deelnemer: {id: quizresultaat.deelnemer.id},
+                aflevering: quizresultaat.aflevering,
+                quizpunten: quizresultaat.punten,
+                afleveringstand,
+                quizresultaat: {id: quizresultaat.id},
+            });
         });
     }
 

@@ -4,7 +4,6 @@ import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Entity()
 @Index(['aflevering', 'deelnemer', 'afleveringstand'], {unique: true})
-
 export class Afleveringpunten {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -27,7 +26,7 @@ export class Afleveringpunten {
     @Column({nullable: true})
     quizpunten: number;
 
-    @Column({nullable: true})
+    @Column()
     afleveringstand: number;
 
     @ManyToOne(type => Voorspelling, voorspelling => voorspelling.id, {
