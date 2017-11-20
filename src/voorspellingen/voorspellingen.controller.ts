@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Req, Res} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
 
 import {CreateVoorspellingDto} from './create-voorspelling.dto';
 import {VoorspellingenService} from './voorspellingen.service';
@@ -27,20 +27,21 @@ export class VoorspellingenController {
     }
 
     @Post()
-    async create(@Res() res, @Req() req, @Body() createVoorspellingDto: CreateVoorspellingDto) {
+    async create(@Req() req, @Body() createVoorspellingDto: CreateVoorspellingDto) {
         const extractedToken = this.getToken(req.headers);
         if (extractedToken) {
             this.logger.log('start decoding');
             const decoded: any = jwt_decode(extractedToken);
             this.logger.log(decoded.sub);
-            this.management.getUser({
+
+            const user = await this.management.getUser({
                 id: decoded.sub,
-            }).then(async user => {
-                const newVoorspelling = Object.assign({}, createVoorspellingDto, {
-                    created_at: new Date(),
-                });
-                this.voorspellingenService.create(newVoorspelling, user.user_id, res);
             });
+
+            const newVoorspelling = Object.assign({}, createVoorspellingDto, {
+                created_at: new Date(),
+            });
+            return this.voorspellingenService.create(newVoorspelling, user.user_id);
         }
     }
 

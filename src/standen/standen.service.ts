@@ -123,7 +123,7 @@ export class StandenService {
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-         return await _(puntenlijst).groupBy('aflevering')
+        return await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,

@@ -4,6 +4,7 @@ import {getRepository, Repository} from 'typeorm';
 
 import {Voorspelling} from './voorspelling.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
+import {HttpException} from '@nestjs/core';
 
 @Component()
 export class VoorspellingenService {
@@ -32,16 +33,14 @@ export class VoorspellingenService {
         }
     }
 
-    async create(voorspelling: Voorspelling, auth0Identifier: string, res: any) {
-        await getRepository(Deelnemer).findOne({auth0Identifier}).then(deelnemer => {
+    async create(voorspelling: Voorspelling, auth0Identifier?: string) {
+        return await getRepository(Deelnemer).findOne({auth0Identifier}).then(async deelnemer => {
             if (deelnemer.id !== voorspelling.deelnemer.id) {
-                return res.status(HttpStatus.UNAUTHORIZED).json(deelnemer.id + ' probeert voorspellingen van ' + voorspelling.deelnemer.id + ' op te slaan').send();
+                 throw new HttpException({message: deelnemer.id + ' probeert voorspellingen van ' + voorspelling.deelnemer.id + ' op te slaan', statusCode: HttpStatus.FORBIDDEN}, HttpStatus.FORBIDDEN);
             }
-            this.voorspellingRepository.save(voorspelling).then(response => {
-                    return res.status(HttpStatus.CREATED).json(response).send();
-                },
-                error => {
-                    return res.status(HttpStatus.FORBIDDEN).json(error).send();
+            return await this.voorspellingRepository.save(voorspelling)
+                .catch((err) => {
+                    throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
                 });
         });
     }
