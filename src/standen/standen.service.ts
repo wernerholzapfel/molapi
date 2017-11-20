@@ -133,7 +133,7 @@ export class StandenService {
                 molpunten: _.sumBy(objs, 'molpunten'),
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                quizpunten: this.determinePreviousQuizPunten(quizStand, key),
+                quizpunten: this.determineQuizPunten(quizStand, key),
                 totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
                 delta_molpunten: _.sumBy(objs, 'molpunten') - this.determinePreviousMolpunten(previousStand, key),
                 delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - this.determinePreviousAfvallerpunten(previousStand, key),
@@ -143,6 +143,10 @@ export class StandenService {
                 this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
+    }
+
+    determineQuizPunten(quizStand, key) {
+        return quizStand.filter(quizItem => quizItem.aflevering === key).quizpunten;
     }
 
     determinePreviousMolpunten(previousQuizStand, key) {
