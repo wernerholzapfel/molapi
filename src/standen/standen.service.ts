@@ -119,7 +119,7 @@ export class StandenService {
                 previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
                 quizpunten: this.determinePreviousQuizPunten(previousQuizStand, key),
-                previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
+                previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determinePreviousQuizPunten(previousQuizStand, key),
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
@@ -139,7 +139,7 @@ export class StandenService {
                 delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - this.determinePreviousAfvallerpunten(previousStand, key),
                 delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - this.determinePreviousWinnaarpunten(previousStand, key),
                 delta_quizpunten: this.determinePreviousQuizPunten(quizStand, key) - this.determinePreviousQuizPunten(previousQuizStand, key),
-                delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten') -
+                delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determinePreviousQuizPunten(quizStand, key) -
                 this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
