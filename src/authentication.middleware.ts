@@ -14,7 +14,9 @@ const management = new ManagementClient({
 
 @Middleware()
 export class AuthenticationMiddleware implements NestMiddleware {
+    private readonly logger = new Logger('deelnemersController', true);
     resolve(): ExpressMiddleware {
+        this.logger.log('AuthenticationMiddleware')
         return jwt({
             secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64'),
             audience: process.env.AUTH0_CLIENT_ID,

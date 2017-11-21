@@ -38,7 +38,7 @@ export class DeelnemersController {
     }
 
     @Get('loggedIn')
-    async findLoggedInDeelnemer(@Req() req, @Res() res) {
+    async findLoggedInDeelnemer(@Req() req) {
         const extractedToken = this.getToken(req.headers);
         if (extractedToken) {
             this.logger.log('start decoding');
@@ -47,7 +47,7 @@ export class DeelnemersController {
             this.management.getUser({
                 id: decoded.sub,
             }).then(async user => {
-               return await this.deelnemersService.findLoggedInDeelnemer(user.user_id, res);
+               return await this.deelnemersService.findLoggedInDeelnemer(user.user_id);
             });
         }
     }

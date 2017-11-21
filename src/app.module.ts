@@ -20,13 +20,13 @@ export class ApplicationModule implements NestModule {
         consumer.apply(AuthenticationMiddleware).forRoutes(
             {path: '/**', method: RequestMethod.POST},
         );
-        consumer.apply(IsEmailVerifiedMiddleware).forRoutes(
-            {path: '/**', method: RequestMethod.POST},
-        );
-        consumer.apply(AdminMiddleware).forRoutes(
-            {path: '/kandidaten', method: RequestMethod.POST},
-                {path: '/afleveringen', method: RequestMethod.POST},
-                {path: '/quizvragen', method: RequestMethod.POST},
-        );
+        // consumer.apply(IsEmailVerifiedMiddleware).forRoutes(
+        //     {path: '/**', method: RequestMethod.POST},
+        // );
+        // consumer.apply(AdminMiddleware).forRoutes(
+        //     {path: '/kandidaten', method: RequestMethod.POST},
+        //         {path: '/afleveringen', method: RequestMethod.POST},
+        //         {path: '/quizvragen', method: RequestMethod.POST},
+        // );
     }
 }

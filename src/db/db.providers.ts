@@ -28,7 +28,7 @@ export const dbProvider =
                 Quizresultaat,
                 Quizpunt,
             ],
-            logging: true,
+            logging: false,
             synchronize: true, // DEV only, do not use on PROD!
         }),
     };

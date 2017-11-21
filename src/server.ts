@@ -5,6 +5,7 @@ import {ApplicationModule} from './app.module';
 import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
 import 'reflect-metadata';
+import {AppExceptionFilter} from './http-exception.filters';
 
 let allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -27,6 +28,7 @@ async function bootstrap() {
     app.use(allowCrossDomain);
     app.useGlobalPipes(new ValidationPipe());
     app.setGlobalPrefix('api/v1');
+    app.useGlobalFilters(new AppExceptionFilter());
     const port = parseInt(process.env.PORT, 10) || 3000;
     await app.listen(port);
 }

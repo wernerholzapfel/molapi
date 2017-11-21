@@ -1,10 +1,11 @@
-import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Logger, Param, Post, Req} from '@nestjs/common';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {QuizvragenService} from './quizvragen.service';
 import {CreateQuizvraagDto} from './create-quizvraag.dto';
 import {getRepository} from 'typeorm';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizvraag} from './quizvraag.entity';
+import {HttpException} from '@nestjs/core';
 
 @Controller('quizvragen')
 export class QuizvragenController {
@@ -33,6 +34,8 @@ export class QuizvragenController {
                 antwoord: antwoord.antwoord,
                 vraag: {id: quizvraag.id},
                 kandidaten: antwoord.kandidaten,
+            }).catch((err) => {
+                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
             });
         });
     }

@@ -1,6 +1,7 @@
-import {Component, Inject, Logger} from '@nestjs/common';
+import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
 import {Repository} from 'typeorm';
 import {Quizvraag} from './quizvraag.entity';
+import {HttpException} from '@nestjs/core';
 
 @Component()
 export class QuizvragenService {
@@ -36,6 +37,8 @@ export class QuizvragenService {
     }
 
     async create(quizvraag: Quizvraag) {
-        return await this.quizvraagRepository.save(quizvraag);
+        return await this.quizvraagRepository.save(quizvraag).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
     }
 }

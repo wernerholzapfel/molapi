@@ -8,6 +8,5 @@ export class CreateKandidaatDTO {
     @IsOptional() @IsBoolean() readonly mol: boolean;
     @IsOptional() @IsBoolean() readonly finalist: boolean;
     @IsOptional() @IsBoolean() readonly afgevallen: boolean;
-    // todo make required
     @IsOptional() @IsInt() readonly aflevering: number;
 }

@@ -1,4 +1,4 @@
-import {Component, Inject, Logger} from '@nestjs/common';
+import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Kandidaat} from './kandidaat.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
@@ -7,6 +7,7 @@ import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
+import {HttpException} from '@nestjs/core';
 
 @Component()
 export class KandidatenService {
@@ -24,12 +25,17 @@ export class KandidatenService {
     }
 
     async findAll(): Promise<Kandidaat[]> {
-        return await this.kandidaatRepository.find();
+        return await this.kandidaatRepository.find()
+            .catch((err) => {
+                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+            });
     }
 
     async create(kandidaat: Kandidaat) {
         this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.aflevering);
-        await this.kandidaatRepository.save(kandidaat);
+        await this.kandidaatRepository.save(kandidaat).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
         await getRepository(Quizpunt).delete({afleveringstand: kandidaat.aflevering});
         await this.updateQuizResultaten(kandidaat.aflevering);
 
@@ -52,8 +58,13 @@ export class KandidatenService {
             return voorspellingenlijst.filter(vl => {
                 return vl.aflevering <= kandidaat.aflevering;
             });
+        }).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const kandidatenlijst = await getRepository(Kandidaat).find();
+
+        const kandidatenlijst = await getRepository(Kandidaat).find().catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
         const uitgespeeldeKandidatenLijst = kandidatenlijst.filter(item => {
             return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
         });
@@ -67,6 +78,8 @@ export class KandidatenService {
                 deelnemer: {id: voorspelling.deelnemer.id},
                 voorspelling: {id: voorspelling.id},
                 afleveringstand: kandidaat.aflevering,
+            }).catch((err) => {
+                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
             });
         });
 
@@ -108,6 +121,8 @@ export class KandidatenService {
                 quizpunten: quizresultaat.punten,
                 afleveringstand,
                 quizresultaat: {id: quizresultaat.id},
+            }).catch((err) => {
+                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
             });
         });
     }

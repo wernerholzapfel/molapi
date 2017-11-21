@@ -2,6 +2,7 @@ import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
 import {Repository} from 'typeorm';
 
 import {Deelnemer} from './deelnemer.interface';
+import {HttpException} from '@nestjs/core';
 
 @Component()
 export class DeelnemersService {
@@ -11,46 +12,45 @@ export class DeelnemersService {
     }
 
     async findAll(): Promise<Deelnemer[]> {
-        try {
-            await this.deelnemerRepository.find(
-                {
-                    join: {
-                        alias: 'deelnemer',
-                        leftJoinAndSelect: {
-                            voorspellingen: 'deelnemer.voorspellingen',
-                        },
+        return await this.deelnemerRepository.find(
+            {
+                join: {
+                    alias: 'deelnemer',
+                    leftJoinAndSelect: {
+                        voorspellingen: 'deelnemer.voorspellingen',
                     },
                 },
-            );
-        } catch (err) {
-            return err;
-        }
+            },
+        ).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
     }
 
     async create(deelnemer: Deelnemer) {
-        try {
-            return await this.deelnemerRepository.save(deelnemer);
-        } catch (err) {
-            return err;
-        }
+        return await this.deelnemerRepository.save(deelnemer)
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
     async findVoorspellingen(deelnemerId: string) {
-        try {
-            this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
-            await this.deelnemerRepository.findOneById(deelnemerId);
-        } catch (err) {
-            return err;
-        }
+        this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
+        return await this.deelnemerRepository.findOneById(deelnemerId)
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
-    async findLoggedInDeelnemer(user_id: string, res) {
-        try {
-            await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(response => {
-                return res.status(HttpStatus.ACCEPTED).json(response).send();
-            });
-        } catch (err) {
-            return err;
-        }
+    async findLoggedInDeelnemer(user_id) {
+        return await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}})
+            .catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
     }
 }
