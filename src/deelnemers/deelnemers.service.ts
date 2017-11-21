@@ -31,7 +31,7 @@ export class DeelnemersService {
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
     }
@@ -42,14 +42,15 @@ export class DeelnemersService {
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
     }
 
     async findLoggedInDeelnemer(user_id) {
-        return await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}})
-            .catch((err) => {
+        this.logger.log(user_id);
+        return await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
+            return deelnemer; }, (err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }

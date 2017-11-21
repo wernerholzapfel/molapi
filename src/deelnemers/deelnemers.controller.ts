@@ -44,11 +44,10 @@ export class DeelnemersController {
             this.logger.log('start decoding');
             const decoded: any = jwt_decode(extractedToken);
             this.logger.log(decoded.sub);
-            this.management.getUser({
+            const user = await this.management.getUser({
                 id: decoded.sub,
-            }).then(async user => {
-               return await this.deelnemersService.findLoggedInDeelnemer(user.user_id);
             });
+            return await this.deelnemersService.findLoggedInDeelnemer(user.user_id);
         }
     }
 
