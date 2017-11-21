@@ -7,6 +7,7 @@ import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
 import 'reflect-metadata';
 import {AppExceptionFilter} from './http-exception.filters';
+import * as path from 'path';
 
 let allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -27,7 +28,9 @@ async function bootstrap() {
     const app = await NestFactory.create(ApplicationModule);
     app.use(bodyParser.json());
     app.use(allowCrossDomain);
-    app.use(express.static(__dirname + '/public'));
+    app.use(express.static(path.join(__dirname, 'public')));
+    // app.use('/public', express.static(path.join(__dirname + '/public')));
+    // app.use(express.static(__dirname + '/public'));
     app.useGlobalPipes(new ValidationPipe());
     app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new AppExceptionFilter());
