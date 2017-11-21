@@ -52,7 +52,6 @@ export class DeelnemersController {
         }
     }
 
-    // todo remove to upperclass
     getToken = headers => {
         if (headers && headers.authorization) {
             const parted = headers.authorization.split(' ');

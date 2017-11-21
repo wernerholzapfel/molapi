@@ -15,8 +15,6 @@ export class QuizresultatenController {
         return this.quizresultatenService.findAll();
     }
 
-    // todo check if sender is deelnemer (see voorspellingen)
-    // todo check if within time
     @Post()
     async create(@Req() req, @Body() createQuizresultaatDto: CreateQuizresultaatDto) {
         const newQuizresultaat = Object.assign({}, createQuizresultaatDto, {});

@@ -34,14 +34,9 @@ export class VoorspellingenService {
     }
 
     async create(voorspelling: Voorspelling, auth0Identifier?: string) {
-        return await getRepository(Deelnemer).findOne({auth0Identifier}).then(async deelnemer => {
-            if (deelnemer.id !== voorspelling.deelnemer.id) {
-                 throw new HttpException({message: deelnemer.id + ' probeert voorspellingen van ' + voorspelling.deelnemer.id + ' op te slaan', statusCode: HttpStatus.FORBIDDEN}, HttpStatus.FORBIDDEN);
-            }
             return await this.voorspellingRepository.save(voorspelling)
                 .catch((err) => {
                     throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
                 });
-        });
-    }
+        }
 }

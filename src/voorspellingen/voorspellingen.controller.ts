@@ -4,7 +4,6 @@ import {CreateVoorspellingDto} from './create-voorspelling.dto';
 import {VoorspellingenService} from './voorspellingen.service';
 import {Voorspelling} from './voorspelling.entity';
 import {ManagementClient} from 'auth0';
-import * as jwt_decode from 'jwt-decode';
 import 'dotenv/config';
 
 const auth0Token = process.env.AUTH0_TOKEN;
@@ -28,33 +27,10 @@ export class VoorspellingenController {
 
     @Post()
     async create(@Req() req, @Body() createVoorspellingDto: CreateVoorspellingDto) {
-        const extractedToken = this.getToken(req.headers);
-        if (extractedToken) {
-            this.logger.log('start decoding');
-            const decoded: any = jwt_decode(extractedToken);
-            this.logger.log(decoded.sub);
-
-            const user = await this.management.getUser({
-                id: decoded.sub,
-            });
-
-            const newVoorspelling = Object.assign({}, createVoorspellingDto, {
-                created_at: new Date(),
-            });
-            return this.voorspellingenService.create(newVoorspelling, user.user_id);
-        }
-    }
-
-    getToken = headers => {
-        if (headers && headers.authorization) {
-            const parted = headers.authorization.split(' ');
-            if (parted.length === 2) {
-                return parted[1];
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
+        const newVoorspelling = Object.assign({}, createVoorspellingDto, {
+            created_at: new Date(),
+        });
+        return this.voorspellingenService.create(newVoorspelling);
     }
 }
+
