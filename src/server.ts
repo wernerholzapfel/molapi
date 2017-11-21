@@ -1,6 +1,7 @@
 import {NestFactory} from '@nestjs/core';
 import * as bodyParser from 'body-parser';
 
+import * as express from 'express';
 import {ApplicationModule} from './app.module';
 import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
@@ -26,6 +27,7 @@ async function bootstrap() {
     const app = await NestFactory.create(ApplicationModule);
     app.use(bodyParser.json());
     app.use(allowCrossDomain);
+    app.use(express.static(__dirname + '/assets'));
     app.useGlobalPipes(new ValidationPipe());
     app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new AppExceptionFilter());
