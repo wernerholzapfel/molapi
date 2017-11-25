@@ -34,5 +34,8 @@ export class Quizresultaat {
 
     @Column({nullable: true})
     punten: number;
+    // todo weghalen
+    @Column({nullable: true})
+    created_at: Date;
 
 }

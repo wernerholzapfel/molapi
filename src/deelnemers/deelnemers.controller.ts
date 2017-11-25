@@ -39,16 +39,7 @@ export class DeelnemersController {
 
     @Get('loggedIn')
     async findLoggedInDeelnemer(@Req() req) {
-        const extractedToken = this.getToken(req.headers);
-        if (extractedToken) {
-            this.logger.log('start decoding');
-            const decoded: any = jwt_decode(extractedToken);
-            this.logger.log(decoded.sub);
-            const user = await this.management.getUser({
-                id: decoded.sub,
-            });
-            return await this.deelnemersService.findLoggedInDeelnemer(user.user_id);
-        }
+            return await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
     }
 
     getToken = headers => {

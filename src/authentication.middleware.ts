@@ -57,12 +57,13 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
-                logger.log('start decoding');
+                logger.log('start decoding IsEmailVerifiedMiddleware');
                 const decoded: any = jwt_decode(extractedToken);
                 logger.log(decoded.sub);
                 management.getUser({
                     id: decoded.sub,
                 }).then(async user => {
+                    req.user = user;
                     if (user.email_verified) next();
                     else {
                         return res.status(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
@@ -79,7 +80,7 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
-                logger.log('start decoding');
+                logger.log('is user allowed to post message token known');
                 const decoded: any = jwt_decode(extractedToken);
                 logger.log(decoded.sub);
                 const user = await management.getUser({
@@ -89,6 +90,7 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                     if (deelnemer.id !== req.body.deelnemer.id){
                                 throw new HttpException({message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan', statusCode: HttpStatus.FORBIDDEN}, HttpStatus.FORBIDDEN);
                     }
+                    next();
                 });
             }
         };

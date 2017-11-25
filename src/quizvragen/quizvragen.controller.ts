@@ -15,14 +15,14 @@ export class QuizvragenController {
     }
 
     @Get()
-    async findAll(): Promise<Quizvraag[]> {
-        return this.quizvragenService.findAll();
+    async find(@Req() req): Promise<any> {
+        return this.quizvragenService.find(req.user.user_id);
     }
 
-    @Get(':afleveringId')
-    async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {
-        return this.quizvragenService.getQuizVoorAflevering(afleveringId);
-    }
+    // @Get(':afleveringId')
+    // async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {
+    //     return this.quizvragenService.getQuizVoorAflevering(afleveringId);
+    // }
 
     @Post()
     async create(@Req() req, @Body() createQuizvraagDto: CreateQuizvraagDto) {

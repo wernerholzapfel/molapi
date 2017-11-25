@@ -8,6 +8,6 @@ export class CreateQuizresultaatDto {
     @IsNumber() readonly aflevering: number;
     @IsDefined() deelnemer: Deelnemer;
     @IsDefined() vraag: Quizvraag;
-    @IsDefined() antwoord: Quizantwoord;
+    antwoord: Quizantwoord;
     readonly punten: number;
 }
