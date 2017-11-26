@@ -26,7 +26,14 @@ export class DeelnemersService {
         });
     }
 
-    async create(deelnemer: Deelnemer) {
+    async create(deelnemer: Deelnemer, auth0Identifier: string) {
+        const oldDeelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+        if (oldDeelnemer) deelnemer = {
+            id: oldDeelnemer.id,
+            display_name: deelnemer.display_name,
+            auth0Identifier: oldDeelnemer.auth0Identifier,
+            email: oldDeelnemer.email,
+        };
         return await this.deelnemerRepository.save(deelnemer)
             .catch((err) => {
                 throw new HttpException({
@@ -50,7 +57,8 @@ export class DeelnemersService {
     async findLoggedInDeelnemer(user_id) {
         this.logger.log(user_id);
         return await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
-            return deelnemer; }, (err) => {
+            return deelnemer;
+        }, (err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }
