@@ -27,7 +27,7 @@ export class QuizresultatenService {
             .leftJoinAndSelect('resultaat.vraag', 'vraag')
             .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
             .where('resultaat.aflevering = :aflevering', {aflevering})
-            .where('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
