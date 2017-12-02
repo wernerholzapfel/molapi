@@ -17,10 +17,10 @@ export class QuizvragenService {
     async find(auth0Identifier: string): Promise<any> {
 
         // get current aflevering
-        const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: false}}).catch((err) => {
+        const afleveringen = await getRepository(Aflevering).find({where: { uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const aflevering = _.minBy(afleveringen, 'aflevering').aflevering;
+        const aflevering: number = await parseInt(_.maxBy(afleveringen, 'aflevering').aflevering, 10);
         this.logger.log('dit is de huidige aflevering: ' + aflevering);
 
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
@@ -31,7 +31,7 @@ export class QuizvragenService {
             .createQueryBuilder('resultaat')
             .leftJoinAndSelect('resultaat.vraag', 'vraag')
             .where('resultaat.aflevering = :aflevering', {aflevering})
-            .where('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
