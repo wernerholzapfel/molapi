@@ -44,7 +44,7 @@ export class StandenService {
                 previous_molpunten: _.sumBy(objs, 'molpunten'),
                 previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                quizpunten: previousQuizStand.find(item => item.deelnemerId === key).quizpunten,
+                quizpunten: previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0,
                 previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
@@ -56,7 +56,7 @@ export class StandenService {
                 molpunten: _.sumBy(objs, 'molpunten'),
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                quizpunten: quizStand.find(item => item.deelnemerId === key).quizpunten,
+                quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
                 totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
                 delta_molpunten: _.sumBy(objs, 'molpunten') - previousStand.find(item => item.deelnemerId === key).previous_molpunten,
                 delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten,
