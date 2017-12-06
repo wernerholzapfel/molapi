@@ -14,7 +14,7 @@ export class QuizMiddleware implements NestMiddleware {
 
             return getRepository(Aflevering).findOne({aflevering: req.body.aflevering})
                 .then(aflevering => {
-                    if (aflevering && (aflevering.uitgezonden || Date.parse(aflevering.deadlineDatetime.toString()) < Date.now())) {
+                    if (aflevering && Date.parse(aflevering.deadlineDatetime.toString()) < Date.now()) {
                         throw new HttpException({
                             message: 'Je kan geen vragen meer beantwoorden voor aflevering ' + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
                             statusCode: HttpStatus.FORBIDDEN,
