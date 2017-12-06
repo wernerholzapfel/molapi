@@ -39,6 +39,7 @@ export class QuizvragenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+        this.logger.log('answeredQuestions: ' + answeredQuestions.length);
 
         const afleveringQuestions = await getRepository(Quizvraag)
             .createQueryBuilder('quizvraag')
@@ -51,6 +52,7 @@ export class QuizvragenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+        this.logger.log('afleveringQuestions: ' + afleveringQuestions.length);
 
         answeredQuestions.forEach(answer => {
             const index = afleveringQuestions.findIndex(question => {
@@ -58,6 +60,7 @@ export class QuizvragenService {
             });
             afleveringQuestions.splice(index, 1);
         });
+
         this.logger.log(deelnemer.display_name + ' heeft nog ' + afleveringQuestions.length + ' vragen te beantwoorden');
         const activeQuestion = afleveringQuestions.sort((a, b) => 0.5 - Math.random())[0];
         if (activeQuestion) {

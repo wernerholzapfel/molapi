@@ -27,9 +27,9 @@ export class QuizresultatenService {
         else {
 
             const uitgezondenAfleveringen = afleveringen.filter(item => {
-                return !item.uitgezonden;
+                return item.uitgezonden;
             });
-            this.aflevering = _.minBy(uitgezondenAfleveringen, 'aflevering').aflevering;
+            this.aflevering = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
         }
 
         this.logger.log('dit is de huidige aflevering: ' + this.aflevering);
