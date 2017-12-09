@@ -70,8 +70,10 @@ export class QuizpuntenService {
         this.logger.log('dit is de huidige aflevering: ' + this.aflevering);
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
-        return await getRepository(Quizpunt)
+        const puntenlijst = await getRepository(Quizpunt)
             .createQueryBuilder('punten')
+            .select('punten.aflevering')
+            .addSelect('punten.quizpunten')
             .leftJoinAndSelect('punten.deelnemer', 'deelnemerAlias')
             .leftJoinAndSelect('punten.quizresultaat', 'resultaat')
             .leftJoinAndSelect('resultaat.vraag', 'vraag')
@@ -85,5 +87,13 @@ export class QuizpuntenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+
+        return await _(puntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+            aflevering: key,
+            display_name: _.head(objs).deelnemer.display_name,
+            afleveringpunten: _.sumBy(objs, 'quizpunten'),
+            vragen: objs,
+        }));
     }
 }
