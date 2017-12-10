@@ -24,6 +24,7 @@ export class ApplicationModule implements NestModule {
         consumer.apply(AuthenticationMiddleware).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: '/deelnemers/loggedIn', method: RequestMethod.GET},
+            {path: '/deelnemers/voorspellingen', method: RequestMethod.GET},
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
@@ -31,6 +32,7 @@ export class ApplicationModule implements NestModule {
         consumer.apply(IsEmailVerifiedMiddleware).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
+            {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},

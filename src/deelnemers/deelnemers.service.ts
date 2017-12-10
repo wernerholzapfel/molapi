@@ -5,6 +5,7 @@ import {Deelnemer} from './deelnemer.interface';
 import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
+import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 
 @Component()
 export class DeelnemersService {
@@ -26,6 +27,34 @@ export class DeelnemersService {
         ).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+    }
+
+    async getVoorspellingen(auth0Identifier): Promise<any[]> {
+        const deelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+
+        // determine aflevering
+        // determine user
+        const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+        const aflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+
+        return await getRepository(Afleveringpunten)
+            .createQueryBuilder('afleveringpunten')
+            .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('afleveringpunten.voorspelling', 'voorspelling')
+            .leftJoinAndSelect('voorspelling.mol', 'mol')
+            .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+            .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+            .where('afleveringpunten.afleveringstand = :aflevering', {aflevering: aflevering.aflevering})
+            .andWhere('afleveringpunten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
     async create(deelnemer: Deelnemer, auth0Identifier: string) {

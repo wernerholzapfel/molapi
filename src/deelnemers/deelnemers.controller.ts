@@ -42,6 +42,11 @@ export class DeelnemersController {
             return await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
     }
 
+    @Get('voorspellingen')
+    async getVoorspellingen(@Req() req) {
+            return await this.deelnemersService.getVoorspellingen(req.user.user_id);
+    }
+
     getToken = headers => {
         if (headers && headers.authorization) {
             const parted = headers.authorization.split(' ');
