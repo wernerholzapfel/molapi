@@ -32,8 +32,6 @@ export class DeelnemersService {
     async getVoorspellingen(auth0Identifier): Promise<any[]> {
         const deelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
 
-        // determine aflevering
-        // determine user
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });

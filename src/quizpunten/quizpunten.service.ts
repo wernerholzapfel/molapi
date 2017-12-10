@@ -70,23 +70,8 @@ export class QuizpuntenService {
         this.logger.log('dit is de huidige aflevering: ' + this.aflevering);
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
-        const puntenlijst = await getRepository(Quizpunt)
-            .createQueryBuilder('punten')
-            .select('punten.aflevering')
-            .addSelect('punten.quizpunten')
-            .leftJoinAndSelect('punten.deelnemer', 'deelnemerAlias')
-            .leftJoinAndSelect('punten.quizresultaat', 'resultaat')
-            .leftJoinAndSelect('resultaat.vraag', 'vraag')
-            .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
-            .where('punten.afleveringstand = :aflevering', {aflevering: this.aflevering})
-            .andWhere('punten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
-            .getMany()
-            .catch((err) => {
-                throw new HttpException({
-                    message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                }, HttpStatus.BAD_REQUEST);
-            });
+        const previousPuntenlijst = await this.getPuntenlijst(this.aflevering === 1 ? this.aflevering : this.aflevering - 1, deelnemer);
+        const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.aflevering, deelnemer), previousPuntenlijst);
 
         return await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
@@ -95,5 +80,36 @@ export class QuizpuntenService {
             afleveringpunten: _.sumBy(objs, 'quizpunten'),
             vragen: objs,
         }));
+    }
+
+    async getPuntenlijst(afleveringId: number, deelnemer: Deelnemer) {
+        return await getRepository(Quizpunt)
+            .createQueryBuilder('punten')
+            .select('punten.aflevering')
+            .addSelect('punten.quizpunten')
+            .leftJoinAndSelect('punten.deelnemer', 'deelnemerAlias')
+            .leftJoinAndSelect('punten.quizresultaat', 'resultaat')
+            .leftJoinAndSelect('resultaat.vraag', 'vraag')
+            .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
+            .where('punten.afleveringstand = :aflevering', {aflevering: afleveringId})
+            .andWhere('punten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+    }
+
+     addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst) {
+         this.logger.log('puntenlijst: ' + puntenlijst.length);
+         puntenlijst.forEach(vraag => {
+            this.logger.log(vraag.quizresultaat.vraag.id);
+            vraag.deltaQuizpunten = -1 * (previousPuntenlijst.find(item => {
+                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id; }) ? previousPuntenlijst.find(item => {
+                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id; }).quizpunten : 0);
+        });
+         return puntenlijst;
     }
 }
