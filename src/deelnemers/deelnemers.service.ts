@@ -59,7 +59,7 @@ export class DeelnemersService {
         voorspellingen.forEach(voorspelling => {
             voorspelling.voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
         });
-        return voorspellingen;
+        return voorspellingen.sort((a, b) => a.aflevering - b.aflevering);
     }
 
     async create(deelnemer: Deelnemer, auth0Identifier: string) {
