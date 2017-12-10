@@ -37,16 +37,16 @@ export class DeelnemersService {
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const aflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+        const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
 
-        return await getRepository(Afleveringpunten)
+        const voorspellingen = await getRepository(Afleveringpunten)
             .createQueryBuilder('afleveringpunten')
             .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
             .leftJoinAndSelect('afleveringpunten.voorspelling', 'voorspelling')
             .leftJoinAndSelect('voorspelling.mol', 'mol')
             .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
             .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
-            .where('afleveringpunten.afleveringstand = :aflevering', {aflevering: aflevering.aflevering})
+            .where('afleveringpunten.afleveringstand = :aflevering', {aflevering: laatsteAflevering.aflevering})
             .andWhere('afleveringpunten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
             .getMany()
             .catch((err) => {
@@ -55,6 +55,13 @@ export class DeelnemersService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+
+        const aflevering = await getRepository(Aflevering).find();
+
+        voorspellingen.forEach(voorspelling => {
+            voorspelling.voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
+        });
+        return voorspellingen;
     }
 
     async create(deelnemer: Deelnemer, auth0Identifier: string) {
