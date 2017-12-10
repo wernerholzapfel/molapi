@@ -14,12 +14,12 @@ export class KandidatenService {
     private readonly logger = new Logger('deelnemersController', true);
     private readonly calclogger = new Logger('calculatieLogger', true);
 
-    molStrafpunten: number = -5;
-    winnaarStrafpunten: number = -5;
-    afvallerPunten: number = 25;
-    molPunten: number = 20;
-    winnaarPunten: number = 5;
-    vragenPunten: number = 10;
+    molStrafpunten: number = -5; // -10
+    winnaarStrafpunten: number = -5; // -5
+    afvallerPunten: number = 25; // 20
+    molPunten: number = 20; // 20
+    winnaarPunten: number = 5; // 10
+    vragenPunten: number = 10; // 10
 
     constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>) {
     }

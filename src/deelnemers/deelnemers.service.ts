@@ -1,8 +1,10 @@
 import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
-import {Repository} from 'typeorm';
+import {getRepository, Repository} from 'typeorm';
 
 import {Deelnemer} from './deelnemer.interface';
 import {HttpException} from '@nestjs/core';
+import {Aflevering} from '../afleveringen/aflevering.entity';
+import * as _ from 'lodash';
 
 @Component()
 export class DeelnemersService {
@@ -56,10 +58,18 @@ export class DeelnemersService {
 
     async findLoggedInDeelnemer(user_id) {
         this.logger.log(user_id);
-        return await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
+        const deelnemerResponse: any = await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
             return deelnemer;
         }, (err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+
+        const aflevering = await getRepository(Aflevering).find();
+
+        deelnemerResponse.voorspellingen.forEach(voorspelling => {
+            voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
+        });
+        return deelnemerResponse;
+
     }
 }
