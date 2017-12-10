@@ -4,6 +4,7 @@ import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import * as _ from 'lodash';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
+import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
 @Component()
 export class StandenService {
@@ -70,7 +71,6 @@ export class StandenService {
     }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
-        // const latestAflevering = {aflevering: 2};
         const latestAflevering = await this.getLatestAflevering();
 
         this.logger.log('latestAflevering: ' + latestAflevering.aflevering);
@@ -116,7 +116,7 @@ export class StandenService {
             }))
             .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-        return await _(puntenlijst).groupBy('aflevering')
+        const resultatenLijst = await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
@@ -136,8 +136,14 @@ export class StandenService {
                 this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
-    }
 
+        const kandidaten = await getRepository(Kandidaat).find();
+
+        resultatenLijst.forEach(resultaat => {
+            resultaat.afgevallenKandidaat = _.find(kandidaten, {afgevallen: true, aflevering: resultaat.aflevering});
+        });
+        return resultatenLijst;
+    }
 
     determinePreviousMolpunten(previousQuizStand, key) {
         if (previousQuizStand.length > 0) {
