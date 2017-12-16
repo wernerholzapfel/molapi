@@ -17,7 +17,7 @@ export class QuizvragenService {
     async find(auth0Identifier: string): Promise<any> {
 
         // get current aflevering
-        const afleveringen = await getRepository(Aflevering).find({where: { uitgezonden: true}}).catch((err) => {
+        const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
         const aflevering: number = await parseInt(_.maxBy(afleveringen, 'aflevering').aflevering, 10);
@@ -64,13 +64,13 @@ export class QuizvragenService {
         this.logger.log(deelnemer.display_name + ' heeft nog ' + afleveringQuestions.length + ' vragen te beantwoorden');
         const activeQuestion = afleveringQuestions.sort((a, b) => 0.5 - Math.random())[0];
         if (activeQuestion) {
-        return {
-            id: activeQuestion.id,
-            aantalOpenVragen: afleveringQuestions.length,
-            antwoorden: activeQuestion.antwoorden,
-            vraag: activeQuestion.vraag,
-            aflevering: activeQuestion.aflevering,
-        };
+            return {
+                id: activeQuestion.id,
+                aantalOpenVragen: afleveringQuestions.length,
+                antwoorden: activeQuestion.antwoorden,
+                vraag: activeQuestion.vraag,
+                aflevering: activeQuestion.aflevering,
+            };
         }
         return {aantalOpenVragen: 0};
     }
@@ -79,5 +79,20 @@ export class QuizvragenService {
         return await this.quizvraagRepository.save(quizvraag).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+    }
+
+    async getQuizVoorAflevering(afleveringId: string) {
+        return await getRepository(Quizvraag)
+            .createQueryBuilder('vraag')
+            .leftJoinAndSelect('vraag.antwoorden', 'antwoord')
+            .leftJoinAndSelect('antwoord.kandidaten', 'kandidaten')
+            .where('vraag.aflevering = :afleveringId', {afleveringId})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 }

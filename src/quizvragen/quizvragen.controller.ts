@@ -19,10 +19,10 @@ export class QuizvragenController {
         return this.quizvragenService.find(req.user.user_id);
     }
 
-    // @Get(':afleveringId')
-    // async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {
-    //     return this.quizvragenService.getQuizVoorAflevering(afleveringId);
-    // }
+    @Get('aflevering/:afleveringId')
+    async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {
+        return this.quizvragenService.getQuizVoorAflevering(afleveringId);
+    }
 
     @Post()
     async create(@Req() req, @Body() createQuizvraagDto: CreateQuizvraagDto) {

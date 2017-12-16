@@ -28,6 +28,8 @@ export class ApplicationModule implements NestModule {
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
+            {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
+
         );
         consumer.apply(IsEmailVerifiedMiddleware).forRoutes(
             {path: '/**', method: RequestMethod.POST},
@@ -41,6 +43,7 @@ export class ApplicationModule implements NestModule {
             {path: '/kandidaten', method: RequestMethod.POST},
                 {path: '/afleveringen', method: RequestMethod.POST},
                 {path: '/quizvragen', method: RequestMethod.POST},
+                {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
         );
         consumer.apply(QuizMiddleware).forRoutes(
             {path: '/quizresultaten', method: RequestMethod.POST},
