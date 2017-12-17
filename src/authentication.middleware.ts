@@ -6,6 +6,7 @@ import 'dotenv/config';
 import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
 import {HttpException} from '@nestjs/core';
+import {expressJwtSecret} from 'jwks-rsa';
 
 const auth0Token = process.env.AUTH0_TOKEN;
 const auth0Domain = process.env.AUTH0_DOMAIN;
@@ -21,11 +22,22 @@ export class AuthenticationMiddleware implements NestMiddleware {
     resolve(): ExpressMiddleware {
         this.logger.log('AuthenticationMiddleware');
         return jwt({
-            secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64'),
-            audience: process.env.AUTH0_CLIENT_ID,
-            issuer: 'https://werner.eu.auth0.com/',
-            algorithm: 'HS256',
+            secret: expressJwtSecret({
+                cache: true,
+                rateLimit: true,
+                jwksRequestsPerMinute: 5,
+                jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
+            }),
+            audience: 'EiV9guRsd4g8R360ifx3nkIhdc1iezQD',
+            issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+            algorithm: 'RS256',
         });
+
+        //     secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64'),
+        //     audience: process.env.AUTH0_CLIENT_ID,
+        //     issuer: 'https://werner.eu.auth0.com/',
+        //     algorithm: 'RS256',
+        // });
     }
 }
 
@@ -43,7 +55,7 @@ export class AdminMiddleware implements NestMiddleware {
                         next();
                     }
                     else {
-                        return res.status(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
+                        return res.sendStatus(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
                     }
                 });
             }
@@ -66,7 +78,7 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
                     req.user = user;
                     if (user.email_verified) next();
                     else {
-                        return res.status(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
+                        return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
                     }
                 });
             }
