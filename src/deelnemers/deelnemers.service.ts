@@ -36,9 +36,8 @@ export class DeelnemersService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        if (afleveringen) {
-            const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
-
+        const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+        if (laatsteAflevering) {
             const voorspellingen = await getRepository(Afleveringpunten)
                 .createQueryBuilder('afleveringpunten')
                 .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
