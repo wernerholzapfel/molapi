@@ -64,10 +64,12 @@ export class QuizpuntenService {
             const uitgezondenAfleveringen = afleveringen.filter(item => {
                 return item.uitgezonden;
             });
+            this.logger.log(uitgezondenAfleveringen.length.toString(10))
+            if (uitgezondenAfleveringen.length > 0) {
             this.aflevering = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
+            }
         }
-
-        this.logger.log('dit is de huidige aflevering: ' + this.aflevering);
+        if (this.aflevering) {
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
         const previousPuntenlijst = await this.getPuntenlijst(this.aflevering === 1 ? this.aflevering : this.aflevering - 1, deelnemer);
@@ -80,6 +82,13 @@ export class QuizpuntenService {
             afleveringpunten: _.sumBy(objs, 'quizpunten'),
             vragen: objs,
         }));
+        }
+        else {
+            throw new HttpException({
+                message: 'er zijn nog geen test resultaten bekend',
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
     }
 
     async getPuntenlijst(afleveringId: number, deelnemer: Deelnemer) {
