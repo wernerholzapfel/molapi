@@ -15,16 +15,16 @@ export class StandenService {
     }
 
     async findAll(): Promise<any[]> {
-        const latestAflevering = await this.getLatestAflevering();
-        if (latestAflevering) {
-            this.logger.log('latestAflevering: ' + latestAflevering.aflevering);
-            const puntenlijst = await this.getPuntenVoorAflevering(latestAflevering.aflevering);
+        const latestUitgezondenAflevering = await this.getLatestUitgezondenAflevering();
+        if (latestUitgezondenAflevering) {
+            this.logger.log('latestUitgezondenAflevering: ' + latestUitgezondenAflevering.aflevering);
+            const puntenlijst = await this.getPuntenVoorAflevering(latestUitgezondenAflevering.aflevering);
             const previouspuntenlijst = await this.getPuntenVoorAflevering(
-                latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1);
+                latestUitgezondenAflevering.aflevering === 1 ? latestUitgezondenAflevering.aflevering : latestUitgezondenAflevering.aflevering - 1);
 
-            const quizPuntenlijst = await this.getPuntenVoorQuiz(latestAflevering.aflevering);
+            const quizPuntenlijst = await this.getPuntenVoorQuiz(latestUitgezondenAflevering.aflevering);
             const QuizPreviouspuntenlijst = await this.getPuntenVoorQuiz(
-                latestAflevering.aflevering === 1 ? latestAflevering.aflevering : latestAflevering.aflevering - 1);
+                latestUitgezondenAflevering.aflevering === 1 ? latestUitgezondenAflevering.aflevering : latestUitgezondenAflevering.aflevering - 1);
 
             const previousQuizStand = await _(QuizPreviouspuntenlijst).groupBy('deelnemer.id')
                 .map((objs, key) => ({
@@ -60,13 +60,13 @@ export class StandenService {
                     afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                     winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
                     quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
-                    totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten'),
-                    delta_molpunten: _.sumBy(objs, 'molpunten') - previousStand.find(item => item.deelnemerId === key) ?  previousStand.find(item => item.deelnemerId === key).previous_molpunten : 0,
-                    delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten : 0,
-                    delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_winnaarpunten : 0,
-                    delta_quizpunten: quizStand.find(item => item.deelnemerId === key) && quizStand.find(item => item.deelnemerId === key) ?  quizStand.find(item => item.deelnemerId === key).quizpunten - previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).quizpunten : 0 : 0,
+                    totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0),
+                    delta_molpunten: _.sumBy(objs, 'molpunten') - (previousStand.find(item => item.deelnemerId === key) ?  previousStand.find(item => item.deelnemerId === key).previous_molpunten : 0),
+                    delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten : 0),
+                    delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_winnaarpunten : 0),
+                    delta_quizpunten:  quizStand.find(item => item.deelnemerId === key) && quizStand.find(item => item.deelnemerId === key) ?  quizStand.find(item => item.deelnemerId === key).quizpunten - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).quizpunten : 0) : 0,
                     delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + _.sumBy(objs, 'quizpunten') -
-                    previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_totaalpunten : 0,
+                    (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_totaalpunten : 0),
                 }))
                 .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
         }
@@ -79,7 +79,7 @@ export class StandenService {
     }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
-        const latestAflevering = await this.getLatestAflevering();
+        const latestAflevering = await this.getLatestUitgezondenAflevering();
 
         this.logger.log('latestAflevering: ' + latestAflevering.aflevering);
         const puntenlijst = await this.getPuntenVoorAfleveringVoorDeelnemer(latestAflevering.aflevering, deelnemerId);
@@ -268,7 +268,7 @@ export class StandenService {
         });
     }
 
-    async getLatestAflevering(): Promise<Aflevering> {
+    async getLatestUitgezondenAflevering(): Promise<Aflevering> {
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}});
         return _.maxBy(afleveringen, 'aflevering');
 
