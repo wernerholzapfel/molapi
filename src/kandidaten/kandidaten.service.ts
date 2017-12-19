@@ -33,7 +33,7 @@ export class KandidatenService {
 
     async create(kandidaat: Kandidaat) {
         this.logger.log(kandidaat.display_name + ' is afgevallen in ronde ' + kandidaat.aflevering);
-        await this.kandidaatRepository.save(kandidaat).catch((err) => {
+        const response = await this.kandidaatRepository.save(kandidaat).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
         await getRepository(Quizpunt).delete({afleveringstand: kandidaat.aflevering});
@@ -41,6 +41,8 @@ export class KandidatenService {
 
         await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
         await this.updateAfleveringPunten(kandidaat);
+
+        return response;
     }
 
     async updateAfleveringPunten(kandidaat: Kandidaat) {
@@ -96,12 +98,16 @@ export class KandidatenService {
                 },
             },
         );
+
+        this.logger.log('answers: ' + answers);
+
         const possibleCorrectAnswers: Quizantwoord[] = answers.filter(answer => {
-            return answer.kandidaten.every(
+            return answer.kandidaten.some(
                 kandidaat => {
                     return !kandidaat.afgevallen && !kandidaat.winner;
                 });
         });
+
 
         this.calclogger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
 

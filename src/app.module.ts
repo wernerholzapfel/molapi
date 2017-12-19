@@ -3,6 +3,7 @@ import {Module, NestModule, RequestMethod} from '@nestjs/common';
 import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
 import {
+    AddAuth0UserToRequest,
     AdminMiddleware, AuthenticationMiddleware, IsEmailVerifiedMiddleware,
     IsUserAllowedToPostMiddleware
 } from './authentication.middleware';
@@ -31,14 +32,14 @@ export class ApplicationModule implements NestModule {
             {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
 
         );
-        // consumer.apply(IsEmailVerifiedMiddleware).forRoutes(
-        //     {path: '/**', method: RequestMethod.POST},
-        //     {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
-        //     {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
-        //     {path: '/quizvragen', method: RequestMethod.GET},
-        //     {path: '/quizresultaten', method: RequestMethod.GET},
-        //     {path: '/quizpunten/**', method: RequestMethod.GET},
-        // );
+        consumer.apply(AddAuth0UserToRequest).forRoutes(
+            {path: '/**', method: RequestMethod.POST},
+            {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
+            {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
+            {path: '/quizvragen', method: RequestMethod.GET},
+            {path: '/quizresultaten', method: RequestMethod.GET},
+            {path: '/quizpunten/**', method: RequestMethod.GET},
+        );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/kandidaten', method: RequestMethod.POST},
                 {path: '/afleveringen', method: RequestMethod.POST},

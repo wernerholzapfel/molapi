@@ -51,6 +51,7 @@ export class QuizpuntenService {
     }
 
     async findAllForDeelnemer(auth0Identifier: string): Promise<Quizpunt[]> {
+        this.logger.log('dit is de auth0Identifier: ' + auth0Identifier);
         const afleveringen = await getRepository(Aflevering).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });

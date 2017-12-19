@@ -87,6 +87,26 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
 }
 
 @Middleware()
+export class AddAuth0UserToRequest implements NestMiddleware {
+    resolve(): ExpressMiddleware {
+        return (req, res, next) => {
+            const extractedToken = getToken(req.headers);
+            if (extractedToken) {
+                logger.log('start decoding IsEmailVerifiedMiddleware');
+                const decoded: any = jwt_decode(extractedToken);
+                logger.log(decoded.sub);
+                management.getUser({
+                    id: decoded.sub,
+                }).then(async user => {
+                    req.user = user;
+                    next();
+                });
+            }
+        };
+    }
+}
+
+@Middleware()
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
     resolve(): ExpressMiddleware {
         return async (req, res, next) => {
