@@ -163,11 +163,6 @@ export class StandenService {
 
         const kandidaten = await getRepository(Kandidaat).find();
 
-        resultatenLijst.forEach(resultaat => {
-            resultaat.afgevallenKandidaat = _.find(kandidaten, {afgevallen: true, aflevering: resultaat.aflevering});
-        });
-
-
         const response = await _(afleveringen).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: key,
@@ -185,8 +180,12 @@ export class StandenService {
                 delta_winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_winnaarpunten : 0,
                 delta_quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_quizpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
                 delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
-            }));
+            })).value();
+        this.logger.log('response: ' + response.length);
 
+        response.forEach(async resultaat => {
+            resultaat.afgevallenKandidaat = _.find(kandidaten, {afgevallen: true, aflevering: parseInt(resultaat.aflevering, 10)});
+        });
         return response;
     }
 
