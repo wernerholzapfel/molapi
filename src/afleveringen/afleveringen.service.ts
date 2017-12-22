@@ -10,11 +10,11 @@ export class AfleveringenService {
     }
 
     async findAll(): Promise<Aflevering[]> {
-        try {
-            return await this.afleveringRepository.find();
-        } catch (err) {
-            return err;
-        }
+        const afleveringen = await this.afleveringRepository.find().catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+        return _.sortBy(afleveringen, 'aflevering');
+
     }
 
     async getLatestAflevering(): Promise<Aflevering> {

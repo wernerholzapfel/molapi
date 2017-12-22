@@ -8,27 +8,30 @@ import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {HttpException} from '@nestjs/core';
+import * as _ from 'lodash';
 
 @Component()
 export class KandidatenService {
     private readonly logger = new Logger('deelnemersController', true);
     private readonly calclogger = new Logger('calculatieLogger', true);
 
-    molStrafpunten: number = -5; // -10
-    winnaarStrafpunten: number = -5; // -5
-    afvallerPunten: number = 25; // 20
-    molPunten: number = 20; // 20
-    winnaarPunten: number = 5; // 10
-    vragenPunten: number = 10; // 10
+    molStrafpunten: number = -10;
+    winnaarStrafpunten: number = -5;
+    afvallerPunten: number = 20;
+    molPunten: number = 20;
+    winnaarPunten: number = 10;
+    vragenPunten: number = 10;
 
     constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>) {
     }
 
     async findAll(): Promise<Kandidaat[]> {
-        return await this.kandidaatRepository.find()
+        const kandidaten = await this.kandidaatRepository.find()
             .catch((err) => {
                 throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
             });
+        return _.sortBy(kandidaten, 'display_name');
+
     }
 
     async create(kandidaat: Kandidaat) {
