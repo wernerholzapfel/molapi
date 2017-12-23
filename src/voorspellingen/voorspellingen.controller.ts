@@ -30,7 +30,7 @@ export class VoorspellingenController {
         const newVoorspelling = Object.assign({}, createVoorspellingDto, {
             created_at: new Date(),
         });
-        return this.voorspellingenService.create(newVoorspelling);
+        return await this.voorspellingenService.create(newVoorspelling);
     }
 }
 

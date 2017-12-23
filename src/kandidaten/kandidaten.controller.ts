@@ -17,6 +17,6 @@ export class KandidatenController {
     @Post()
     async create(@Body() createKandidaatDto: CreateKandidaatDTO) {
         const newEntry = Object.assign({}, createKandidaatDto, {});
-        await this.kandidatenService.create(newEntry);
+        return await this.kandidatenService.create(newEntry);
     }
 }

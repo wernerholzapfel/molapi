@@ -38,5 +38,6 @@ export class QuizvragenController {
                 throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
             });
         });
+        return quizvraag;
     }
 }
