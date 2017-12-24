@@ -103,8 +103,8 @@ export class StandenService {
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
-                deelnemer: _.head(objs).deelnemer,
-                afleveringstand: _.head(objs).afleveringstand,
+                // deelnemer: _.head(objs).deelnemer,
+                // afleveringstand: _.head(objs).afleveringstand,
                 quizpunten: _.sumBy(objs, 'quizpunten'),
             }))
             .value();
@@ -114,8 +114,8 @@ export class StandenService {
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
-                deelnemer: _.head(objs).deelnemer,
-                afleveringstand: _.head(objs).afleveringstand,
+                // deelnemer: _.head(objs).deelnemer,
+                // afleveringstand: _.head(objs).afleveringstand,
                 quizpunten: _.sumBy(objs, 'quizpunten'),
                 deltaquizpunten: this.determineDeltaQuizPunten(key, previousQuizStand, objs),
             }))
@@ -141,10 +141,10 @@ export class StandenService {
         const resultatenLijst = await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
-                deelnemerId: _.head(objs).deelnemer.id,
-                deelnemer: _.head(objs).deelnemer,
-                display_name: _.head(objs).deelnemer.display_name,
-                voorspelling: _.head(objs).voorspelling,
+                // deelnemerId: _.head(objs).deelnemer.id,
+                // deelnemer: _.head(objs).deelnemer,
+                // display_name: _.head(objs).deelnemer.display_name,
+                // voorspelling: _.head(objs).voorspelling,
                 molpunten: _.sumBy(objs, 'molpunten'),
                 afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                 winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
@@ -154,8 +154,8 @@ export class StandenService {
                 delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - this.determinePreviousAfvallerpunten(previousStand, key),
                 delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - this.determinePreviousWinnaarpunten(previousStand, key),
                 delta_quizpunten: this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key),
-                delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(quizStand, key) -
-                this.determinePreviousTotaalpunten(previousStand, key),
+                // delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(quizStand, key) -
+                // this.determinePreviousTotaalpunten(previousStand, key),
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
 
@@ -168,10 +168,10 @@ export class StandenService {
         })).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: key,
-                deelnemerId,
-                deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
+                // deelnemerId,
+                // deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
                 // display_name: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).display_name : null,
-                voorspelling: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).voorspelling : null,
+                // voorspelling: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).voorspelling : null,
                 molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).molpunten : 0,
                 afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).afvallerpunten : 0,
                 winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).winnaarpunten : 0,
@@ -181,7 +181,7 @@ export class StandenService {
                 delta_afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_afvallerpunten : 0,
                 delta_winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_winnaarpunten : 0,
                 delta_quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_quizpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
-                delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
+                // delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
             })).value();
         this.logger.log('response: ' + response.length);
 
