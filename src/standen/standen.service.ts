@@ -163,7 +163,9 @@ export class StandenService {
 
         const kandidaten = await getRepository(Kandidaat).find();
 
-        const response = await _(afleveringen).groupBy('aflevering')
+        const response = await _(afleveringen.filter(aflevering => {
+            return aflevering.hasVoorspelling;
+        })).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: key,
                 deelnemerId,
