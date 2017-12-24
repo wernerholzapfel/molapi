@@ -12,7 +12,7 @@ export class QuizMiddleware implements NestMiddleware {
         return (req, res, next) => {
             this.logger.log(req.body.aflevering);
 
-            return getRepository(Aflevering).findOne({aflevering: req.body.aflevering})
+            return getRepository(Aflevering).findOne({aflevering: req.body.aflevering + 1})
                 .then(aflevering => {
                     if (aflevering && Date.parse(aflevering.deadlineDatetime.toString()) < Date.now()) {
                         throw new HttpException({
