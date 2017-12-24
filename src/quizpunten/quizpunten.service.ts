@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 @Component()
 export class QuizpuntenService {
     private readonly logger = new Logger('quizpuntenService', true);
-    aflevering: number;
+    afleveringWithLatestTest: number;
 
     constructor(@Inject('QuizpuntRepositoryToken') private readonly quizpuntRepository: Repository<Quizpunt>) {
     }
@@ -23,16 +23,16 @@ export class QuizpuntenService {
             return item.laatseAflevering;
         });
         if (afleveringObject) {
-            this.aflevering = afleveringObject.aflevering - 1;
+            this.afleveringWithLatestTest = afleveringObject.aflevering - 1;
         }
         else {
             const uitgezondenAfleveringen = afleveringen.filter(item => {
                 return item.uitgezonden;
             });
-            this.aflevering = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
+            this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
         }
 
-        this.logger.log('dit is de huidige aflevering: ' + this.aflevering);
+        this.logger.log('dit is de huidige aflevering: ' + this.afleveringWithLatestTest);
 
         return await getRepository(Quizpunt)
             .createQueryBuilder('punten')
@@ -40,7 +40,7 @@ export class QuizpuntenService {
             .leftJoinAndSelect('punten.quizresultaat', 'resultaat')
             .leftJoinAndSelect('resultaat.vraag', 'vraag')
             .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
-            .where('punten.afleveringstand = :aflevering', {aflevering: this.aflevering})
+            .where('punten.afleveringstand = :aflevering', {aflevering: this.afleveringWithLatestTest})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
@@ -55,11 +55,11 @@ export class QuizpuntenService {
         const afleveringen = await getRepository(Aflevering).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const afleveringObject = afleveringen.find(item => {
+        const laatsteAfleveringen = afleveringen.filter(item => {
             return item.laatseAflevering;
         });
-        if (afleveringObject) {
-            this.aflevering = afleveringObject.aflevering - 1;
+        if (laatsteAfleveringen.length > 0) {
+            this.afleveringWithLatestTest = _.maxBy(laatsteAfleveringen, 'aflevering').aflevering - 1;
         }
         else {
             const uitgezondenAfleveringen = afleveringen.filter(item => {
@@ -67,14 +67,14 @@ export class QuizpuntenService {
             });
             this.logger.log(uitgezondenAfleveringen.length.toString(10))
             if (uitgezondenAfleveringen.length > 0) {
-            this.aflevering = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
+            this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
             }
         }
-        if (this.aflevering) {
+        if (this.afleveringWithLatestTest) {
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
-        const previousPuntenlijst = await this.getPuntenlijst(this.aflevering === 1 ? this.aflevering : this.aflevering - 1, deelnemer);
-        const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.aflevering, deelnemer), previousPuntenlijst);
+        const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
+        const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
 
         return await _(puntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
