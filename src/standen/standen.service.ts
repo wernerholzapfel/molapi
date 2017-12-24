@@ -45,11 +45,11 @@ export class StandenService {
             const previousStand = await _(previouspuntenlijst).groupBy('deelnemer.id')
                 .map((objs, key) => ({
                     deelnemerId: key,
-                    display_name: _.head(objs).deelnemer.display_name,
-                    previous_molpunten: _.sumBy(objs, 'molpunten'),
-                    previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
-                    previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                    quizpunten: (previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0),
+                    // display_name: _.head(objs).deelnemer.display_name,
+                    // previous_molpunten: _.sumBy(objs, 'molpunten'),
+                    // previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                    // previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                    // quizpunten: (previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0),
                     previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + ((previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0)),
                 }))
                 .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
@@ -58,15 +58,15 @@ export class StandenService {
                 .map((objs, key) => ({
                     deelnemerId: key,
                     display_name: _.head(objs).deelnemer.display_name,
-                    molpunten: _.sumBy(objs, 'molpunten'),
-                    afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
-                    winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                    quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
+                    // molpunten: _.sumBy(objs, 'molpunten'),
+                    // afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                    // winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                    // quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
                     totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0),
-                    delta_molpunten: _.sumBy(objs, 'molpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_molpunten : 0),
-                    delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten : 0),
-                    delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_winnaarpunten : 0),
-                    delta_quizpunten: quizStand.find(item => item.deelnemerId === key) && quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).quizpunten : 0) : 0,
+                    // delta_molpunten: _.sumBy(objs, 'molpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_molpunten : 0),
+                    // delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten : 0),
+                    // delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_winnaarpunten : 0),
+                    // delta_quizpunten: quizStand.find(item => item.deelnemerId === key) && quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).quizpunten : 0) : 0,
                     delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0) -
                     (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_totaalpunten : 0),
                 }))
