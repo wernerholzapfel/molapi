@@ -15,6 +15,12 @@ export class Aflevering {
     @Column()
     uitgezonden: boolean;
 
+    @Column({ default: false })
+    hasTest: boolean;
+
+    @Column({ default: false })
+    hasVoorspelling: boolean;
+
     @Column()
     deadlineDatetime: Date;
 }

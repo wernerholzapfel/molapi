@@ -6,4 +6,6 @@ export class CreateAfleveringDto {
     @IsBoolean() readonly laatseAflevering: boolean;
     @IsDateString() readonly deadlineDatetime: Date;
     @IsBoolean() readonly uitgezonden: boolean;
+    @IsBoolean() readonly hasVoorspelling: boolean;
+    @IsBoolean() readonly hasTest: boolean;
 }
