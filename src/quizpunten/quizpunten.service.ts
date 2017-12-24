@@ -55,34 +55,35 @@ export class QuizpuntenService {
         const afleveringen = await getRepository(Aflevering).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const laatsteAfleveringen = afleveringen.filter(item => {
-            return item.laatseAflevering;
+
+        // const laatsteAfleveringWithTest = afleveringen.find(item => {
+        //     return item.hasTest && item.laatseAflevering;
+        // });
+        // if (laatsteAfleveringWithTest) {
+        //     this.afleveringWithLatestTest = laatsteAfleveringWithTest.aflevering - 1;
+        // }
+        // else {
+        const uitgezondenAfleveringen = afleveringen.filter(item => {
+            return item.uitgezonden;
         });
-        if (laatsteAfleveringen.length > 0) {
-            this.afleveringWithLatestTest = _.maxBy(laatsteAfleveringen, 'aflevering').aflevering - 1;
-        }
-        else {
-            const uitgezondenAfleveringen = afleveringen.filter(item => {
-                return item.uitgezonden;
-            });
-            this.logger.log(uitgezondenAfleveringen.length.toString(10))
-            if (uitgezondenAfleveringen.length > 0) {
+        this.logger.log(uitgezondenAfleveringen.length.toString(10))
+        if (uitgezondenAfleveringen.length > 0) {
             this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
-            }
         }
+        // }
         if (this.afleveringWithLatestTest) {
-        const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+            const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
-        const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
-        const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
+            const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
+            const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
 
-        return await _(puntenlijst).groupBy('aflevering')
-            .map((objs, key) => ({
-            aflevering: key,
-            display_name: _.head(objs).deelnemer.display_name,
-            afleveringpunten: _.sumBy(objs, 'quizpunten'),
-            vragen: objs,
-        }));
+            return await _(puntenlijst).groupBy('aflevering')
+                .map((objs, key) => ({
+                    aflevering: key,
+                    display_name: _.head(objs).deelnemer.display_name,
+                    afleveringpunten: _.sumBy(objs, 'quizpunten'),
+                    vragen: objs,
+                }));
         }
         else {
             throw new HttpException({
@@ -112,14 +113,16 @@ export class QuizpuntenService {
             });
     }
 
-     addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst) {
-         this.logger.log('puntenlijst: ' + puntenlijst.length);
-         puntenlijst.forEach(vraag => {
+    addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst) {
+        this.logger.log('puntenlijst: ' + puntenlijst.length);
+        puntenlijst.forEach(vraag => {
             this.logger.log(vraag.quizresultaat.vraag.id);
             vraag.deltaQuizpunten = -1 * (previousPuntenlijst.find(item => {
-                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id; }) ? previousPuntenlijst.find(item => {
-                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id; }).quizpunten : 0);
+                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
+            }) ? previousPuntenlijst.find(item => {
+                return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
+            }).quizpunten : 0);
         });
-         return puntenlijst;
+        return puntenlijst;
     }
 }

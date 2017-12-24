@@ -18,12 +18,12 @@ export class QuizresultatenService {
         const afleveringen = await getRepository(Aflevering).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const laatsteAfleveringen = afleveringen.filter(item => {
-            return item.laatseAflevering;
+        const afleveringenWithTestList = afleveringen.filter(item => {
+            return item.hasTest;
         });
 
-        if (laatsteAfleveringen.length > 0) {
-            this.afleveringWithLatestTest = _.maxBy(laatsteAfleveringen, 'aflevering').aflevering - 1;
+        if (afleveringenWithTestList.length > 0) {
+            this.afleveringWithLatestTest = _.maxBy(afleveringenWithTestList, 'aflevering').aflevering;
         }
         else {
 
