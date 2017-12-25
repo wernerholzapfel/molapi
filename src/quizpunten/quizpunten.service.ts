@@ -117,11 +117,11 @@ export class QuizpuntenService {
         this.logger.log('puntenlijst: ' + puntenlijst.length);
         puntenlijst.forEach(vraag => {
             this.logger.log(vraag.quizresultaat.vraag.id);
-            vraag.deltaQuizpunten = -1 * (previousPuntenlijst.find(item => {
+            vraag.deltaQuizpunten = (previousPuntenlijst.find(item => {
                 return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
-            }) ? previousPuntenlijst.find(item => {
+            }) ? -1 * (vraag.quizpunten - previousPuntenlijst.find(item => {
                 return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
-            }).quizpunten : 0);
+            }).quizpunten) : 0);
         });
         return puntenlijst;
     }
