@@ -15,9 +15,10 @@ import {QuizvragenModule} from './quizvragen/quizvragen.module';
 import {QuizresultatenModule} from './quizresultaten/quizresultaten.module';
 import {QuizpuntenModule} from './quizpunten/quizpunten.module';
 import {QuizMiddleware} from './quiz.middleware';
+import {ActiesModule} from './acties/acties.module';
 
 @Module({
-    modules: [QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
+    modules: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
 })
 
 export class ApplicationModule implements NestModule {
