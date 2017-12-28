@@ -29,7 +29,12 @@ export class ActiesService {
     }
 
     getDeadlineDatetime(afleveringnummer: number, afleveringen: Aflevering[]) {
-        return afleveringen.find(aflevering =>  aflevering.aflevering === afleveringnummer).deadlineDatetime;
+        if (afleveringnummer > 0) {
+            return afleveringen.find(aflevering => aflevering.aflevering === afleveringnummer).deadlineDatetime;
+        }
+        else {
+            return null;
+        }
     }
 
     // tdod
