@@ -15,7 +15,7 @@ export class StandenService {
     }
 
     async findAll(): Promise<any[]> {
-        const afleveringen = await this.getAfleveringenVoorStand();
+        const afleveringen = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering = _.maxBy(afleveringen, 'aflevering');
 
         if (latestUitgezondenAflevering) {
@@ -81,9 +81,9 @@ export class StandenService {
     }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
-        const afleveringenMetTestOrVoorspelling = await this.getAfleveringenVoorStand();
-        this.logger.log('afleveringenMetVoorspelling: ' + afleveringenMetTestOrVoorspelling.length);
-        const laatsteAfleveringMetTestOrVoorspelling = _.maxBy(afleveringenMetTestOrVoorspelling, 'aflevering');
+        const alleUitgezondenAfleveringen = await this.getAlleUitgezondenAfleveringen();
+        this.logger.log('afleveringenMetVoorspelling: ' + alleUitgezondenAfleveringen.length);
+        const laatsteAfleveringMetTestOrVoorspelling = _.maxBy(alleUitgezondenAfleveringen, 'aflevering');
 
         this.logger.log('latestAflevering: ' + laatsteAfleveringMetTestOrVoorspelling.aflevering);
         const puntenlijst = await this.getPuntenVoorAfleveringVoorDeelnemer(laatsteAfleveringMetTestOrVoorspelling.aflevering, deelnemerId);
@@ -164,7 +164,7 @@ export class StandenService {
 
         const kandidaten = await getRepository(Kandidaat).find();
 
-        const response = await _(afleveringenMetTestOrVoorspelling).groupBy('aflevering')
+        const response = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: key,
                 // deelnemerId,
@@ -323,10 +323,17 @@ export class StandenService {
     }
 
     // laatsteaflevering niet meenemen in stand, is geen voorspelling en quiz voor.
-    async getAfleveringenVoorStand(): Promise<Aflevering[]> {
+    // async getAfleveringenVoorStand(): Promise<Aflevering[]> {
+    //     const afleveringen = await getRepository(Aflevering).find();
+    //     return afleveringen.filter(aflevering => {
+    //         return aflevering.uitgezonden && !aflevering.laatseAflevering;
+    //     });
+    // }
+
+    async getAlleUitgezondenAfleveringen(): Promise<Aflevering[]> {
         const afleveringen = await getRepository(Aflevering).find();
         return afleveringen.filter(aflevering => {
-            return aflevering.uitgezonden && !aflevering.laatseAflevering;
+            return aflevering.uitgezonden;
         });
     }
 }
