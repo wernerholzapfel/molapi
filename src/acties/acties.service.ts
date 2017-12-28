@@ -1,21 +1,35 @@
 import {Component, HttpStatus, Inject} from '@nestjs/common';
-import {Repository} from 'typeorm';
+import {getRepository, Repository} from 'typeorm';
 import {HttpException} from '@nestjs/core';
 import {Actie} from './actie.entity';
+import {Aflevering} from '../afleveringen/aflevering.entity';
+import {ActieResponse} from './actieresponse.interface';
 
 @Component()
 export class ActiesService {
     constructor(@Inject('ActieRepositoryToken') private readonly actieRepository: Repository<Actie>) {
     }
 
-    async find(): Promise<Actie> {
+    async find(): Promise<ActieResponse> {
         return await this.actieRepository.createQueryBuilder('actie')
-            .getOne().catch((err) => {
+            .getOne().then(async response => {
+                const afleveringen = await getRepository(Aflevering).find();
+                return {
+                    voorspellingaflevering: response.voorspellingaflevering,
+                    testaflevering: response.testaflevering,
+                    testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering, afleveringen),
+                    voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
+                };
+            }).catch((err) => {
                 throw new HttpException({
                     message: err.message,
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+    }
+
+    getDeadlineDatetime(afleveringnummer: number, afleveringen: Aflevering[]) {
+        return afleveringen.find(aflevering =>  aflevering.aflevering === afleveringnummer).deadlineDatetime;
     }
 
     // tdod

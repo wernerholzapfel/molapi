@@ -1,6 +1,6 @@
 import {Controller, Get} from '@nestjs/common';
-import {Actie} from './actie.entity';
 import {ActiesService} from './acties.service';
+import {ActieResponse} from './actieresponse.interface';
 
 @Controller('acties')
 export class ActiesController {
@@ -8,7 +8,7 @@ export class ActiesController {
     }
 
     @Get()
-    async find(): Promise<Actie> {
+    async find(): Promise<ActieResponse> {
         return this.actiesService.find();
     }
 }
