@@ -187,7 +187,7 @@ export class StandenService {
         response.forEach(async resultaat => {
             resultaat.afgevallenKandidaat = _.find(kandidaten, {
                 afgevallen: true,
-                aflevering: parseInt(resultaat.aflevering, 10)
+                aflevering: parseInt(resultaat.aflevering, 10),
             });
         });
         return response;
@@ -234,7 +234,7 @@ export class StandenService {
     }
 
     determineQuizPunten(quizStand, aflevering) {
-        if (quizStand.length > 0) {
+        if (quizStand.length > 0 && quizStand.find(item => item.aflevering === (parseInt(aflevering, 10)))) {
             return (parseInt(aflevering, 10) > _.maxBy(quizStand, 'aflevering').aflevering) ? 0 : quizStand.find(item => {
                 return item.aflevering === (parseInt(aflevering, 10));
             }).quizpunten;
