@@ -15,7 +15,7 @@ export class StandenService {
     }
 
     async findAll(): Promise<any[]> {
-        const afleveringen = await this.getAlleAfleveringenMetTestOrVoorspelling();
+        const afleveringen = await this.getAfleveringenVoorStand();
         const latestUitgezondenAflevering = _.maxBy(afleveringen, 'aflevering');
 
         if (latestUitgezondenAflevering) {
@@ -81,7 +81,7 @@ export class StandenService {
     }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
-        const afleveringenMetTestOrVoorspelling = await this.getAlleAfleveringenMetTestOrVoorspelling();
+        const afleveringenMetTestOrVoorspelling = await this.getAfleveringenVoorStand();
         this.logger.log('afleveringenMetVoorspelling: ' + afleveringenMetTestOrVoorspelling.length);
         const laatsteAfleveringMetTestOrVoorspelling = _.maxBy(afleveringenMetTestOrVoorspelling, 'aflevering');
 
@@ -322,11 +322,11 @@ export class StandenService {
         });
     }
 
-    async getAlleAfleveringenMetTestOrVoorspelling(): Promise<Aflevering[]> {
-
+    // laatsteaflevering niet meenemen in stand, is geen voorspelling en quiz voor.
+    async getAfleveringenVoorStand(): Promise<Aflevering[]> {
         const afleveringen = await getRepository(Aflevering).find();
         return afleveringen.filter(aflevering => {
-            return (aflevering.hasTest || aflevering.hasVoorspelling) && aflevering.uitgezonden;
+            return aflevering.uitgezonden && !aflevering.laatseAflevering;
         });
     }
 }
