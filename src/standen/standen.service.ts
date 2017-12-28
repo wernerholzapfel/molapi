@@ -326,7 +326,7 @@ export class StandenService {
 
         const afleveringen = await getRepository(Aflevering).find();
         return afleveringen.filter(aflevering => {
-            return aflevering.hasTest || aflevering.hasVoorspelling;
+            return (aflevering.hasTest || aflevering.hasVoorspelling) && aflevering.uitgezonden;
         });
     }
 }
