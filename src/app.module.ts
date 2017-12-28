@@ -16,6 +16,7 @@ import {QuizresultatenModule} from './quizresultaten/quizresultaten.module';
 import {QuizpuntenModule} from './quizpunten/quizpunten.module';
 import {QuizMiddleware} from './quiz.middleware';
 import {ActiesModule} from './acties/acties.module';
+import {VoorspellingMiddleware} from './voorspelling.middleware';
 
 @Module({
     modules: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
@@ -47,12 +48,16 @@ export class ApplicationModule implements NestModule {
                 {path: '/quizvragen', method: RequestMethod.POST},
                 {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
         );
-        consumer.apply(QuizMiddleware).forRoutes(
-            {path: '/quizresultaten', method: RequestMethod.POST},
-        );
         consumer.apply(IsUserAllowedToPostMiddleware).forRoutes(
             {path: '/quizresultaten', method: RequestMethod.POST},
             {path: '/voorspellingen', method: RequestMethod.POST},
         );
+        consumer.apply(QuizMiddleware).forRoutes(
+            {path: '/quizresultaten', method: RequestMethod.POST},
+        );
+        consumer.apply(VoorspellingMiddleware).forRoutes(
+            {path: '/voorspellingen', method: RequestMethod.POST},
+        );
+
     }
 }
