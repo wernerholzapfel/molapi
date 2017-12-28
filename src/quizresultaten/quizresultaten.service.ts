@@ -22,35 +22,40 @@ export class QuizresultatenService {
             return item.uitgezonden;
         });
 
-        this.latestUitgezondenAflevering = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
+        if (afleveringenUitgezondenList.length > 0) {
+            this.latestUitgezondenAflevering = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
 
-        // if (laatsteUitgezondenAflevering.hasTest) {
-        //     this.afleveringWithLatestTest = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
-        // }
-        // else {
-        //
-        //     const uitgezondenAfleveringen = afleveringen.filter(item => {
-        //         return item.uitgezonden;
-        //     });
-        //     this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
-        // }
+            // if (laatsteUitgezondenAflevering.hasTest) {
+            //     this.afleveringWithLatestTest = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
+            // }
+            // else {
+            //
+            //     const uitgezondenAfleveringen = afleveringen.filter(item => {
+            //         return item.uitgezonden;
+            //     });
+            //     this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
+            // }
 
-        this.logger.log('dit is de huidige aflevering: ' + this.latestUitgezondenAflevering);
-        const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+            this.logger.log('dit is de huidige aflevering: ' + this.latestUitgezondenAflevering);
+            const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
-        return await getRepository(Quizresultaat)
-            .createQueryBuilder('resultaat')
-            .leftJoinAndSelect('resultaat.vraag', 'vraag')
-            .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
-            .where('resultaat.aflevering = :aflevering', {aflevering: this.latestUitgezondenAflevering})
-            .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
-            .getMany()
-            .catch((err) => {
-                throw new HttpException({
-                    message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                }, HttpStatus.BAD_REQUEST);
-            });
+            return await getRepository(Quizresultaat)
+                .createQueryBuilder('resultaat')
+                .leftJoinAndSelect('resultaat.vraag', 'vraag')
+                .leftJoinAndSelect('resultaat.antwoord', 'antwoord')
+                .where('resultaat.aflevering = :aflevering', {aflevering: this.latestUitgezondenAflevering})
+                .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .getMany()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        }
+        else {
+            return [];
+        }
     }
 
     async create(quizresultaat: Quizresultaat) {
