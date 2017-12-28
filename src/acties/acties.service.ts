@@ -17,7 +17,7 @@ export class ActiesService {
                 return {
                     voorspellingaflevering: response.voorspellingaflevering,
                     testaflevering: response.testaflevering,
-                    testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering, afleveringen),
+                    testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
                 };
             }).catch((err) => {
