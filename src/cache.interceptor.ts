@@ -9,13 +9,14 @@ export class CacheInterceptor implements NestInterceptor {
     constructor(private readonly cacheService: CacheService) {}
 
     async intercept(dataOrRequest, context: ExecutionContext, stream$: Observable<any>): Promise<any> {
-        const value = await this.cacheService.get(dataOrRequest.originalUrl.replace(/^\/|\/$/g, ''));
+        const key = dataOrRequest.originalUrl;
+        const value = await this.cacheService.get(key);
         if (value) {
-            this.logger.log('cache ' + dataOrRequest.baseUrl + ' has value');
+            this.logger.log('cache ' + key + ' has value');
             return Observable.of(value);
         }
         else {
-            this.logger.log('cache ' + dataOrRequest.baseUrl + ' has NO value');
+            this.logger.log('cache ' + key + ' has NO value');
             return stream$;
         }
     }

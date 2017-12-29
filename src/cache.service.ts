@@ -10,11 +10,11 @@ export class CacheService {
     }
 
     async get(key): Promise<any> {
-        return myCache.get(key);
+        return myCache.get(key.replace(/^\/|\/$/g, ''));
     }
 
     async set(key, value): Promise<any> {
-        return myCache.set(key, value);
+        return myCache.set(key.replace(/^\/|\/$/g, ''), value);
     }
 
     async flushAll(): Promise<any> {

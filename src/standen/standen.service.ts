@@ -73,7 +73,7 @@ export class StandenService {
                 }))
                 .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
 
-            this.cacheService.set('/api/v1/standen', response);
+            this.cacheService.set('api/v1/standen', response);
 
             return response;
         }
@@ -196,7 +196,7 @@ export class StandenService {
             });
         });
 
-        this.cacheService.set('/api/v1/standen/' + deelnemerId, response);
+        this.cacheService.set('api/v1/standen/' + deelnemerId, response);
 
         return response;
     }
