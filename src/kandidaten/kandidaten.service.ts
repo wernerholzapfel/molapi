@@ -9,6 +9,7 @@ import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {HttpException} from '@nestjs/core';
 import * as _ from 'lodash';
+import {CacheService} from '../cache.service';
 
 @Component()
 export class KandidatenService {
@@ -22,7 +23,7 @@ export class KandidatenService {
     winnaarPunten: number = 10;
     vragenPunten: number = 10;
 
-    constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>) {
+    constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>, private readonly cacheService: CacheService) {
     }
 
     async findAll(): Promise<Kandidaat[]> {
@@ -45,6 +46,7 @@ export class KandidatenService {
         await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
         await this.updateAfleveringPunten(kandidaat);
 
+        this.cacheService.flushAll();
         return response;
     }
 

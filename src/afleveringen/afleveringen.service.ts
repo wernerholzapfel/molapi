@@ -3,10 +3,11 @@ import {Repository} from 'typeorm';
 import {Aflevering} from './aflevering.entity';
 import * as _ from 'lodash';
 import {HttpException} from '@nestjs/core';
+import {CacheService} from '../cache.service';
 
 @Component()
 export class AfleveringenService {
-    constructor(@Inject('AfleveringRepositoryToken') private readonly afleveringRepository: Repository<Aflevering>) {
+    constructor(@Inject('AfleveringRepositoryToken') private readonly afleveringRepository: Repository<Aflevering>,  private readonly cacheService: CacheService) {
     }
 
     async findAll(): Promise<Aflevering[]> {
@@ -32,7 +33,9 @@ export class AfleveringenService {
     }
 
     async create(aflevering: Aflevering) {
-        return await this.afleveringRepository.save(aflevering).catch((err) => {
+        return await this.afleveringRepository.save(aflevering).then((success => {
+            this.cacheService.flushAll();
+        })).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }

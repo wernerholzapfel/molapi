@@ -38,7 +38,7 @@ export class DeelnemersService {
 
         const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
         if (laatsteAflevering) {
-            const voorspellingen = await getRepository(Afleveringpunten)
+            const voorspellingen: any = await getRepository(Afleveringpunten)
                 .createQueryBuilder('afleveringpunten')
                 .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
                 .leftJoinAndSelect('afleveringpunten.voorspelling', 'voorspelling')

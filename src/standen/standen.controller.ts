@@ -1,7 +1,9 @@
-import {Controller, Get, Param} from '@nestjs/common';
+import {Controller, Get, Param, UseInterceptors} from '@nestjs/common';
 import {StandenService} from './standen.service';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
+import {CacheInterceptor} from '../cache.interceptor';
 
+@UseInterceptors(CacheInterceptor)
 @Controller('standen')
 export class StandenController {
 

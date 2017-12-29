@@ -50,19 +50,12 @@ export class QuizpuntenService {
             });
     }
 
-    async findAllForDeelnemer(auth0Identifier: string): Promise<Quizpunt[]> {
+    async findAllForDeelnemer(auth0Identifier: string): Promise<any[]> {
         this.logger.log('dit is de auth0Identifier: ' + auth0Identifier);
         const afleveringen = await getRepository(Aflevering).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        // const laatsteAfleveringWithTest = afleveringen.find(item => {
-        //     return item.hasTest && item.laatseAflevering;
-        // });
-        // if (laatsteAfleveringWithTest) {
-        //     this.afleveringWithLatestTest = laatsteAfleveringWithTest.aflevering - 1;
-        // }
-        // else {
         const uitgezondenAfleveringen = afleveringen.filter(item => {
             return item.uitgezonden;
         });
@@ -70,20 +63,20 @@ export class QuizpuntenService {
         if (uitgezondenAfleveringen.length > 0) {
             this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
         }
-        // }
+
         if (this.afleveringWithLatestTest) {
             const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
             const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
-            const puntenlijst = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
+            const puntenlijst: any[] = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
 
-            return await _(puntenlijst).groupBy('aflevering')
+            return await  _(puntenlijst).groupBy('aflevering')
                 .map((objs, key) => ({
                     aflevering: key,
                     display_name: _.head(objs).deelnemer.display_name,
                     afleveringpunten: _.sumBy(objs, 'quizpunten'),
                     vragen: objs,
-                }));
+                })).value();
         }
         else {
             throw new HttpException({
@@ -113,7 +106,7 @@ export class QuizpuntenService {
             });
     }
 
-    addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst) {
+    addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst): any[] {
         this.logger.log('puntenlijst: ' + puntenlijst.length);
         puntenlijst.forEach(vraag => {
             this.logger.log(vraag.quizresultaat.vraag.id);

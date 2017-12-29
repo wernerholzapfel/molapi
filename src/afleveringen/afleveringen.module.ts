@@ -5,6 +5,7 @@ import {VoorspellingenModule} from '../voorspellingen/voorspellingen.module';
 import {AfleveringenController} from './afleveringen.controller';
 import {afleveringProviders} from './aflevering.providers';
 import {AfleveringenService} from './afleveringen.service';
+import {CacheService} from '../cache.service';
 
 @Module({
     modules: [DBModule, VoorspellingenModule],
@@ -12,6 +13,7 @@ import {AfleveringenService} from './afleveringen.service';
     components: [
         ...afleveringProviders,
         AfleveringenService,
+        CacheService,
     ],
 })
 

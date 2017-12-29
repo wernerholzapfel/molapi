@@ -25,17 +25,6 @@ export class QuizresultatenService {
         if (afleveringenUitgezondenList.length > 0) {
             this.latestUitgezondenAflevering = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
 
-            // if (laatsteUitgezondenAflevering.hasTest) {
-            //     this.afleveringWithLatestTest = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
-            // }
-            // else {
-            //
-            //     const uitgezondenAfleveringen = afleveringen.filter(item => {
-            //         return item.uitgezonden;
-            //     });
-            //     this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
-            // }
-
             this.logger.log('dit is de huidige aflevering: ' + this.latestUitgezondenAflevering);
             const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 

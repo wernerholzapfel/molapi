@@ -20,7 +20,9 @@ export class QuizvragenService {
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const aflevering: number = await parseInt(_.maxBy(afleveringen, 'aflevering').aflevering, 10);
+
+        //todo was met ParseInt er omheen??
+        const aflevering: number = await _.maxBy(afleveringen, 'aflevering').aflevering;
         this.logger.log('dit is de huidige aflevering: ' + aflevering);
 
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});

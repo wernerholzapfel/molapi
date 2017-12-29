@@ -6,12 +6,13 @@ import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {HttpException} from '@nestjs/core';
+import {CacheService} from '../cache.service';
 
 @Component()
 export class StandenService {
     private readonly logger = new Logger('standenService', true);
 
-    constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>) {
+    constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>, public readonly cacheService: CacheService) {
     }
 
     async findAll(): Promise<any[]> {
@@ -52,9 +53,9 @@ export class StandenService {
                     // quizpunten: (previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0),
                     previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + ((previousQuizStand.find(item => item.deelnemerId === key) ? previousQuizStand.find(item => item.deelnemerId === key).quizpunten : 0)),
                 }))
-                .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+                .value();
 
-            return await _(puntenlijst).groupBy('deelnemer.id')
+            const response = await _(puntenlijst).groupBy('deelnemer.id')
                 .map((objs, key) => ({
                     deelnemerId: key,
                     display_name: _.head(objs).deelnemer.display_name,
@@ -71,6 +72,10 @@ export class StandenService {
                     (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_totaalpunten : 0),
                 }))
                 .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+
+            this.cacheService.set('/api/v1/standen', response);
+
+            return response;
         }
         else {
             throw new HttpException({
@@ -124,7 +129,7 @@ export class StandenService {
 
         this.logger.log('quizStand: ' + quizStand.length);
 
-        const previousStand = await _(previouspuntenlijst).groupBy('aflevering')
+        const previousStand: any = await _(previouspuntenlijst).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: parseInt(key, 10),
                 deelnemerId: _.head(objs).deelnemer.id,
@@ -135,7 +140,7 @@ export class StandenService {
                 previous_quizpunten: this.determineQuizPunten(previousQuizStand, key),
                 previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(previousQuizStand, key),
             }))
-            .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+            .value();
 
         this.logger.log('previousStand: ' + previousStand.length);
 
@@ -164,7 +169,7 @@ export class StandenService {
 
         const kandidaten = await getRepository(Kandidaat).find();
 
-        const response = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
+        const response: any = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
             .map((objs, key) => ({
                 aflevering: key,
                 // deelnemerId,
@@ -190,6 +195,9 @@ export class StandenService {
                 aflevering: parseInt(resultaat.aflevering, 10),
             });
         });
+
+        this.cacheService.set('/api/v1/standen/' + deelnemerId, response);
+
         return response;
     }
 
@@ -197,7 +205,7 @@ export class StandenService {
         return _.find(resultatenLijst, {aflevering: parseInt(aflevering, 10)});
     }
 
-    determinePreviousMolpunten(previousQuizStand, key) {
+    determinePreviousMolpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -206,7 +214,7 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousAfvallerpunten(previousQuizStand, key) {
+    determinePreviousAfvallerpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -215,7 +223,7 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousWinnaarpunten(previousQuizStand, key) {
+    determinePreviousWinnaarpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -224,7 +232,7 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousTotaalpunten(previousQuizStand, key) {
+    determinePreviousTotaalpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -233,7 +241,7 @@ export class StandenService {
         return 0;
     }
 
-    determineQuizPunten(quizStand, aflevering) {
+    determineQuizPunten(quizStand: any[], aflevering) {
         if (quizStand.length > 0 && quizStand.find(item => item.aflevering === (parseInt(aflevering, 10)))) {
             return (parseInt(aflevering, 10) > _.maxBy(quizStand, 'aflevering').aflevering) ? 0 : quizStand.find(item => {
                 return item.aflevering === (parseInt(aflevering, 10));

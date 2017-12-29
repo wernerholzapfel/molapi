@@ -4,7 +4,8 @@ import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
 import {
     AddAuth0UserToRequest,
-    AdminMiddleware, AuthenticationMiddleware, IsEmailVerifiedMiddleware,
+    AdminMiddleware,
+    AuthenticationMiddleware,
     IsUserAllowedToPostMiddleware
 } from './authentication.middleware';
 import {MiddlewaresConsumer} from '@nestjs/common/interfaces/middlewares';
@@ -32,7 +33,6 @@ export class ApplicationModule implements NestModule {
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
             {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
-
         );
         consumer.apply(AddAuth0UserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
@@ -44,9 +44,9 @@ export class ApplicationModule implements NestModule {
         );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/kandidaten', method: RequestMethod.POST},
-                {path: '/afleveringen', method: RequestMethod.POST},
-                {path: '/quizvragen', method: RequestMethod.POST},
-                {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
+            {path: '/afleveringen', method: RequestMethod.POST},
+            {path: '/quizvragen', method: RequestMethod.POST},
+            {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
         );
         consumer.apply(IsUserAllowedToPostMiddleware).forRoutes(
             {path: '/quizresultaten', method: RequestMethod.POST},
@@ -58,6 +58,5 @@ export class ApplicationModule implements NestModule {
         consumer.apply(VoorspellingMiddleware).forRoutes(
             {path: '/voorspellingen', method: RequestMethod.POST},
         );
-
     }
 }
