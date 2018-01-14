@@ -11,6 +11,7 @@ export class CacheInterceptor implements NestInterceptor {
     async intercept(dataOrRequest, context: ExecutionContext, stream$: Observable<any>): Promise<any> {
         const key = dataOrRequest.originalUrl;
         const value = await this.cacheService.get(key);
+
         if (value) {
             this.logger.log('cache ' + key + ' has value');
             return Observable.of(value);
