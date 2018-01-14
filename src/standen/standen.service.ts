@@ -71,11 +71,10 @@ export class StandenService {
                     delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0) -
                     (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_totaalpunten : 0),
                 }))
-                .value().sort((a, b) => b.totaalpunten - a.totaalpunten);
+                .value();
 
-            this.cacheService.set('api/v1/standen', response);
-
-            return response;
+            this.cacheService.set('api/v1/standen', _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name ]));
+            return _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name ]);
         }
         else {
             throw new HttpException({
@@ -201,11 +200,11 @@ export class StandenService {
         return response;
     }
 
-    hasResultaatForAflevering(resultatenLijst: any, aflevering: string) {
+    private hasResultaatForAflevering(resultatenLijst: any, aflevering: string) {
         return _.find(resultatenLijst, {aflevering: parseInt(aflevering, 10)});
     }
 
-    determinePreviousMolpunten(previousQuizStand: any[], key) {
+    private determinePreviousMolpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -214,7 +213,7 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousAfvallerpunten(previousQuizStand: any[], key) {
+    private determinePreviousAfvallerpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -223,7 +222,7 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousWinnaarpunten(previousQuizStand: any[], key) {
+    private determinePreviousWinnaarpunten(previousQuizStand: any[], key) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -232,16 +231,16 @@ export class StandenService {
         return 0;
     }
 
-    determinePreviousTotaalpunten(previousQuizStand: any[], key) {
-        if (previousQuizStand.length > 0) {
-            return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
-                return item.aflevering === (parseInt(key, 10));
-            }).previous_totaalpunten;
-        }
-        return 0;
-    }
+    // determinePreviousTotaalpunten(previousQuizStand: any[], key) {
+    //     if (previousQuizStand.length > 0) {
+    //         return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : previousQuizStand.find(item => {
+    //             return item.aflevering === (parseInt(key, 10));
+    //         }).previous_totaalpunten;
+    //     }
+    //     return 0;
+    // }
 
-    determineQuizPunten(quizStand: any[], aflevering) {
+    private determineQuizPunten(quizStand: any[], aflevering) {
         if (quizStand.length > 0 && quizStand.find(item => item.aflevering === (parseInt(aflevering, 10)))) {
             return (parseInt(aflevering, 10) > _.maxBy(quizStand, 'aflevering').aflevering) ? 0 : quizStand.find(item => {
                 return item.aflevering === (parseInt(aflevering, 10));
@@ -250,7 +249,7 @@ export class StandenService {
         return 0;
     }
 
-    determineDeltaQuizPunten(key, previousQuizStand: any[], objs) {
+    private determineDeltaQuizPunten(key, previousQuizStand: any[], objs) {
         if (previousQuizStand.length > 0) {
             return (parseInt(key, 10) > _.maxBy(previousQuizStand, 'aflevering').aflevering) ? 0 : _.sumBy(objs, 'quizpunten') - previousQuizStand.find(item => {
                 return item.aflevering === (parseInt(key, 10));
@@ -259,7 +258,7 @@ export class StandenService {
         return 0;
     }
 
-    async getPuntenVoorAflevering(aflevering: number) {
+    private async getPuntenVoorAflevering(aflevering: number) {
         return await this.afleveringpuntRepository.find({
             join: {
                 alias: 'afleveringpunten',
@@ -274,7 +273,7 @@ export class StandenService {
         });
     }
 
-    async getPuntenVoorAfleveringVoorDeelnemer(aflevering: number, deelnemerId: string) {
+    private async getPuntenVoorAfleveringVoorDeelnemer(aflevering: number, deelnemerId: string) {
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
@@ -299,7 +298,7 @@ export class StandenService {
         return punten;
     }
 
-    async getPuntenVoorQuiz(aflevering: number) {
+    private async getPuntenVoorQuiz(aflevering: number) {
         return await getRepository(Quizpunt).find({
             join: {
                 alias: 'quizpunten',
@@ -314,7 +313,7 @@ export class StandenService {
         });
     }
 
-    async getPuntenVoorQuizVoorDeelnemer(aflevering: number, deelnemerId: string) {
+    private async getPuntenVoorQuizVoorDeelnemer(aflevering: number, deelnemerId: string) {
         return await getRepository(Quizpunt).find({
             join: {
                 alias: 'quizpunten',
@@ -330,15 +329,7 @@ export class StandenService {
         });
     }
 
-    // laatsteaflevering niet meenemen in stand, is geen voorspelling en quiz voor.
-    // async getAfleveringenVoorStand(): Promise<Aflevering[]> {
-    //     const afleveringen = await getRepository(Aflevering).find();
-    //     return afleveringen.filter(aflevering => {
-    //         return aflevering.uitgezonden && !aflevering.laatseAflevering;
-    //     });
-    // }
-
-    async getAlleUitgezondenAfleveringen(): Promise<Aflevering[]> {
+    private async getAlleUitgezondenAfleveringen(): Promise<Aflevering[]> {
         const afleveringen = await getRepository(Aflevering).find();
         return afleveringen.filter(aflevering => {
             return aflevering.uitgezonden;

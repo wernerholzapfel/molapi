@@ -43,9 +43,11 @@ export class ApplicationModule implements NestModule {
             {path: '/quizpunten/**', method: RequestMethod.GET},
         );
         consumer.apply(AdminMiddleware).forRoutes(
-            {path: '/kandidaten', method: RequestMethod.POST},
+            {path: '/acties', method: RequestMethod.POST},
             {path: '/afleveringen', method: RequestMethod.POST},
+            {path: '/kandidaten', method: RequestMethod.POST},
             {path: '/quizvragen', method: RequestMethod.POST},
+            {path: '/quizvragen/update', method: RequestMethod.POST},
             {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
         );
         consumer.apply(IsUserAllowedToPostMiddleware).forRoutes(

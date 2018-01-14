@@ -1,10 +1,10 @@
-import {Body, Controller, Get, Logger, Param, Post, Req, Res} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
 
 import {Deelnemer} from './deelnemer.interface';
 import {CreateDeelnemerDto} from './create-deelnemer.dto';
 import {DeelnemersService} from './deelnemers.service';
 import {ManagementClient} from 'auth0';
-import * as jwt_decode from 'jwt-decode';
+import * as _ from 'lodash';
 import 'dotenv/config';
 
 const auth0Token = process.env.AUTH0_TOKEN;
@@ -39,12 +39,14 @@ export class DeelnemersController {
 
     @Get('loggedIn')
     async findLoggedInDeelnemer(@Req() req) {
-            return await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
+        const deelnemer = await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
+        deelnemer.voorspellingen =  _.sortBy(deelnemer.voorspellingen, [v => -v.aflevering.aflevering]);
+        return deelnemer;
     }
 
     @Get('voorspellingen')
     async getVoorspellingen(@Req() req) {
-            return await this.deelnemersService.getVoorspellingen(req.user.user_id);
+        return await this.deelnemersService.getVoorspellingen(req.user.user_id);
     }
 
     getToken = headers => {

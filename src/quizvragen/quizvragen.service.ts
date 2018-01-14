@@ -1,11 +1,13 @@
 import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
-import {getRepository, Repository} from 'typeorm';
+import {getConnection, getRepository, Repository} from 'typeorm';
 import {Quizvraag} from './quizvraag.entity';
 import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
+import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
+import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
 @Component()
 export class QuizvragenService {
@@ -81,6 +83,42 @@ export class QuizvragenService {
         return await this.quizvraagRepository.save(quizvraag).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+    }
+
+    async updateAntwoorden(antwoord: Quizantwoord) {
+        this.logger.log('quizvraag done');
+        return await getConnection()
+            .createQueryBuilder()
+            .update(Quizantwoord)
+            .set({antwoord: antwoord.antwoord})
+            .where('id = :id', {id: antwoord.id})
+            .execute();
+    }
+
+    async deleteKandidaten(antwoord: Quizantwoord) {
+        const oldAntwoord = await getRepository(Quizantwoord).createQueryBuilder('antwoord')
+            .leftJoinAndSelect('antwoord.kandidaten', 'kandidaten')
+            .where('antwoord.id = :antwoordId', {antwoordId: antwoord.id})
+            .getOne();
+
+        await oldAntwoord.kandidaten.forEach(async kandidaat => {
+            this.logger.log('delete: ' + kandidaat.display_name);
+            return await
+                getConnection()
+                    .createQueryBuilder()
+                    .relation(Quizantwoord, 'kandidaten')
+                    .of(antwoord)
+                    .remove(kandidaat);
+        });
+    }
+
+    async updateKandidaten(antwoord: Quizantwoord, kandidaat: Kandidaat) {
+        this.logger.log('kandidaat toegevoegd: ' + kandidaat.display_name);
+        return await getConnection()
+            .createQueryBuilder()
+            .relation(Quizantwoord, 'kandidaten')
+            .of(antwoord) // you can use just post id as well
+            .add(kandidaat); // you can use just category id as well
     }
 
     async getQuizVoorAflevering(afleveringId: string) {
