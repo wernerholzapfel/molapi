@@ -39,9 +39,8 @@ export class DeelnemersController {
 
     @Get('loggedIn')
     async findLoggedInDeelnemer(@Req() req) {
-        const deelnemer = await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
-        deelnemer.voorspellingen =  _.sortBy(deelnemer.voorspellingen, [v => -v.aflevering.aflevering]);
-        return deelnemer;
+        return await this.deelnemersService.findLoggedInDeelnemer(req.user.user_id);
+
     }
 
     @Get('voorspellingen')

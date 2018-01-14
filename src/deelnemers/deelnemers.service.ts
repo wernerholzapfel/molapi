@@ -60,7 +60,7 @@ export class DeelnemersService {
             voorspellingen.forEach(voorspelling => {
                 voorspelling.voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
             });
-            return voorspellingen.sort((a, b) => a.aflevering - b.aflevering);
+            return _.sortBy(voorspellingen, [v => -v.aflevering]);
         }
         else {
             throw new HttpException({
@@ -111,6 +111,8 @@ export class DeelnemersService {
         deelnemerResponse.voorspellingen.forEach(voorspelling => {
             voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
         });
+
+        deelnemerResponse.voorspellingen =  _.sortBy(deelnemerResponse.voorspellingen, [v => -v.aflevering.aflevering]);
         return deelnemerResponse;
 
     }
