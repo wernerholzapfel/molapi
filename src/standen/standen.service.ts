@@ -7,6 +7,7 @@ import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {HttpException} from '@nestjs/core';
 import {CacheService} from '../cache.service';
+import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
 @Component()
 export class StandenService {
@@ -15,7 +16,7 @@ export class StandenService {
     constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>, public readonly cacheService: CacheService) {
         this.findAll().then(async deelnemers => {
             for (const deelnemer of deelnemers) {
-                await this.findByDeelnemer(deelnemer.deelnemerId);
+                this.findByDeelnemer(deelnemer.deelnemerId);
             }
         });
     }
@@ -195,6 +196,40 @@ export class StandenService {
         return response;
     }
 
+    async getStatistieken(): Promise<any[]> {
+        const voorspellingen =  await getConnection()
+            .createQueryBuilder()
+            .select('voorspelling')
+            .from(Voorspelling, 'voorspelling')
+            .leftJoinAndSelect('voorspelling.mol', 'mol')
+            .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        const laatsteVoorspellingPerDeelnemer = await _(voorspellingen).groupBy('deelnemer.id')
+            .map((objs, key) => ({
+                deelnemer: _.maxBy(objs, 'aflevering').deelnemer,
+                aflevering: _.maxBy(objs, 'aflevering').aflevering,
+                mol: _.maxBy(objs, 'aflevering').mol,
+            }))
+            .value();
+
+        const molPercentaPerKandidaat = await _(laatsteVoorspellingPerDeelnemer).groupBy('mol.id')
+            .map((objs, key) => ({
+                mol: _.head(objs).mol,
+                count: objs.length,
+                percentage: objs.length / laatsteVoorspellingPerDeelnemer.length * 100,
+            }))
+            .value();
+
+        return molPercentaPerKandidaat;
+    }
+
     private hasResultaatForAflevering(resultatenLijst: any, aflevering: string) {
         return _.find(resultatenLijst, {aflevering: parseInt(aflevering, 10)});
     }
@@ -245,14 +280,19 @@ export class StandenService {
     }
 
     private async getPuntenVoorAflevering(aflevering: number) {
-
         return await getConnection()
             .createQueryBuilder()
             .select('afleveringpunt')
             .from(Afleveringpunten, 'afleveringpunt')
             .leftJoinAndSelect('afleveringpunt.deelnemer', 'deelnemer')
             .where('afleveringpunt.afleveringstand = :aflevering', {aflevering})
-            .getMany();
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
     private async getPuntenVoorAfleveringVoorDeelnemer(aflevering: number, deelnemerId: string) {
@@ -267,7 +307,13 @@ export class StandenService {
             .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
             .where('deelnemer.id = :deelnemerId', {deelnemerId})
             .andWhere('afleveringpunt.afleveringstand = :aflevering', {aflevering})
-            .getMany();
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
 
     }
 
@@ -279,7 +325,13 @@ export class StandenService {
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
             .where('quizpunten.afleveringstand = :afleveringstand', { afleveringstand })
             .getMany()
-            .then(response => response);
+            .then(response => response)
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
     private async getPuntenVoorQuizVoorDeelnemer(aflevering: number, deelnemerId: string) {
@@ -293,7 +345,13 @@ export class StandenService {
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
             .where('quizpunten.afleveringstand = :aflevering', { aflevering })
             .andWhere('deelnemer.id = :deelnemerId', { deelnemerId })
-            .getMany();
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
     }
 
     private async getAlleUitgezondenAfleveringen(): Promise<Aflevering[]> {

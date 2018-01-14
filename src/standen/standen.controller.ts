@@ -12,7 +12,17 @@ export class StandenController {
 
     @Get()
     async findAll(): Promise<Afleveringpunten[]> {
-        return this.standenService.findAll();
+        const stand = await this.standenService.findAll();
+
+        for (const deelnemer of stand) {
+            this.findByDeelnemer(deelnemer.deelnemerId);
+        }
+        return stand;
+    }
+
+    @Get('statistieken')
+    async getStatistieken(): Promise<any[]> {
+        return this.standenService.getStatistieken();
     }
 
     @Get(':deelnemerId')
