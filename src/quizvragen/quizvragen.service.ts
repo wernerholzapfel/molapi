@@ -101,7 +101,7 @@ export class QuizvragenService {
             .where('antwoord.id = :antwoordId', {antwoordId: antwoord.id})
             .getOne();
 
-        await oldAntwoord.kandidaten.forEach(async kandidaat => {
+        return await oldAntwoord.kandidaten.forEach(async kandidaat => {
             this.logger.log('delete: ' + kandidaat.display_name);
             return await
                 getConnection()

@@ -15,6 +15,7 @@ export class ActiesService {
             .getOne().then(async response => {
                 const afleveringen = await getRepository(Aflevering).find();
                 return {
+                    id: response.id,
                     voorspellingaflevering: response.voorspellingaflevering,
                     testaflevering: response.testaflevering,
                     testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
