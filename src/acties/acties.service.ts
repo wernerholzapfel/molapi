@@ -38,10 +38,9 @@ export class ActiesService {
         }
     }
 
-    // tdod
-    // async create(aflevering: Aflevering) {
-    //     return await this.afleveringRepository.save(aflevering).catch((err) => {
-    //         throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-    //     });
-    // }
+    async create(actie: Actie) {
+        return await this.actieRepository.save(actie).catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+    }
 }
