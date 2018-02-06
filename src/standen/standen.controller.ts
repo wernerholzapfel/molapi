@@ -20,6 +20,11 @@ export class StandenController {
         return stand;
     }
 
+    @Get('getpossiblestand/:molId/:winnaarId')
+    async getpossiblestand(@Param('molId') molId, @Param('winnaarId') winnaarId): Promise<any[]> {
+        return this.standenService.getPossibleStand(molId, winnaarId);
+    }
+
     @Get('statistieken')
     async getStatistieken(): Promise<any[]> {
         return this.standenService.getStatistieken();

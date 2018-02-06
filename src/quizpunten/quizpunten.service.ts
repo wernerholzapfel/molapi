@@ -108,14 +108,14 @@ export class QuizpuntenService {
 
     addPreviousPuntenToVragen(puntenlijst, previousPuntenlijst): any[] {
         this.logger.log('puntenlijst: ' + puntenlijst.length);
-        puntenlijst.forEach(vraag => {
+        for (const vraag of puntenlijst) {
             this.logger.log(vraag.quizresultaat.vraag.id);
             vraag.deltaQuizpunten = (previousPuntenlijst.find(item => {
                 return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
             }) ? -1 * (vraag.quizpunten - previousPuntenlijst.find(item => {
                 return item.quizresultaat.vraag.id === vraag.quizresultaat.vraag.id;
             }).quizpunten) : 0);
-        });
+        }
         return puntenlijst;
     }
 }

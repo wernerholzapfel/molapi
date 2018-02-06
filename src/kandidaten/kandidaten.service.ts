@@ -113,12 +113,11 @@ export class KandidatenService {
                 });
         });
 
-
         this.calclogger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
 
         const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
         await quizresultaten.forEach(async quizresultaat => {
-            if (possibleCorrectAnswers.find(correctAnswer => {
+            if (quizresultaat.antwoord && possibleCorrectAnswers.find(correctAnswer => {
                     return correctAnswer.id === quizresultaat.antwoord.id;
                 })) {
                 quizresultaat.punten = this.vragenPunten;
