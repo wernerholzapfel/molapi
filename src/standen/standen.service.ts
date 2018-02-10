@@ -194,7 +194,16 @@ export class StandenService {
             resultaat.afgevallenKandidaat = _.find(kandidaten, {
                 afgevallen: true,
                 aflevering: parseInt(resultaat.aflevering, 10),
-            });
+            }) ?  _.find(kandidaten, {
+                afgevallen: true,
+                aflevering: parseInt(resultaat.aflevering, 10),
+            }) : {   display_name: 'geen afvaller',
+                image_url: '',
+                winner: false,
+                mol: null,
+                finalist: null,
+                afgevallen: true,
+                aflevering: resultaat.aflevering};
         });
 
         this.cacheService.set('api/v1/standen/' + deelnemerId, response).catch(err => {
