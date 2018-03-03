@@ -425,7 +425,7 @@ export class StandenService {
             .from(Quizpunt, 'quizpunten')
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
             .where('quizpunten.afleveringstand = :afleveringstand', { afleveringstand })
-            .andWhere('quizpunten.aflevering < :afleveringstand', {afleveringstand})
+            .andWhere('quizpunten.aflevering <= :afleveringstand', {afleveringstand})
             .getMany()
             .then(response => response)
             .catch((err) => {
