@@ -5,6 +5,7 @@ import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import * as _ from 'lodash';
+import {Actie} from '../acties/actie.entity';
 
 @Component()
 export class QuizresultatenService {
@@ -15,15 +16,13 @@ export class QuizresultatenService {
     }
 
     async findAll(auth0Identifier: string): Promise<Quizresultaat[]> {
-        const afleveringen = await getRepository(Aflevering).find().catch((err) => {
+        const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        const afleveringenUitgezondenList = afleveringen.filter(item => {
-            return item.uitgezonden;
-        });
 
-        if (afleveringenUitgezondenList.length > 0) {
-            this.latestUitgezondenAflevering = _.maxBy(afleveringenUitgezondenList, 'aflevering').aflevering;
+        this.latestUitgezondenAflevering = acties.testaflevering;
+
+        if (this.latestUitgezondenAflevering > 0) {
 
             this.logger.log('dit is de huidige aflevering: ' + this.latestUitgezondenAflevering);
             const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});

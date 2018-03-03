@@ -5,6 +5,7 @@ import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import * as _ from 'lodash';
+import {Actie} from '../acties/actie.entity';
 
 @Component()
 export class QuizpuntenService {
@@ -52,19 +53,14 @@ export class QuizpuntenService {
 
     async findAllForDeelnemer(auth0Identifier: string): Promise<any[]> {
         this.logger.log('dit is de auth0Identifier: ' + auth0Identifier);
-        const afleveringen = await getRepository(Aflevering).find().catch((err) => {
+        const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        const uitgezondenAfleveringen = afleveringen.filter(item => {
-            return item.uitgezonden;
-        });
-        this.logger.log(uitgezondenAfleveringen.length.toString(10))
-        if (uitgezondenAfleveringen.length > 0) {
-            this.afleveringWithLatestTest = _.maxBy(uitgezondenAfleveringen, 'aflevering').aflevering;
-        }
+        // todo was met ParseInt er omheen??
+        this.afleveringWithLatestTest = acties.testaflevering;
 
-        if (this.afleveringWithLatestTest) {
+        if (this.afleveringWithLatestTest > 0) {
             const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
 
             const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
