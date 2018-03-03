@@ -8,6 +8,7 @@ import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
+import {Actie} from '../acties/actie.entity';
 
 @Component()
 export class QuizvragenService {
@@ -18,13 +19,12 @@ export class QuizvragenService {
 
     async find(auth0Identifier: string): Promise<any> {
 
-        // get current aflevering
-        const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
+        const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        //todo was met ParseInt er omheen??
-        const aflevering: number = await _.maxBy(afleveringen, 'aflevering').aflevering;
+        // todo was met ParseInt er omheen??
+        const aflevering: number = acties.testaflevering;
         this.logger.log('dit is de huidige aflevering: ' + aflevering);
 
         const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
