@@ -8,6 +8,8 @@ import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {HttpException} from '@nestjs/core';
 import {CacheService} from '../cache.service';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
+import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
+import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 
 @Component()
 export class StandenService {
@@ -20,7 +22,12 @@ export class StandenService {
             }
         });
     }
-
+    molStrafpunten: number = -10;
+    winnaarStrafpunten: number = -5;
+    afvallerPunten: number = 20;
+    molPunten: number = 20;
+    winnaarPunten: number = 10;
+    vragenPunten: number = 10;
     async findAll(): Promise<any[]> {
         const afleveringen = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering = _.maxBy(afleveringen, 'aflevering');
@@ -161,7 +168,8 @@ export class StandenService {
             .value().sort((a, b) => a.aflevering - b.aflevering);
 
         const response: any = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
-            .map((objs, key) => ({
+            .map((objs, key) => (
+                {
                 aflevering: key,
                 // deelnemerId,
                 // deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
@@ -217,7 +225,7 @@ export class StandenService {
                 aflevering: _.maxBy(objs, 'aflevering').aflevering,
                 mol: _.maxBy(objs, 'aflevering').mol,
             }))
-            .value();
+            .value().filter(voorspelling => !voorspelling.mol.afgevallen);
 
         const molPercentaPerKandidaat = await _(laatsteVoorspellingPerDeelnemer).groupBy('mol.id')
             .map((objs, key) => ({
@@ -227,7 +235,46 @@ export class StandenService {
             }))
             .value();
 
-        return molPercentaPerKandidaat;
+        return _.sortBy(molPercentaPerKandidaat, 'count');
+    }
+
+    async getPossibleStand(molId, winnaarId): Promise<any[]> {
+
+        const afleveringen = await this.getAlleUitgezondenAfleveringen();
+        const latestUitgezondenAflevering = _.maxBy(afleveringen, 'aflevering');
+
+        if (latestUitgezondenAflevering) {
+            this.logger.log('latestUitgezondenAflevering: ' + latestUitgezondenAflevering.aflevering);
+            const puntenlijst = await this.getPossiblePuntenVoorAflevering(latestUitgezondenAflevering.aflevering, molId, winnaarId);
+            const quizPuntenlijst = await this.getPossiblePuntenVoorQuiz(latestUitgezondenAflevering.aflevering, molId);
+            const quizStand = await _(quizPuntenlijst).groupBy('deelnemer.id')
+                .map((objs, key) => ({
+                    deelnemerId: key,
+                    quizpunten: _.sumBy(objs, 'quizpunten'),
+                }))
+                .value();
+
+            const response = await _(puntenlijst).groupBy('deelnemer.id')
+                .map((objs, key) => ({
+                    deelnemerId: key,
+                    display_name: _.head(objs).deelnemer.display_name,
+                    molpunten: _.sumBy(objs, 'molpunten'),
+                    afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                    winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                    quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
+                    totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0),
+                }))
+                .value();
+
+            // this.cacheService.set('api/v1/standen/getpossiblestand', _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
+            return _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]);
+        }
+        else {
+            throw new HttpException({
+                message: 'er is nog geen stand bekend',
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
     }
 
     private hasResultaatForAflevering(resultatenLijst: any, aflevering: string) {
@@ -279,6 +326,51 @@ export class StandenService {
         return 0;
     }
 
+    private async getPossiblePuntenVoorAflevering(aflevering: number, molId: string, winnaarId: string) {
+        const voorspellingen = await getConnection().createQueryBuilder()
+            .select('voorspelling')
+            .from(Voorspelling, 'voorspelling')
+            .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('voorspelling.mol', 'mol')
+            .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+            .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+            .where('voorspelling.aflevering <= :aflevering', {aflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        const kandidatenlijst = await getRepository(Kandidaat).find().catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+        const uitgespeeldeKandidatenLijst = kandidatenlijst;
+            // .filter(item => {
+            // return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
+        // });
+
+        const mol: Kandidaat = uitgespeeldeKandidatenLijst.find(kandidaat => kandidaat.id === molId);
+        const winnaar: Kandidaat = uitgespeeldeKandidatenLijst.find(kandidaat => kandidaat.id === winnaarId);
+        const tempje: any[] = [];
+
+        await voorspellingen.forEach(async voorspelling => {
+            const item: any = {};
+            item.mol = voorspelling.mol,
+            item.afvaller = voorspelling.afvaller,
+            item.winnaar = voorspelling.winnaar,
+            item.deelnemer = voorspelling.deelnemer,
+            item.aflevering = voorspelling.aflevering,
+            item.afvallerpunten = await this.determineAfvallerPunten(voorspelling, uitgespeeldeKandidatenLijst),
+            item.molpunten = await this.determineMolPunten(voorspelling, uitgespeeldeKandidatenLijst, mol),
+            item.winnaarpunten = await this.determineWinnaarPunten(voorspelling, uitgespeeldeKandidatenLijst, winnaar),
+
+            tempje.push(item);
+        });
+        return tempje;
+        }
+
     private async getPuntenVoorAflevering(aflevering: number) {
         return await getConnection()
             .createQueryBuilder()
@@ -324,6 +416,7 @@ export class StandenService {
             .from(Quizpunt, 'quizpunten')
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
             .where('quizpunten.afleveringstand = :afleveringstand', { afleveringstand })
+            .andWhere('quizpunten.aflevering < :afleveringstand', {afleveringstand})
             .getMany()
             .then(response => response)
             .catch((err) => {
@@ -332,6 +425,68 @@ export class StandenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+    }
+
+    private async getPossiblePuntenVoorQuiz(afleveringstand: number, molId) {
+
+        const answers = await getConnection().createQueryBuilder()
+            .select('quizantwoord')
+            .from(Quizantwoord, 'quizantwoord')
+            .leftJoinAndSelect('quizantwoord.kandidaten', 'kandidaten')
+            .leftJoinAndSelect('quizantwoord.vraag', 'vraag')
+            .where('vraag.aflevering <= :aflevering', {aflevering: (afleveringstand - 1)})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+        // // todo rewrite with afleveringen filter?
+        // const answers = await getRepository(Quizantwoord).find(
+        //     {
+        //         join: {
+        //             alias: 'quizantwoord',
+        //             leftJoinAndSelect: {
+        //                 kandidaten: 'quizantwoord.kandidaten',
+        //             },
+        //         },
+        //     },
+        // );
+
+        this.logger.log('answers: ' + answers);
+
+        const possibleCorrectAnswers: Quizantwoord[] = answers.filter(answer => {
+            return answer.kandidaten.some(
+                kandidaat => {
+                   return kandidaat.id === molId;
+                    // return !kandidaat.afgevallen && !kandidaat.winner;
+                });
+        });
+
+        const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
+        const quizpuntenlijst = [];
+
+        await quizresultaten.forEach(async quizresultaat => {
+            if (possibleCorrectAnswers.find(correctAnswer => {
+                    return correctAnswer.id === quizresultaat.antwoord.id;
+                })) {
+                quizresultaat.punten = this.vragenPunten;
+            }
+            else {
+                quizresultaat.punten = 0;
+            }
+
+            const quizpunten: any = {};
+
+            quizpunten.deelnemer = {id: quizresultaat.deelnemer.id, display_name : quizresultaat.deelnemer.display_name},
+            quizpunten.aflevering = quizresultaat.aflevering,
+            quizpunten.quizpunten = quizresultaat.punten,
+            quizpunten.afleveringstand = afleveringstand,
+            // quizpunten.quizresultaat = quizresultaat,
+            quizpuntenlijst.push(quizpunten);
+        });
+        return quizpuntenlijst;
     }
 
     private async getPuntenVoorQuizVoorDeelnemer(aflevering: number, deelnemerId: string) {
@@ -344,6 +499,7 @@ export class StandenService {
             .from(Quizpunt, 'quizpunten')
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
             .where('quizpunten.afleveringstand = :aflevering', { aflevering })
+            .andWhere('quizpunten.aflevering < :aflevering', { aflevering })
             .andWhere('deelnemer.id = :deelnemerId', { deelnemerId })
             .getMany()
             .catch((err) => {
@@ -356,5 +512,32 @@ export class StandenService {
 
     private async getAlleUitgezondenAfleveringen(): Promise<Aflevering[]> {
         return await getRepository(Aflevering).find({where: {uitgezonden: true}});
+    }
+
+    determineAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
+            return this.afvallerPunten;
+        }
+        return 0;
+    }
+
+    determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], mol: Kandidaat) {
+        if (voorspelling.mol.id === mol.id) return this.molPunten;
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
+            return this.molStrafpunten;
+        }
+        return 0;
+    }
+
+    determineWinnaarPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], winnaar: Kandidaat) {
+        if (voorspelling.winnaar.id === winnaar.id) return this.winnaarPunten;
+
+        if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+                voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
+            return this.winnaarStrafpunten;
+        }
+        return 0;
     }
 }
