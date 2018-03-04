@@ -8,7 +8,7 @@
     "dev": "nodemon",
     "prestart:prod": "tsc",
     "prestart": "npm run build",
-    "prepublish": "npm run typings && npm run build",
+    "prepublish": "npm run build",
     "start": "node dist/server.js",
     "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'",
     "pretest": "npm run lint",
