@@ -16,8 +16,8 @@ export class ActiesService {
                 const afleveringen = await getRepository(Aflevering).find();
                 return {
                     id: response.id,
-                    voorspellingaflevering: response.voorspellingaflevering,
-                    testaflevering: response.testaflevering,
+                    voorspellingaflevering: this.determineVoorspellingAflevering(response.voorspellingaflevering, afleveringen) ,
+                    testaflevering: this.determineTestAflevering(response.testaflevering, afleveringen),
                     testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
                 };
@@ -36,6 +36,16 @@ export class ActiesService {
         else {
             return null;
         }
+    }
+
+    determineVoorspellingAflevering(afleveringnummer: number, afleveringen: Aflevering[]): number {
+        const aflevering = afleveringen.find(item => item.aflevering === afleveringnummer);
+        return !aflevering.laatseAflevering ? afleveringnummer : null;
+    }
+
+    determineTestAflevering(afleveringnummer: number, afleveringen: Aflevering[]): number {
+        const aflevering = afleveringen.find(item => item.aflevering === afleveringnummer);
+        return !aflevering.laatseAflevering ? afleveringnummer : null;
     }
 
     async create(actie: Actie) {

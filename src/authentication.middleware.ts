@@ -32,12 +32,6 @@ export class AuthenticationMiddleware implements NestMiddleware {
             issuer: `https://${process.env.AUTH0_DOMAIN}/`,
             algorithm: 'RS256',
         });
-
-        //     secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64'),
-        //     audience: process.env.AUTH0_CLIENT_ID,
-        //     issuer: 'https://werner.eu.auth0.com/',
-        //     algorithm: 'RS256',
-        // });
     }
 }
 

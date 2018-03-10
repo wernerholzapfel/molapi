@@ -21,11 +21,6 @@ export class CacheService {
 
     async getStats(): Promise<Stats> {
         const stats = await myCache.getStats();
-        // this.logger.log('cache keys: ' + stats.keys);
-        // this.logger.log('cache ksize: ' + stats.ksize);
-        // this.logger.log('cache hits: ' + stats.hits);
-        // this.logger.log('cache misses: ' + stats.misses);
-        // this.logger.log('cache vsize: ' + stats.vsize);
 
         return stats;
     }
