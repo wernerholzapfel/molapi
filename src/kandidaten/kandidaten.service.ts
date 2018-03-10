@@ -1,9 +1,8 @@
 import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
-import {getRepository, Repository} from 'typeorm';
+import {getConnection, getRepository, Repository} from 'typeorm';
 import {Kandidaat} from './kandidaat.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
-import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
@@ -29,7 +28,10 @@ export class KandidatenService {
     async findAll(): Promise<Kandidaat[]> {
         const kandidaten = await this.kandidaatRepository.find()
             .catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
             });
         return _.sortBy(kandidaten, 'display_name');
 
@@ -40,59 +42,65 @@ export class KandidatenService {
         const response = await this.kandidaatRepository.save(kandidaat).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
-        await getRepository(Quizpunt).delete({afleveringstand: kandidaat.aflevering});
-        await this.updateQuizResultaten(kandidaat.aflevering);
+        this.updateQuizResultaten(kandidaat.aflevering);
 
-        await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
-        await this.updateAfleveringPunten(kandidaat);
+        this.updateAfleveringPunten(kandidaat);
 
-        this.cacheService.flushAll();
         return response;
     }
 
     async updateAfleveringPunten(kandidaat: Kandidaat) {
-        const voorspellingen = await getRepository(Voorspelling).find({
-            join: {
-                alias: 'voorspelling',
-                leftJoinAndSelect: {
-                    deelnemer: 'voorspelling.deelnemer',
-                    mol: 'voorspelling.mol',
-                    afvaller: 'voorspelling.afvaller',
-                    winnaar: 'voorspelling.winnaar',
-                },
-            },
-        }).then(voorspellingenlijst => {
-            return voorspellingenlijst.filter(vl => {
-                return vl.aflevering <= kandidaat.aflevering;
-            });
-        }).catch((err) => {
-            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-        });
+        this.calclogger.log('start updating afleveringpunten for stand: ' + kandidaat.aflevering);
+
+        const voorspellingen: Voorspelling[] = await getRepository(Voorspelling)
+            .createQueryBuilder('voorspelling')
+            .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('voorspelling.mol', 'mol')
+            .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+            .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+            .where('voorspelling.aflevering <= :aflevering', {aflevering: kandidaat.aflevering})
+            .getMany()
+            // .catch((err) => {
+            //     throw new HttpException({
+            //         message: err.message,
+            //         statusCode: HttpStatus.BAD_REQUEST,
+            //     }, HttpStatus.BAD_REQUEST);
+            // });
+
+        this.calclogger.log('voorspellingen.length: ' + voorspellingen.length);
 
         const kandidatenlijst = await getRepository(Kandidaat).find().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+
         const uitgespeeldeKandidatenLijst = kandidatenlijst.filter(item => {
             return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
         });
 
+        await getRepository(Afleveringpunten).delete({afleveringstand: kandidaat.aflevering});
+
+        const newAfleveringpunten: Afleveringpunten[] = [];
+
         await voorspellingen.forEach(async voorspelling => {
             await getRepository(Afleveringpunten).save({
                 aflevering: voorspelling.aflevering,
-                afvallerpunten: await this.determineAfvallerPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
-                molpunten: await this.determineMolPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
-                winnaarpunten: await this.determineWinnaarPunten(voorspelling, voorspellingen, uitgespeeldeKandidatenLijst),
+                afvallerpunten: await this.determineAfvallerPunten(voorspelling, uitgespeeldeKandidatenLijst),
+                molpunten: await this.determineMolPunten(voorspelling, uitgespeeldeKandidatenLijst),
+                winnaarpunten: await this.determineWinnaarPunten(voorspelling, uitgespeeldeKandidatenLijst),
                 deelnemer: {id: voorspelling.deelnemer.id},
                 voorspelling: {id: voorspelling.id},
                 afleveringstand: kandidaat.aflevering,
             }).catch((err) => {
                 throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-            });
         });
-
+            });
+        this.calclogger.log('finished updating afleveringpunten for stand: ' + kandidaat.aflevering);
+        this.cacheService.flushAll();
     }
 
     async updateQuizResultaten(afleveringstand) {
+        this.calclogger.log('start updating quizresultaten for stand: ' + afleveringstand);
+
         const answers = await getRepository(Quizantwoord).find(
             {
                 join: {
@@ -104,7 +112,7 @@ export class KandidatenService {
             },
         );
 
-        this.logger.log('answers: ' + answers);
+        this.calclogger.log('answers: ' + answers.length);
 
         const possibleCorrectAnswers: Quizantwoord[] = answers.filter(answer => {
             return answer.kandidaten.some(
@@ -115,7 +123,16 @@ export class KandidatenService {
 
         this.calclogger.log('possibleCorrectAnswers.length: ' + possibleCorrectAnswers.length);
 
-        const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat).find();
+        const quizresultaten: Quizresultaat[] = await getRepository(Quizresultaat)
+            .createQueryBuilder('quizresultaat')
+            .leftJoinAndSelect('quizresultaat.vraag', 'vraag')
+            .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
+            .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
+            .where('quizresultaat.aflevering <= :aflevering', {aflevering: afleveringstand})
+            .getMany();
+
+        this.calclogger.log('quizresultaten opgehaald: ' + quizresultaten.length);
+        const newQuizResults: Quizpunt[] = [];
         await quizresultaten.forEach(async quizresultaat => {
             if (quizresultaat.antwoord && possibleCorrectAnswers.find(correctAnswer => {
                     return correctAnswer.id === quizresultaat.antwoord.id;
@@ -125,19 +142,44 @@ export class KandidatenService {
             else {
                 quizresultaat.punten = 0;
             }
-            await getRepository(Quizpunt).save({
+            newQuizResults.push({
                 deelnemer: {id: quizresultaat.deelnemer.id},
                 aflevering: quizresultaat.aflevering,
                 quizpunten: quizresultaat.punten,
                 afleveringstand,
                 quizresultaat: {id: quizresultaat.id},
-            }).catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-            });
+            } as Quizpunt);
         });
+
+        await getRepository(Quizpunt).delete({afleveringstand});
+
+        this.calclogger.log('ik ga nu ' + newQuizResults.length + ' newQuizResults opslaan');
+
+        let index = 1;
+        const batchsize = 500;
+        const totalItems = newQuizResults.length;
+
+        for (index; index <= Math.ceil(totalItems / batchsize); index++) {
+            getConnection()
+                .createQueryBuilder()
+                .insert()
+                .into(Quizpunt)
+                .values(newQuizResults.slice((index * batchsize - batchsize), batchsize * index))
+                .execute().then(response => {
+                newQuizResults.splice(0, batchsize);
+            })
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        }
+        this.calclogger.log('finished updating quizresultaten for stand: ' + afleveringstand);
+        this.cacheService.flushAll();
     }
 
-    determineAfvallerPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+    determineAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
                 voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
             return this.afvallerPunten;
@@ -145,7 +187,7 @@ export class KandidatenService {
         return 0;
     }
 
-    determineMolPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+    determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => voorspelling.mol.id === kandidaat.id && kandidaat.mol)) {
             return this.molPunten;
         }
@@ -156,7 +198,7 @@ export class KandidatenService {
         return 0;
     }
 
-    determineWinnaarPunten(voorspelling: Voorspelling, voorspellingen: Voorspelling[], kandidaten: Kandidaat[]) {
+    determineWinnaarPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => voorspelling.winnaar.id === kandidaat.id && kandidaat.winner)) {
             return this.winnaarPunten;
         }
@@ -166,11 +208,4 @@ export class KandidatenService {
         }
         return 0;
     }
-
-    // determineVoorspellingId(deelnemer: Deelnemer, voorspellingen: Voorspelling[], kandidaat: Kandidaat) {
-    //     return voorspellingen.find(voorspelling => {
-    //         return voorspelling.deelnemer.id === deelnemer.id &&
-    //             voorspelling.aflevering === kandidaat.aflevering;
-    //     }).id;
-    // }
 }

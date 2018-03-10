@@ -17,17 +17,52 @@ export class StandenService {
 
     constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>, public readonly cacheService: CacheService) {
         this.findAll().then(async deelnemers => {
-            for (const deelnemer of deelnemers) {
-                this.findByDeelnemer(deelnemer.deelnemerId);
-            }
+            this.setDeelnemerstandenInCache(deelnemers);
         });
     }
+
     molStrafpunten: number = -10;
     winnaarStrafpunten: number = -5;
     afvallerPunten: number = 20;
     molPunten: number = 20;
     winnaarPunten: number = 10;
     vragenPunten: number = 10;
+
+    async setDeelnemerstandenInCache(deelnemers: any[]) {
+
+        const alleUitgezondenAfleveringen = await this.getAlleUitgezondenAfleveringen();
+
+        const laatsteAfleveringMetTestOrVoorspelling = _.maxBy(alleUitgezondenAfleveringen, 'aflevering');
+        const kandidaten = await getRepository(Kandidaat).find();
+        const puntenlijst = await this.getPuntenVoorAfleveringVoorAlleDeelnemers(laatsteAfleveringMetTestOrVoorspelling.aflevering);
+
+        const previouspuntenlijst = await this.getPuntenVoorAfleveringVoorAlleDeelnemers(
+            laatsteAfleveringMetTestOrVoorspelling.aflevering === 1 ? laatsteAfleveringMetTestOrVoorspelling.aflevering : laatsteAfleveringMetTestOrVoorspelling.aflevering - 1);
+
+        const quizPuntenlijst = await this.getPuntenVoorQuizVoorAlleDeelnemers(laatsteAfleveringMetTestOrVoorspelling.aflevering);
+
+        const previousQuizpuntenlijst = await this.getPuntenVoorQuizVoorAlleDeelnemers(
+            laatsteAfleveringMetTestOrVoorspelling.aflevering === 1 ? laatsteAfleveringMetTestOrVoorspelling.aflevering : laatsteAfleveringMetTestOrVoorspelling.aflevering - 1);
+        for (const deelnemer of deelnemers) {
+            this.setDeelnemerStandInCache(deelnemer.deelnemerId, alleUitgezondenAfleveringen, laatsteAfleveringMetTestOrVoorspelling, puntenlijst, previouspuntenlijst, quizPuntenlijst, previousQuizpuntenlijst, kandidaten);
+        }
+    }
+
+    async fetchLists(latestUitgezondenAflevering): Promise<any> {
+        const previousAflevering = latestUitgezondenAflevering.aflevering === 1 ? latestUitgezondenAflevering.aflevering : latestUitgezondenAflevering.aflevering - 1;
+        const puntenlijst = await this.getPuntenVoorAflevering(latestUitgezondenAflevering.aflevering);
+        const previouspuntenlijst = puntenlijst.filter(item => item.aflevering === previousAflevering);
+        const quizPuntenlijst = await this.getPuntenVoorQuiz(latestUitgezondenAflevering.aflevering);
+        const QuizPreviouspuntenlijst = quizPuntenlijst.filter(item => item.aflevering === previousAflevering);
+
+        return {
+            puntenlijst,
+            previouspuntenlijst,
+            quizPuntenlijst,
+            QuizPreviouspuntenlijst,
+        };
+    }
+
     async findAll(): Promise<any[]> {
         const afleveringen = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering = _.maxBy(afleveringen, 'aflevering');
@@ -95,6 +130,129 @@ export class StandenService {
                 statusCode: HttpStatus.NO_CONTENT,
             }, HttpStatus.NO_CONTENT);
         }
+    }
+
+    async listsByDeelnemer(deelnemerId, laatsteAfleveringMetTestOrVoorspelling): Promise<any> {
+        return await {
+            puntenlijst: await this.getPuntenVoorAfleveringVoorDeelnemer(laatsteAfleveringMetTestOrVoorspelling.aflevering, deelnemerId),
+
+            previouspuntenlijst: await this.getPuntenVoorAfleveringVoorDeelnemer(
+                laatsteAfleveringMetTestOrVoorspelling.aflevering === 1 ? laatsteAfleveringMetTestOrVoorspelling.aflevering : laatsteAfleveringMetTestOrVoorspelling.aflevering - 1, deelnemerId),
+
+            quizPuntenlijst: await this.getPuntenVoorQuizVoorDeelnemer(laatsteAfleveringMetTestOrVoorspelling.aflevering, deelnemerId),
+            QuizPreviouspuntenlijst: await this.getPuntenVoorQuizVoorDeelnemer(
+                laatsteAfleveringMetTestOrVoorspelling.aflevering === 1 ? laatsteAfleveringMetTestOrVoorspelling.aflevering : laatsteAfleveringMetTestOrVoorspelling.aflevering - 1, deelnemerId),
+        };
+    }
+
+    setDeelnemerStandInCache(deelnemerId, alleUitgezondenAfleveringen, laatsteAfleveringMetTestOrVoorspelling, allpuntenlijst: any[], allpreviouspuntenlijst: any[], allquizPuntenlijst: any[], allpreviousQuizpuntenlijst: any[], kandidaten: any[]): Promise<any[]> {
+
+        const puntenlijst = allpuntenlijst.filter(item => item.deelnemer.id === deelnemerId);
+
+        const previouspuntenlijst = allpreviouspuntenlijst.filter(item => item.deelnemer.id === deelnemerId);
+        const quizPuntenlijst = allquizPuntenlijst.filter(item => item.deelnemer.id === deelnemerId);
+        const QuizPreviouspuntenlijst = allpreviousQuizpuntenlijst.filter(item => item.deelnemer.id === deelnemerId);
+
+        const previousQuizStand = _(QuizPreviouspuntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                deelnemerId: _.head(objs).deelnemer.id,
+                // deelnemer: _.head(objs).deelnemer,
+                // afleveringstand: _.head(objs).afleveringstand,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+            }))
+            .value();
+
+        const quizStand = _(quizPuntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                deelnemerId: _.head(objs).deelnemer.id,
+                // deelnemer: _.head(objs).deelnemer,
+                // afleveringstand: _.head(objs).afleveringstand,
+                quizpunten: _.sumBy(objs, 'quizpunten'),
+                deltaquizpunten: this.determineDeltaQuizPunten(key, previousQuizStand, objs),
+            }))
+            .value();
+
+        const previousStand: any = _(previouspuntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                deelnemerId: _.head(objs).deelnemer.id,
+                deelnemer: _.head(objs).deelnemer,
+                previous_molpunten: _.sumBy(objs, 'molpunten'),
+                previous_afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                previous_winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                previous_quizpunten: this.determineQuizPunten(previousQuizStand, key),
+                previous_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(previousQuizStand, key),
+            }))
+            .value();
+
+        const resultatenLijst = _(puntenlijst).groupBy('aflevering')
+            .map((objs, key) => ({
+                aflevering: parseInt(key, 10),
+                // deelnemerId: _.head(objs).deelnemer.id,
+                // deelnemer: _.head(objs).deelnemer,
+                // display_name: _.head(objs).deelnemer.display_name,
+                voorspelling: _.head(objs).voorspelling,
+                molpunten: _.sumBy(objs, 'molpunten'),
+                afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                quizpunten: this.determineQuizPunten(quizStand, key),
+                totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(quizStand, key),
+                delta_molpunten: _.sumBy(objs, 'molpunten') - this.determinePreviousMolpunten(previousStand, key),
+                delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - this.determinePreviousAfvallerpunten(previousStand, key),
+                delta_winnaarpunten: _.sumBy(objs, 'winnaarpunten') - this.determinePreviousWinnaarpunten(previousStand, key),
+                delta_quizpunten: this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key),
+                // delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + this.determineQuizPunten(quizStand, key) -
+                // this.determinePreviousTotaalpunten(previousStand, key),
+            }))
+            .value().sort((a, b) => a.aflevering - b.aflevering);
+
+        const response: any = _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
+            .map((objs, key) => (
+                {
+                    aflevering: key,
+                    // deelnemerId,
+                    // deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
+                    // display_name: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).display_name : null,
+                    voorspelling: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).voorspelling : null,
+                    molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).molpunten : 0,
+                    afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).afvallerpunten : 0,
+                    winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).winnaarpunten : 0,
+                    quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).quizpunten : this.determineQuizPunten(quizStand, key),
+                    totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).totaalpunten : this.determineQuizPunten(quizStand, key),
+                    delta_molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_molpunten : 0,
+                    delta_afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_afvallerpunten : 0,
+                    delta_winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_winnaarpunten : 0,
+                    delta_quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_quizpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
+                    // delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
+                })).value();
+
+        // voeg afgevallen kandidaat toe.
+
+        response.forEach(async resultaat => {
+            resultaat.afgevallenKandidaat = _.find(kandidaten, {
+                afgevallen: true,
+                aflevering: parseInt(resultaat.aflevering, 10),
+            }) ? _.find(kandidaten, {
+                afgevallen: true,
+                aflevering: parseInt(resultaat.aflevering, 10),
+            }) : {
+                display_name: 'geen afvaller',
+                image_url: '',
+                winner: false,
+                mol: null,
+                finalist: null,
+                afgevallen: true,
+                aflevering: resultaat.aflevering,
+            };
+        });
+
+        this.cacheService.set('api/v1/standen/' + deelnemerId, response).catch(err => {
+            this.logger.log('fatal error caching mislukt' + err);
+        });
+        this.cacheService.getStats().then(stats => this.logger.log('aantal keys in cache na deelnemerstand: ' + stats.keys));
+        return response;
     }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
@@ -170,22 +328,22 @@ export class StandenService {
         const response: any = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
             .map((objs, key) => (
                 {
-                aflevering: key,
-                // deelnemerId,
-                // deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
-                // display_name: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).display_name : null,
-                voorspelling: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).voorspelling : null,
-                molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).molpunten : 0,
-                afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).afvallerpunten : 0,
-                winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).winnaarpunten : 0,
-                quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).quizpunten : this.determineQuizPunten(quizStand, key),
-                totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).totaalpunten : this.determineQuizPunten(quizStand, key),
-                delta_molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_molpunten : 0,
-                delta_afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_afvallerpunten : 0,
-                delta_winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_winnaarpunten : 0,
-                delta_quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_quizpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
-                // delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
-            })).value();
+                    aflevering: key,
+                    // deelnemerId,
+                    // deelnemer: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).deelnemer : null,
+                    // display_name: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).display_name : null,
+                    voorspelling: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).voorspelling : null,
+                    molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).molpunten : 0,
+                    afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).afvallerpunten : 0,
+                    winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).winnaarpunten : 0,
+                    quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).quizpunten : this.determineQuizPunten(quizStand, key),
+                    totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).totaalpunten : this.determineQuizPunten(quizStand, key),
+                    delta_molpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_molpunten : 0,
+                    delta_afvallerpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_afvallerpunten : 0,
+                    delta_winnaarpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_winnaarpunten : 0,
+                    delta_quizpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_quizpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
+                    // delta_totaalpunten: this.hasResultaatForAflevering(resultatenLijst, key) ? this.hasResultaatForAflevering(resultatenLijst, key).delta_totaalpunten : (this.determineQuizPunten(quizStand, key) - this.determineQuizPunten(previousQuizStand, key)),
+                })).value();
 
         // voeg afgevallen kandidaat toe.
         const kandidaten = await getRepository(Kandidaat).find();
@@ -194,27 +352,51 @@ export class StandenService {
             resultaat.afgevallenKandidaat = _.find(kandidaten, {
                 afgevallen: true,
                 aflevering: parseInt(resultaat.aflevering, 10),
-            }) ?  _.find(kandidaten, {
+            }) ? _.find(kandidaten, {
                 afgevallen: true,
                 aflevering: parseInt(resultaat.aflevering, 10),
-            }) : {   display_name: 'geen afvaller',
+            }) : {
+                display_name: 'geen afvaller',
                 image_url: '',
                 winner: false,
                 mol: null,
                 finalist: null,
                 afgevallen: true,
-                aflevering: resultaat.aflevering};
+                aflevering: resultaat.aflevering
+            };
         });
 
         this.cacheService.set('api/v1/standen/' + deelnemerId, response).catch(err => {
-            this.logger.log('fatal error caching mislukt');
+            this.logger.log('fatal error caching mislukt: ' + err);
         });
         this.cacheService.getStats().then(stats => this.logger.log('aantal keys in cache na deelnemerstand: ' + stats.keys));
         return response;
     }
 
+    // async setDeelnemersStandCache(deelnemers: any[]) {
+    //     const alleUitgezondenAfleveringen = await this.getAlleUitgezondenAfleveringen();
+    //
+    //     const laatsteAfleveringMetTestOrVoorspelling = _.maxBy(alleUitgezondenAfleveringen, 'aflevering');
+    //     const eenNaLaatsetAfleveringMetTestOrVoorspelling = laatsteAfleveringMetTestOrVoorspelling.aflevering === 1
+    //         ? laatsteAfleveringMetTestOrVoorspelling.aflevering
+    //         : laatsteAfleveringMetTestOrVoorspelling.aflevering - 1;
+    //
+    //     const kandidaten = await getRepository(Kandidaat).find();
+    //
+    //     const puntenlijst = await this.getPuntenVoorAflevering(laatsteAfleveringMetTestOrVoorspelling.aflevering);
+    //
+    //     const previouspuntenlijst = puntenlijst.filter(item => item.aflevering = eenNaLaatsetAfleveringMetTestOrVoorspelling);
+    //     const quizPuntenlijst = await this.getPuntenVoorQuiz(laatsteAfleveringMetTestOrVoorspelling.aflevering);
+    //     const QuizPreviouspuntenlijst = quizPuntenlijst.filter(item => item.aflevering = eenNaLaatsetAfleveringMetTestOrVoorspelling);
+    //
+    //     for (const deelnemer of deelnemers) {
+    //         this.setDeelnemerStandCache(deelnemer.deelnemerId, {puntenlijst, previouspuntenlijst, quizPuntenlijst, QuizPreviouspuntenlijst}, kandidaten, alleUitgezondenAfleveringen);
+    //     }
+    //     return deelnemers;
+    // }
+
     async getStatistieken(): Promise<any[]> {
-        const voorspellingen =  await getConnection()
+        const voorspellingen = await getConnection()
             .createQueryBuilder()
             .select('voorspelling')
             .from(Voorspelling, 'voorspelling')
@@ -356,29 +538,26 @@ export class StandenService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
         const uitgespeeldeKandidatenLijst = kandidatenlijst;
-            // .filter(item => {
-            // return item.aflevering <= kandidaat.aflevering && item.aflevering > 0;
-        // });
 
         const mol: Kandidaat = uitgespeeldeKandidatenLijst.find(kandidaat => kandidaat.id === molId);
         const winnaar: Kandidaat = uitgespeeldeKandidatenLijst.find(kandidaat => kandidaat.id === winnaarId);
-        const tempje: any[] = [];
+        const possiblestand: any[] = [];
 
         await voorspellingen.forEach(async voorspelling => {
             const item: any = {};
             item.mol = voorspelling.mol,
-            item.afvaller = voorspelling.afvaller,
-            item.winnaar = voorspelling.winnaar,
-            item.deelnemer = voorspelling.deelnemer,
-            item.aflevering = voorspelling.aflevering,
-            item.afvallerpunten = await this.determineAfvallerPunten(voorspelling, uitgespeeldeKandidatenLijst),
-            item.molpunten = await this.determineMolPunten(voorspelling, uitgespeeldeKandidatenLijst, mol),
-            item.winnaarpunten = await this.determineWinnaarPunten(voorspelling, uitgespeeldeKandidatenLijst, winnaar),
+                item.afvaller = voorspelling.afvaller,
+                item.winnaar = voorspelling.winnaar,
+                item.deelnemer = voorspelling.deelnemer,
+                item.aflevering = voorspelling.aflevering,
+                item.afvallerpunten = await this.determineAfvallerPunten(voorspelling, uitgespeeldeKandidatenLijst),
+                item.molpunten = await this.determineMolPunten(voorspelling, uitgespeeldeKandidatenLijst, mol),
+                item.winnaarpunten = await this.determineWinnaarPunten(voorspelling, uitgespeeldeKandidatenLijst, winnaar);
 
-            tempje.push(item);
+            possiblestand.push(item);
         });
-        return tempje;
-        }
+        return possiblestand;
+    }
 
     private async getPuntenVoorAflevering(aflevering: number) {
         return await getConnection()
@@ -418,13 +597,34 @@ export class StandenService {
 
     }
 
+    private async getPuntenVoorAfleveringVoorAlleDeelnemers(aflevering: number) {
+        return await getConnection()
+            .createQueryBuilder()
+            .select('afleveringpunt')
+            .from(Afleveringpunten, 'afleveringpunt')
+            .leftJoinAndSelect('afleveringpunt.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('afleveringpunt.voorspelling', 'voorspelling')
+            .leftJoinAndSelect('voorspelling.mol', 'mol')
+            .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+            .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+            .where('afleveringpunt.afleveringstand = :aflevering', {aflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+    }
+
     private async getPuntenVoorQuiz(afleveringstand: number) {
         return await getConnection()
             .createQueryBuilder()
             .select('quizpunten')
             .from(Quizpunt, 'quizpunten')
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
-            .where('quizpunten.afleveringstand = :afleveringstand', { afleveringstand })
+            .where('quizpunten.afleveringstand = :afleveringstand', {afleveringstand})
             .andWhere('quizpunten.aflevering <= :afleveringstand', {afleveringstand})
             .getMany()
             .then(response => response)
@@ -451,24 +651,13 @@ export class StandenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
-        // // todo rewrite with afleveringen filter?
-        // const answers = await getRepository(Quizantwoord).find(
-        //     {
-        //         join: {
-        //             alias: 'quizantwoord',
-        //             leftJoinAndSelect: {
-        //                 kandidaten: 'quizantwoord.kandidaten',
-        //             },
-        //         },
-        //     },
-        // );
 
         this.logger.log('answers: ' + answers);
 
         const possibleCorrectAnswers: Quizantwoord[] = answers.filter(answer => {
             return answer.kandidaten.some(
                 kandidaat => {
-                   return kandidaat.id === molId;
+                    return kandidaat.id === molId;
                     // return !kandidaat.afgevallen && !kandidaat.winner;
                 });
         });
@@ -488,12 +677,12 @@ export class StandenService {
 
             const quizpunten: any = {};
 
-            quizpunten.deelnemer = {id: quizresultaat.deelnemer.id, display_name : quizresultaat.deelnemer.display_name},
-            quizpunten.aflevering = quizresultaat.aflevering,
-            quizpunten.quizpunten = quizresultaat.punten,
-            quizpunten.afleveringstand = afleveringstand,
-            // quizpunten.quizresultaat = quizresultaat,
-            quizpuntenlijst.push(quizpunten);
+            quizpunten.deelnemer = {id: quizresultaat.deelnemer.id, display_name: quizresultaat.deelnemer.display_name},
+                quizpunten.aflevering = quizresultaat.aflevering,
+                quizpunten.quizpunten = quizresultaat.punten,
+                quizpunten.afleveringstand = afleveringstand,
+                // quizpunten.quizresultaat = quizresultaat,
+                quizpuntenlijst.push(quizpunten);
         });
         return quizpuntenlijst;
     }
@@ -507,9 +696,29 @@ export class StandenService {
             .addSelect('deelnemer.id')
             .from(Quizpunt, 'quizpunten')
             .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
-            .where('quizpunten.afleveringstand = :aflevering', { aflevering })
-            .andWhere('quizpunten.aflevering <= :aflevering', { aflevering })
-            .andWhere('deelnemer.id = :deelnemerId', { deelnemerId })
+            .where('quizpunten.afleveringstand = :aflevering', {aflevering})
+            .andWhere('quizpunten.aflevering <= :aflevering', {aflevering})
+            .andWhere('deelnemer.id = :deelnemerId', {deelnemerId})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+    }
+
+    private async getPuntenVoorQuizVoorAlleDeelnemers(aflevering: number) {
+
+        return await getConnection()
+            .createQueryBuilder()
+            .select('quizpunten.quizpunten')
+            .addSelect('quizpunten.aflevering')
+            .addSelect('deelnemer.id')
+            .from(Quizpunt, 'quizpunten')
+            .leftJoinAndSelect('quizpunten.deelnemer', 'deelnemer')
+            .where('quizpunten.afleveringstand = :aflevering', {aflevering})
+            .andWhere('quizpunten.aflevering <= :aflevering', {aflevering})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
