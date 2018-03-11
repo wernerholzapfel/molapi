@@ -208,7 +208,7 @@ export class StandenService {
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
 
-        const response: any = _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
+        const response: any = _(alleUitgezondenAfleveringen.filter(aflevering => aflevering.uitgezonden)).groupBy('aflevering')
             .map((objs, key) => (
                 {
                     aflevering: key,
@@ -325,7 +325,7 @@ export class StandenService {
             }))
             .value().sort((a, b) => a.aflevering - b.aflevering);
 
-        const response: any = await _(alleUitgezondenAfleveringen.filter(aflevering => !aflevering.laatseAflevering)).groupBy('aflevering')
+        const response: any = await _(alleUitgezondenAfleveringen.filter(aflevering => aflevering.uitgezonden)).groupBy('aflevering')
             .map((objs, key) => (
                 {
                     aflevering: key,
