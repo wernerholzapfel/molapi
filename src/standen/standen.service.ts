@@ -10,6 +10,7 @@ import {CacheService} from '../cache.service';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
+import * as fs from 'fs';
 
 @Component()
 export class StandenService {
@@ -27,6 +28,8 @@ export class StandenService {
     molPunten: number = 20;
     winnaarPunten: number = 10;
     vragenPunten: number = 10;
+
+    createStandenFile: boolean = true;
 
     async setDeelnemerstandenInCache(deelnemers: any[]) {
 
@@ -107,10 +110,10 @@ export class StandenService {
                 .map((objs, key) => ({
                     deelnemerId: key,
                     display_name: _.head(objs).deelnemer.display_name,
-                    // molpunten: _.sumBy(objs, 'molpunten'),
-                    // afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
-                    // winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                    // quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
+                    molpunten: _.sumBy(objs, 'molpunten'),
+                    afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
+                    winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
+                    quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
                     totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0),
                     // delta_molpunten: _.sumBy(objs, 'molpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_molpunten : 0),
                     // delta_afvallerpunten: _.sumBy(objs, 'afvallerpunten') - (previousStand.find(item => item.deelnemerId === key) ? previousStand.find(item => item.deelnemerId === key).previous_afvallerpunten : 0),
@@ -122,6 +125,14 @@ export class StandenService {
                 .value();
 
             this.cacheService.set('api/v1/standen', _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
+
+            if (this.createStandenFile) {
+                const jsonStand = JSON.stringify(_.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
+                fs.writeFile('output/stand.json', jsonStand, 'utf8', (err) => {
+                    // throws an error, you could also catch it here
+                    if (err) throw err;
+                });
+            }
             return _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]);
         }
         else {
@@ -252,6 +263,14 @@ export class StandenService {
             this.logger.log('fatal error caching mislukt' + err);
         });
         this.cacheService.getStats().then(stats => this.logger.log('aantal keys in cache na deelnemerstand: ' + stats.keys));
+
+        if (this.createStandenFile) {
+            const jsonStand = JSON.stringify(response);
+            fs.writeFile('output/deel   nemerstand_' + deelnemerId + '.json', jsonStand, 'utf8', (err) => {
+                // throws an error, you could also catch it here
+                if (err) throw err;
+            });
+        }
         return response;
     }
 

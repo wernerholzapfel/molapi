@@ -57,7 +57,6 @@ export class QuizpuntenService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        // todo was met ParseInt er omheen??
         this.afleveringWithLatestTest = acties.testaflevering;
 
         if (this.afleveringWithLatestTest > 0) {
