@@ -21,4 +21,7 @@ export class Quizantwoord {
     @ManyToMany(type => Kandidaat)
     @JoinTable()
     kandidaten: Kandidaat[];
+
+    @Column({nullable: true})
+    is_niet_meer_mogelijk_sinds: number;
 }

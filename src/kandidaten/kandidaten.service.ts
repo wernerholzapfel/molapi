@@ -42,11 +42,48 @@ export class KandidatenService {
         const response = await this.kandidaatRepository.save(kandidaat).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+
+        this.updateAntwoorden(kandidaat);
+
         this.updateQuizResultaten(kandidaat.aflevering);
 
         this.updateAfleveringPunten(kandidaat);
 
         return response;
+    }
+
+    async updateAntwoorden(kandidaat: Kandidaat) {
+        const antwoordMogelijkheden: Quizantwoord[] = await getRepository(Quizantwoord)
+            .createQueryBuilder('antwoordMogelijkheden')
+            .leftJoinAndSelect('antwoordMogelijkheden.kandidaten', 'kandidaten')
+            .leftJoinAndSelect('antwoordMogelijkheden.vraag', 'vraag')
+            .getMany();
+
+        antwoordMogelijkheden.forEach(async antwoordMogelijkheid => {
+            if (antwoordMogelijkheid.kandidaten.every(kandidaatItem => {
+                    return kandidaatItem.afgevallen || kandidaatItem.winner;
+                })) {
+
+                this.logger.log('aantal kandidaten dat is afgevallen :'
+                    + antwoordMogelijkheid.antwoord + ' - '
+                    + antwoordMogelijkheid.kandidaten.length);
+                const isNietMeerMogelijkSinds = antwoordMogelijkheid.kandidaten
+                    .sort((a, b) => a.aflevering + b.aflevering)[0].aflevering;
+
+                await getRepository(Quizantwoord)
+                    .createQueryBuilder('quizantwoord')
+                    .update()
+                    .set({is_niet_meer_mogelijk_sinds: isNietMeerMogelijkSinds})
+                    .where('id = :id', {id: antwoordMogelijkheid.id})
+                    .execute()
+                    .catch((err) => {
+                        throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        }, HttpStatus.BAD_REQUEST);
+                    });
+            }
+        });
     }
 
     async updateAfleveringPunten(kandidaat: Kandidaat) {
@@ -60,12 +97,12 @@ export class KandidatenService {
             .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
             .where('voorspelling.aflevering <= :aflevering', {aflevering: kandidaat.aflevering})
             .getMany()
-            // .catch((err) => {
-            //     throw new HttpException({
-            //         message: err.message,
-            //         statusCode: HttpStatus.BAD_REQUEST,
-            //     }, HttpStatus.BAD_REQUEST);
-            // });
+        // .catch((err) => {
+        //     throw new HttpException({
+        //         message: err.message,
+        //         statusCode: HttpStatus.BAD_REQUEST,
+        //     }, HttpStatus.BAD_REQUEST);
+        // });
 
         this.calclogger.log('voorspellingen.length: ' + voorspellingen.length);
 
@@ -91,9 +128,12 @@ export class KandidatenService {
                 voorspelling: {id: voorspelling.id},
                 afleveringstand: kandidaat.aflevering,
             }).catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-        });
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
             });
+        });
         this.calclogger.log('finished updating afleveringpunten for stand: ' + kandidaat.aflevering);
         this.cacheService.flushAll();
     }

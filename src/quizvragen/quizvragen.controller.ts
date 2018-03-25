@@ -29,40 +29,48 @@ export class QuizvragenController {
         const quizvraag = await this.quizvragenService.create(newQuizvraag);
         this.logger.log(quizvraag.id);
         createQuizvraagDto.antwoorden.forEach(async antwoord => {
-            const opgeslagenAntwoord = await getRepository(Quizantwoord).save({
+            await getRepository(Quizantwoord).save({
                 antwoord: antwoord.antwoord,
                 vraag: {id: quizvraag.id},
                 kandidaten: antwoord.kandidaten,
             }).catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
             });
         });
         return quizvraag;
     }
+
     @Post('update')
     async update(@Req() req, @Body() createQuizvraagDto: CreateQuizvraagDto) {
         const newQuizvraag = Object.assign({}, createQuizvraagDto, {});
         const quizvraag = await this.quizvragenService.create(newQuizvraag);
-        this.logger.log('quizvraag.id');
         this.logger.log('quizvraag.id: ' + quizvraag.id);
         createQuizvraagDto.antwoorden.forEach(async antwoord => {
-            this.quizvragenService.updateAntwoorden(antwoord).then(async response => {
-                this.quizvragenService.deleteKandidaten(antwoord).then(async success => {
-                    antwoord.kandidaten.forEach(kandidaat => {
-                        this.quizvragenService.updateKandidaten(antwoord, kandidaat);
+            if (antwoord.id) {
+
+                this.quizvragenService.updateAntwoorden(antwoord).then(async response => {
+                    this.quizvragenService.deleteKandidaten(antwoord).then(async success => {
+                        antwoord.kandidaten.forEach(kandidaat => {
+                            this.quizvragenService.updateKandidaten(antwoord, kandidaat);
+                        });
                     });
                 });
-                //     const opgeslagenAntwoord = await getRepository(Quizantwoord).save({
-                //         antwoord: antwoord.antwoord,
-                //         vraag: {id: quizvraag.id},
-                //         kandidaten: antwoord.kandidaten,
-                //     }).catch((err) => {
-                //         throw new HttpException({
-                //             message: err.message,
-                //             statusCode: HttpStatus.BAD_REQUEST
-                //         }, HttpStatus.BAD_REQUEST);
-                //     });
-            });
+            }
+            else {
+                await getRepository(Quizantwoord).save({
+                    antwoord: antwoord.antwoord,
+                    vraag: {id: quizvraag.id},
+                    kandidaten: antwoord.kandidaten,
+                }).catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST
+                    }, HttpStatus.BAD_REQUEST);
+                });
+            }
         });
         return quizvraag;
     }
