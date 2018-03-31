@@ -9,18 +9,19 @@ import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {HttpException} from '@nestjs/core';
 import * as _ from 'lodash';
 import {CacheService} from '../cache.service';
+import {
+    afvallerPunten,
+    molPunten,
+    molStrafpunten,
+    vragenPunten,
+    winnaarPunten,
+    winnaarStrafpunten
+} from '../shared/puntentelling.constanten';
 
 @Component()
 export class KandidatenService {
-    private readonly logger = new Logger('deelnemersController', true);
+    private readonly logger = new Logger('KandidatenService', true);
     private readonly calclogger = new Logger('calculatieLogger', true);
-
-    molStrafpunten: number = -10;
-    winnaarStrafpunten: number = -5;
-    afvallerPunten: number = 20;
-    molPunten: number = 20;
-    winnaarPunten: number = 10;
-    vragenPunten: number = 10;
 
     constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>, private readonly cacheService: CacheService) {
     }
@@ -64,7 +65,7 @@ export class KandidatenService {
                     return kandidaatItem.afgevallen || kandidaatItem.winner;
                 })) {
 
-                this.logger.log('aantal kandidaten dat is afgevallen :'
+                this.logger.log('aantal kandidaten dat is afgevallen voor antwoord: '
                     + antwoordMogelijkheid.antwoord + ' - '
                     + antwoordMogelijkheid.kandidaten.length);
                 const isNietMeerMogelijkSinds = antwoordMogelijkheid.kandidaten
@@ -97,12 +98,12 @@ export class KandidatenService {
             .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
             .where('voorspelling.aflevering <= :aflevering', {aflevering: kandidaat.aflevering})
             .getMany()
-        // .catch((err) => {
-        //     throw new HttpException({
-        //         message: err.message,
-        //         statusCode: HttpStatus.BAD_REQUEST,
-        //     }, HttpStatus.BAD_REQUEST);
-        // });
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
 
         this.calclogger.log('voorspellingen.length: ' + voorspellingen.length);
 
@@ -130,7 +131,7 @@ export class KandidatenService {
             }).catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
         });
@@ -177,7 +178,7 @@ export class KandidatenService {
             if (quizresultaat.antwoord && possibleCorrectAnswers.find(correctAnswer => {
                     return correctAnswer.id === quizresultaat.antwoord.id;
                 })) {
-                quizresultaat.punten = this.vragenPunten;
+                quizresultaat.punten = vragenPunten;
             }
             else {
                 quizresultaat.punten = 0;
@@ -222,29 +223,29 @@ export class KandidatenService {
     determineAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
                 voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
-            return this.afvallerPunten;
+            return afvallerPunten;
         }
         return 0;
     }
 
     determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => voorspelling.mol.id === kandidaat.id && kandidaat.mol)) {
-            return this.molPunten;
+            return molPunten;
         }
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
                 voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
-            return this.molStrafpunten;
+            return molStrafpunten;
         }
         return 0;
     }
 
     determineWinnaarPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => voorspelling.winnaar.id === kandidaat.id && kandidaat.winner)) {
-            return this.winnaarPunten;
+            return winnaarPunten;
         }
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
                 voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
-            return this.winnaarStrafpunten;
+            return winnaarStrafpunten;
         }
         return 0;
     }
