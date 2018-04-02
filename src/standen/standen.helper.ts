@@ -46,19 +46,29 @@ export function hasResultaatForAflevering(resultatenLijst: any, aflevering: stri
 }
 
 export function determineAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], aflevering: number) {
-    if (kandidaten.find(kandidaat =>
+    if (voorspelling && voorspelling.afvaller && kandidaten.find(kandidaat =>
             kandidaat.aflevering === voorspelling.aflevering &&
             voorspelling.afvaller.id === kandidaat.id &&
-            kandidaat.afgevallen &&
-            aflevering <= kandidaat.aflevering)) {
+            kandidaat.afgevallen)) {
+        return afvallerPunten;
+    }
+    return 0;
+}
+
+export function determinePreviousAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], aflevering: number) {
+    if (voorspelling && voorspelling.aflevering === aflevering) return 0;
+    if (voorspelling && voorspelling.afvaller && kandidaten.find(kandidaat =>
+            kandidaat.aflevering === voorspelling.aflevering &&
+            voorspelling.afvaller.id === kandidaat.id &&
+            kandidaat.afgevallen)) {
         return afvallerPunten;
     }
     return 0;
 }
 
 export function determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], mol: Kandidaat) {
-    if (voorspelling.mol.id === mol.id) return molPunten;
-    if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+    if (voorspelling && voorspelling.mol && voorspelling.mol.id === mol.id) return molPunten;
+    if (voorspelling && voorspelling.mol && kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
             voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
         return molStrafpunten;
     }
@@ -66,9 +76,9 @@ export function determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandi
 }
 
 export function determineWinnaarPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], winnaar: Kandidaat) {
-    if (voorspelling.winnaar.id === winnaar.id) return winnaarPunten;
+    if (voorspelling && voorspelling.winnaar && voorspelling.winnaar.id === winnaar.id) return winnaarPunten;
 
-    if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+    if (voorspelling && voorspelling.winnaar && kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
             voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
         return winnaarStrafpunten;
     }

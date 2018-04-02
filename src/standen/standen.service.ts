@@ -3,7 +3,6 @@ import {getConnection, getRepository, Repository} from 'typeorm';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import * as _ from 'lodash';
 import {Aflevering} from '../afleveringen/aflevering.entity';
-import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {HttpException} from '@nestjs/core';
 import {CacheService} from '../cache.service';
@@ -12,10 +11,7 @@ import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import * as fs from 'fs';
 import {Stand, TestStand} from './standen.interface';
-import {
-    afvallerPunten, molPunten, molStrafpunten, vragenPunten, winnaarPunten,
-    winnaarStrafpunten,
-} from '../shared/puntentelling.constanten';
+import {vragenPunten,} from '../shared/puntentelling.constanten';
 import * as standenhelper from './standen.helper';
 
 @Component()
@@ -81,7 +77,10 @@ export class StandenService {
                 .value();
 
             const kandidatenlijst = await getRepository(Kandidaat).find().catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
             });
 
             const afleveringsVoorspellingen: Voorspelling[] = await this.getAfleveringsVoorspellingen(aflevering);
@@ -98,7 +97,7 @@ export class StandenService {
                 winnaarpunten: winnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, winnaar) : 0,
                 previouswinnaarpunten: previouswinnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar) : 0,
                 afvallerpunten: standenhelper.determineAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering),
-                previousafvallerpunten: voorspelling.aflevering < aflevering ? standenhelper.determineAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering) : 0,
+                previousafvallerpunten: voorspelling.aflevering < aflevering ? standenhelper.determinePreviousAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering) : 0,
                 quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).quizpunten : 0,
                 previous_quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).previous_quizpunten : 0,
                 delta_quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).delta_quizpunten : 0,
@@ -120,6 +119,9 @@ export class StandenService {
                     previouswinnaarpunten: _.sumBy(objs, 'previouswinnaarpunten'),
                     previous_quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).previous_quizpunten : 0,
                     totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0),
+                    delta_totaalpunten: _.sumBy(objs, 'molpunten') + _.sumBy(objs, 'afvallerpunten') + _.sumBy(objs, 'winnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0) - (
+                        _.sumBy(objs, 'previousmolpunten') + _.sumBy(objs, 'previousafvallerpunten') + _.sumBy(objs, 'previouswinnaarpunten') + (quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).previous_quizpunten : 0)
+                    ),
                 }))
                 .value();
 
@@ -216,7 +218,7 @@ export class StandenService {
         }
     }
 
-    private  async getStandByDeelnemerForAflevering(deelnemerId, aflevering: number) {
+    private async getStandByDeelnemerForAflevering(deelnemerId, aflevering: number) {
         const testantwoorden: Quizresultaat[] = await this.getGemaakteTestsForDeelnemer(deelnemerId, aflevering);
 
         const quizStand = await _(testantwoorden).groupBy('aflevering')
@@ -241,23 +243,36 @@ export class StandenService {
         const winnaar: Kandidaat = kandidatenlijst.find(kandidaat => kandidaat.winner);
         const previouswinnaar: Kandidaat = standenhelper.getWinnaar(kandidatenlijst, aflevering - 1);
 
-        // todo alleafleveringen ophalen die geweest zijn en dan een map over die afleveringen naar voorspellingen response
+        const afleveringen = await this.getAlleUitgezondenAfleveringen();
+        const laatsteAflevering = _.maxBy(afleveringen, 'aflevering');
 
-        const response = afleveringsVoorspellingen.map(voorspelling => ({
-            ...voorspelling,
-            molpunten: mol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, mol) : 0,
-            previousmolpunten: previousmol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, previousmol) : 0,
-            winnaarpunten: winnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, winnaar) : 0,
-            previouswinnaarpunten: previouswinnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar) : 0,
-            afvallerpunten: standenhelper.determineAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering),
-            previousafvallerpunten: standenhelper.determineAfvallerPunten(standenhelper.getVoorspellingVoorAflevering(afleveringsVoorspellingen, voorspelling.aflevering), kandidatenlijst, voorspelling.aflevering - 1),
-            quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).quizpunten : 0,
-            previous_quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).previous_quizpunten : 0,
-            delta_quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).delta_quizpunten : 0,
-        })).map(voorspelling => ({
-            ...voorspelling,
-            totaalpunten: voorspelling.molpunten + voorspelling.afvallerpunten + voorspelling.winnaarpunten + voorspelling.quizpunten,
-        }));
+        const response = afleveringen
+            .filter(afleveringItem => afleveringItem.aflevering <= aflevering)
+            .map(afleveringItem => ({
+                aflevering: afleveringItem,
+                voorspelling: afleveringsVoorspellingen.find(item => item.aflevering === afleveringItem.aflevering),
+            }))
+            .map(mergedAfleveringVoorspelling => ({
+                ...mergedAfleveringVoorspelling.voorspelling,
+                aflevering: mergedAfleveringVoorspelling.aflevering.aflevering,
+                molpunten: mol ? standenhelper.determineMolPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, mol) : 0,
+                previousmolpunten: previousmol ? standenhelper.determineMolPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, previousmol) : 0,
+                winnaarpunten: winnaar ? standenhelper.determineWinnaarPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, winnaar) : 0,
+                previouswinnaarpunten: previouswinnaar ? standenhelper.determineWinnaarPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, previouswinnaar) : 0,
+                afvallerpunten: standenhelper.determineAfvallerPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, mergedAfleveringVoorspelling.aflevering.aflevering),
+                previousafvallerpunten: standenhelper.determinePreviousAfvallerPunten(mergedAfleveringVoorspelling.voorspelling, kandidatenlijst, laatsteAflevering.aflevering),
+                quizpunten: standenhelper.hasResultaatForAflevering(quizStand, mergedAfleveringVoorspelling.aflevering.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, mergedAfleveringVoorspelling.aflevering.aflevering.toString()).quizpunten : 0,
+                previousquizpunten: standenhelper.hasResultaatForAflevering(quizStand, mergedAfleveringVoorspelling.aflevering.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, mergedAfleveringVoorspelling.aflevering.aflevering.toString()).previous_quizpunten : 0,
+            }))
+            .map(voorspelling => ({
+                ...voorspelling,
+                totaalpunten: voorspelling.molpunten + voorspelling.afvallerpunten + voorspelling.winnaarpunten + voorspelling.quizpunten,
+                delta_molpunten: voorspelling.molpunten - voorspelling.previousmolpunten,
+                delta_afvallerpunten: voorspelling.afvallerpunten - voorspelling.previousafvallerpunten,
+                delta_winnaarpunten: voorspelling.winnaarpunten - voorspelling.previouswinnaarpunten,
+                delta_quizpunten: voorspelling.quizpunten - voorspelling.previousquizpunten,
+                afgevallenKandidaat: kandidatenlijst.find(kandidaat => kandidaat.afgevallen && kandidaat.aflevering === voorspelling.aflevering),
+            }));
 
         return response.sort((a, b) => a.aflevering - b.aflevering);
     }
