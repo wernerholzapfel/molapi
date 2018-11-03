@@ -3,7 +3,6 @@ import {CacheService} from './cache.service';
 import {Observable, of} from 'rxjs';
 import {map} from 'rxjs/operators';
 
-
 @Injectable()
 export class CacheInterceptor implements NestInterceptor {
     private readonly logger = new Logger('CacheInterceptor', true);
@@ -15,11 +14,11 @@ export class CacheInterceptor implements NestInterceptor {
 
         if (value) {
             this.logger.log('cache ' + key + ' has value');
-            return Observable.of(value);
+            return of(value);
         }
         else {
             this.logger.log('cache ' + key + ' has NO value');
-            return stream$;
+            return stream$.pipe(map(data => ({ data })));
         }
     }
 }
