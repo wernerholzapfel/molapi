@@ -9,7 +9,8 @@ export class CacheInterceptor implements NestInterceptor {
     constructor(private readonly cacheService: CacheService) {}
 
     async intercept(context: ExecutionContext, stream$: Observable<any>): Promise<any> {
-        const key = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest();
+        const key = request.originalUrl;
         const value = await this.cacheService.get(key);
 
         if (value) {
