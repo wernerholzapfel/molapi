@@ -6,9 +6,9 @@ import {QuizpuntenService} from './quizpunten.service';
 import {QuizquizpuntenController} from './quizpunten.controller';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [QuizquizpuntenController],
-    components: [
+    providers: [
         ...quizpuntProviders,
         QuizpuntenService,
     ],

@@ -6,9 +6,9 @@ import {QuizvragenService} from './quizvragen.service';
 import {QuizvragenController} from './quizvragen.controller';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [QuizvragenController],
-    components: [
+    providers: [
         ...quizvragenProviders,
         QuizvragenService,
     ],

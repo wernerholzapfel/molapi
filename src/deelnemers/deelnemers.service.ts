@@ -1,13 +1,12 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 
 import {Deelnemer} from './deelnemer.interface';
-import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 
-@Component()
+@Injectable()
 export class DeelnemersService {
     private readonly logger = new Logger('deelnemerService', true);
 
@@ -89,7 +88,7 @@ export class DeelnemersService {
 
     async findVoorspellingen(deelnemerId: string) {
         this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
-        return await this.deelnemerRepository.findOneById(deelnemerId)
+        return await this.deelnemerRepository.findOne(deelnemerId)
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,

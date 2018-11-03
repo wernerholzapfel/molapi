@@ -1,11 +1,10 @@
-import {Component, HttpStatus, Inject} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
-import {HttpException} from '@nestjs/core';
 import {Actie} from './actie.entity';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {ActieResponse} from './actieresponse.interface';
 
-@Component()
+@Injectable()
 export class ActiesService {
     constructor(@Inject('ActieRepositoryToken') private readonly actieRepository: Repository<Actie>) {
     }
@@ -16,7 +15,7 @@ export class ActiesService {
                 const afleveringen = await getRepository(Aflevering).find();
                 return {
                     id: response.id,
-                    voorspellingaflevering: this.determineVoorspellingAflevering(response.voorspellingaflevering, afleveringen) ,
+                    voorspellingaflevering: this.determineVoorspellingAflevering(response.voorspellingaflevering, afleveringen),
                     testaflevering: this.determineTestAflevering(response.testaflevering, afleveringen),
                     testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),

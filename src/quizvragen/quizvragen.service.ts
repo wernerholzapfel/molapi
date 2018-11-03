@@ -1,16 +1,13 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Quizvraag} from './quizvraag.entity';
-import {HttpException} from '@nestjs/core';
-import {Aflevering} from '../afleveringen/aflevering.entity';
-import * as _ from 'lodash';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {Actie} from '../acties/actie.entity';
 
-@Component()
+@Injectable()
 export class QuizvragenService {
     private readonly logger = new Logger('quizvragenService', true);
 

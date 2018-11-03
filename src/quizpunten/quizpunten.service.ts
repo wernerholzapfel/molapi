@@ -1,13 +1,12 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Quizpunt} from './quizpunt.entity';
-import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import * as _ from 'lodash';
 import {Actie} from '../acties/actie.entity';
 
-@Component()
+@Injectable()
 export class QuizpuntenService {
     private readonly logger = new Logger('quizpuntenService', true);
     afleveringWithLatestTest: number;
@@ -65,7 +64,7 @@ export class QuizpuntenService {
             const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
             const puntenlijst: any[] = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);
 
-            return await  _(puntenlijst).groupBy('aflevering')
+            return await _(puntenlijst).groupBy('aflevering')
                 .map((objs, key) => ({
                     aflevering: key,
                     display_name: _.head(objs).deelnemer.display_name,

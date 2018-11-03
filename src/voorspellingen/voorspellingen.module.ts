@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common';
+import {Module} from '@nestjs/common';
 
-import { DBModule } from '../db/db.module';
-import { VoorspellingenController } from './voorspellingen.controller';
-import { VoorspellingenService } from './voorspellingen.service';
-import { voorspellingProviders } from './voorspelling.providers';
+import {DBModule} from '../db/db.module';
+import {VoorspellingenController} from './voorspellingen.controller';
+import {VoorspellingenService} from './voorspellingen.service';
+import {voorspellingProviders} from './voorspelling.providers';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [VoorspellingenController],
-    components: [
+    providers: [
         ...voorspellingProviders,
         VoorspellingenService,
     ],

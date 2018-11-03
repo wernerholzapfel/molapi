@@ -1,12 +1,10 @@
-import {Component, HttpStatus, Inject} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {Logger} from '@nestjs/common/services/logger.service';
-import {getRepository, Repository} from 'typeorm';
+import {Repository} from 'typeorm';
 
 import {Voorspelling} from './voorspelling.entity';
-import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import {HttpException} from '@nestjs/core';
 
-@Component()
+@Injectable()
 export class VoorspellingenService {
     private readonly logger = new Logger('voorspellingenService', true);
 
@@ -34,9 +32,12 @@ export class VoorspellingenService {
     }
 
     async create(voorspelling: Voorspelling, auth0Identifier?: string) {
-            return await this.voorspellingRepository.save(voorspelling)
-                .catch((err) => {
-                    throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-                });
-        }
+        return await this.voorspellingRepository.save(voorspelling)
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+    }
 }

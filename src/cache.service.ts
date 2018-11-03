@@ -1,10 +1,10 @@
 import * as NodeCache from 'node-cache';
-import {Component, Logger} from '@nestjs/common';
 import {Stats} from 'node-cache';
+import {Injectable, Logger} from '@nestjs/common';
 
 const myCache = new NodeCache();
 
-@Component()
+@Injectable()
 export class CacheService {
     private readonly logger = new Logger('CacheService', true);
 

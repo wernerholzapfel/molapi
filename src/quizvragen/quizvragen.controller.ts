@@ -1,10 +1,9 @@
-import {Body, Controller, Get, HttpStatus, Logger, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Req} from '@nestjs/common';
 import {QuizvragenService} from './quizvragen.service';
 import {CreateQuizvraagDto} from './create-quizvraag.dto';
 import {Quizvraag} from './quizvraag.entity';
 import {getRepository} from 'typeorm';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
-import {HttpException} from '@nestjs/core';
 
 @Controller('quizvragen')
 export class QuizvragenController {
@@ -36,7 +35,7 @@ export class QuizvragenController {
             }).catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
         });
@@ -51,8 +50,8 @@ export class QuizvragenController {
         createQuizvraagDto.antwoorden.forEach(async antwoord => {
             if (antwoord.id) {
 
-                this.quizvragenService.updateAntwoorden(antwoord).then(async response => {
-                    this.quizvragenService.deleteKandidaten(antwoord).then(async success => {
+                this.quizvragenService.updateAntwoorden(antwoord).then(async () => {
+                    this.quizvragenService.deleteKandidaten(antwoord).then(async () => {
                         antwoord.kandidaten.forEach(kandidaat => {
                             this.quizvragenService.updateKandidaten(antwoord, kandidaat);
                         });
@@ -67,7 +66,7 @@ export class QuizvragenController {
                 }).catch((err) => {
                     throw new HttpException({
                         message: err.message,
-                        statusCode: HttpStatus.BAD_REQUEST
+                        statusCode: HttpStatus.BAD_REQUEST,
                     }, HttpStatus.BAD_REQUEST);
                 });
             }

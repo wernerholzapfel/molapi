@@ -1,13 +1,10 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Quizresultaat} from './quizresultaat.entity';
-import {HttpException} from '@nestjs/core';
-import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import * as _ from 'lodash';
 import {Actie} from '../acties/actie.entity';
 
-@Component()
+@Injectable()
 export class QuizresultatenService {
     private readonly logger = new Logger('quizresultatenService', true);
     latestUitgezondenAflevering: number;

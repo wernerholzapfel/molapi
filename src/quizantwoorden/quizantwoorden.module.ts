@@ -4,9 +4,9 @@ import {DBModule} from '../db/db.module';
 import {quizantwoordenProviders} from './quizantwoord.providers';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [],
-    components: [
+    providers: [
         ...quizantwoordenProviders,
     ],
 })

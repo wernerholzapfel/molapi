@@ -1,12 +1,12 @@
-import {ExpressMiddleware, HttpStatus, Logger, Middleware, NestMiddleware} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, NestMiddleware} from '@nestjs/common';
 import * as jwt from 'express-jwt';
 import {ManagementClient} from 'auth0';
 import * as jwt_decode from 'jwt-decode';
 import 'dotenv/config';
 import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
-import {HttpException} from '@nestjs/core';
 import {expressJwtSecret} from 'jwks-rsa';
+import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
 
 const auth0Token = process.env.AUTH0_TOKEN;
 const auth0Domain = process.env.AUTH0_DOMAIN;
@@ -16,10 +16,11 @@ const management = new ManagementClient({
     token: auth0Token,
 });
 
-@Middleware()
+@Injectable()
 export class AuthenticationMiddleware implements NestMiddleware {
     private readonly logger = new Logger('deelnemersController', true);
-    resolve(): ExpressMiddleware {
+
+    resolve(): MiddlewareFunction {
         this.logger.log('AuthenticationMiddleware');
         return jwt({
             secret: expressJwtSecret({
@@ -35,9 +36,9 @@ export class AuthenticationMiddleware implements NestMiddleware {
     }
 }
 
-@Middleware()
+@Injectable()
 export class AdminMiddleware implements NestMiddleware {
-    resolve(): ExpressMiddleware {
+    resolve(): MiddlewareFunction {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
@@ -57,9 +58,9 @@ export class AdminMiddleware implements NestMiddleware {
     }
 }
 
-@Middleware()
+@Injectable()
 export class IsEmailVerifiedMiddleware implements NestMiddleware {
-    resolve(): ExpressMiddleware {
+    resolve(): MiddlewareFunction {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
@@ -80,9 +81,9 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
     }
 }
 
-@Middleware()
+@Injectable()
 export class AddAuth0UserToRequest implements NestMiddleware {
-    resolve(): ExpressMiddleware {
+    resolve(): MiddlewareFunction {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
@@ -100,9 +101,9 @@ export class AddAuth0UserToRequest implements NestMiddleware {
     }
 }
 
-@Middleware()
+@Injectable()
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
-    resolve(): ExpressMiddleware {
+    resolve(): MiddlewareFunction {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {

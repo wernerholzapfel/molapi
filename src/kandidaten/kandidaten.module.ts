@@ -7,9 +7,9 @@ import {kandidaatProviders} from './kandidaat.providers';
 import {CacheService} from '../cache.service';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [KandidatenController],
-    components: [
+    providers: [
         ...kandidaatProviders,
         KandidatenService,
         CacheService,

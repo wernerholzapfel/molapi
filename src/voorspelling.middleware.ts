@@ -1,14 +1,13 @@
-import {HttpStatus, Logger, Middleware} from '@nestjs/common';
-import {ExpressMiddleware, NestMiddleware} from '@nestjs/common/interfaces/middlewares';
-import {HttpException} from '@nestjs/core';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {Aflevering} from './afleveringen/aflevering.entity';
 import {getRepository} from 'typeorm';
+import {MiddlewareFunction, NestMiddleware} from '@nestjs/common/interfaces/middleware';
 
-@Middleware()
+@Injectable()
 export class VoorspellingMiddleware implements NestMiddleware {
     private readonly logger = new Logger('VoorspellingMiddleware', true);
 
-    resolve(): ExpressMiddleware {
+    resolve(): MiddlewareFunction {
         return (req, res, next) => {
             this.logger.log(req.body.aflevering);
 

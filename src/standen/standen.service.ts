@@ -1,20 +1,19 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import * as _ from 'lodash';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
-import {HttpException} from '@nestjs/core';
 import {CacheService} from '../cache.service';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import * as fs from 'fs';
 import {Stand, TestStand} from './standen.interface';
-import {vragenPunten,} from '../shared/puntentelling.constanten';
+import {vragenPunten} from '../shared/puntentelling.constanten';
 import * as standenhelper from './standen.helper';
 
-@Component()
+@Injectable()
 export class StandenService {
     private readonly logger = new Logger('standenService', true);
 
@@ -79,7 +78,7 @@ export class StandenService {
             const kandidatenlijst = await getRepository(Kandidaat).find().catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
 
@@ -228,7 +227,7 @@ export class StandenService {
                 quizpunten: standenhelper.determineQuizpunten(objs, aflevering),
                 previous_quizpunten: standenhelper.determinePreviousQuizpunten(objs, aflevering - 1),
                 delta_quizpunten: standenhelper.determineQuizpunten(objs, aflevering) -
-                standenhelper.determinePreviousQuizpunten(objs, aflevering - 1),
+                    standenhelper.determinePreviousQuizpunten(objs, aflevering - 1),
             }))
             .value();
 
@@ -429,8 +428,8 @@ export class StandenService {
 
         await quizresultaten.forEach(async quizresultaat => {
             if (possibleCorrectAnswers.find(correctAnswer => {
-                    return correctAnswer.id === quizresultaat.antwoord.id;
-                })) {
+                return correctAnswer.id === quizresultaat.antwoord.id;
+            })) {
                 quizresultaat.punten = vragenPunten;
             }
             else {

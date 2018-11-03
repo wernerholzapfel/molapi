@@ -7,9 +7,9 @@ import {afleveringPuntProviders} from '../afleveringpunten/afleveringpunt.provid
 import {CacheService} from '../cache.service';
 
 @Module({
-    modules: [DBModule],
+    imports: [DBModule],
     controllers: [StandenController],
-    components: [
+    providers: [
         ...afleveringPuntProviders,
         StandenService,
         CacheService,

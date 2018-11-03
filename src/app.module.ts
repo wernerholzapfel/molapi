@@ -6,9 +6,8 @@ import {
     AddAuth0UserToRequest,
     AdminMiddleware,
     AuthenticationMiddleware,
-    IsUserAllowedToPostMiddleware
+    IsUserAllowedToPostMiddleware,
 } from './authentication.middleware';
-import {MiddlewaresConsumer} from '@nestjs/common/interfaces/middlewares';
 import {AfleveringenModule} from './afleveringen/afleveringen.module';
 import {KandidatenModule} from './kandidaten/kandidaten.module';
 import {StandenModule} from './standen/standen.module';
@@ -18,13 +17,14 @@ import {QuizpuntenModule} from './quizpunten/quizpunten.module';
 import {QuizMiddleware} from './quiz.middleware';
 import {ActiesModule} from './acties/acties.module';
 import {VoorspellingMiddleware} from './voorspelling.middleware';
+import {MiddlewareConsumer} from '@nestjs/common/interfaces/middleware';
 
 @Module({
-    modules: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
+    imports: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
 })
 
 export class ApplicationModule implements NestModule {
-    configure(consumer: MiddlewaresConsumer): void {
+    configure(consumer: MiddlewareConsumer): void {
         consumer.apply(AuthenticationMiddleware).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: '/deelnemers/loggedIn', method: RequestMethod.GET},

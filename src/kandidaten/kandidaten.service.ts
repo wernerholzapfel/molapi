@@ -1,4 +1,4 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Kandidaat} from './kandidaat.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
@@ -6,7 +6,6 @@ import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
-import {HttpException} from '@nestjs/core';
 import * as _ from 'lodash';
 import {CacheService} from '../cache.service';
 import {
@@ -15,10 +14,10 @@ import {
     molStrafpunten,
     vragenPunten,
     winnaarPunten,
-    winnaarStrafpunten
+    winnaarStrafpunten,
 } from '../shared/puntentelling.constanten';
 
-@Component()
+@Injectable()
 export class KandidatenService {
     private readonly logger = new Logger('KandidatenService', true);
     private readonly calclogger = new Logger('calculatieLogger', true);
@@ -62,8 +61,8 @@ export class KandidatenService {
 
         antwoordMogelijkheden.forEach(async antwoordMogelijkheid => {
             if (antwoordMogelijkheid.kandidaten.every(kandidaatItem => {
-                    return kandidaatItem.afgevallen || kandidaatItem.winner;
-                })) {
+                return kandidaatItem.afgevallen || kandidaatItem.winner;
+            })) {
 
                 this.logger.log('aantal kandidaten dat is afgevallen voor antwoord: '
                     + antwoordMogelijkheid.antwoord + ' - '
@@ -176,8 +175,8 @@ export class KandidatenService {
         const newQuizResults: Quizpunt[] = [];
         await quizresultaten.forEach(async quizresultaat => {
             if (quizresultaat.antwoord && possibleCorrectAnswers.find(correctAnswer => {
-                    return correctAnswer.id === quizresultaat.antwoord.id;
-                })) {
+                return correctAnswer.id === quizresultaat.antwoord.id;
+            })) {
                 quizresultaat.punten = vragenPunten;
             }
             else {
@@ -222,7 +221,7 @@ export class KandidatenService {
 
     determineAfvallerPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[]) {
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
-                voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
+            voorspelling.afvaller.id === kandidaat.id && kandidaat.afgevallen)) {
             return afvallerPunten;
         }
         return 0;
@@ -233,7 +232,7 @@ export class KandidatenService {
             return molPunten;
         }
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
-                voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
+            voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
             return molStrafpunten;
         }
         return 0;
@@ -244,7 +243,7 @@ export class KandidatenService {
             return winnaarPunten;
         }
         if (kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
-                voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
+            voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
             return winnaarStrafpunten;
         }
         return 0;

@@ -1,11 +1,10 @@
-import {Component, HttpStatus, Inject} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {Repository} from 'typeorm';
 import {Aflevering} from './aflevering.entity';
 import * as _ from 'lodash';
-import {HttpException} from '@nestjs/core';
 import {CacheService} from '../cache.service';
 
-@Component()
+@Injectable()
 export class AfleveringenService {
     constructor(@Inject('AfleveringRepositoryToken') private readonly afleveringRepository: Repository<Aflevering>,  private readonly cacheService: CacheService) {
     }
@@ -33,7 +32,7 @@ export class AfleveringenService {
     }
 
     async create(aflevering: Aflevering) {
-        return await this.afleveringRepository.save(aflevering).then((success => {
+        return await this.afleveringRepository.save(aflevering).then((() => {
             this.cacheService.flushAll();
         })).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
