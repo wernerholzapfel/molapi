@@ -20,7 +20,7 @@ export class QuizpuntenService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
         const afleveringObject = afleveringen.find(item => {
-            return item.laatseAflevering;
+            return item.laatsteAflevering;
         });
         if (afleveringObject) {
             this.afleveringWithLatestTest = afleveringObject.aflevering - 1;

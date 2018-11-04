@@ -1,10 +1,12 @@
 import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
-import {getRepository, Repository} from 'typeorm';
+import {getConnection, getRepository, Repository} from 'typeorm';
 
-import {Deelnemer} from './deelnemer.interface';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
+import {Poule} from '../poules/poule.entity';
+import {Deelnemer} from './deelnemer.entity';
+import {IDeelnemer} from './deelnemer.interface';
 
 @Injectable()
 export class DeelnemersService {
@@ -69,7 +71,7 @@ export class DeelnemersService {
         }
     }
 
-    async create(deelnemer: Deelnemer, auth0Identifier: string) {
+    async create(deelnemer: IDeelnemer, auth0Identifier: string) {
         const oldDeelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
         if (oldDeelnemer) deelnemer = {
             id: oldDeelnemer.id,
@@ -86,7 +88,8 @@ export class DeelnemersService {
             });
     }
 
-    async findVoorspellingen(deelnemerId: string) {
+    // todo
+    async oldfindVoorspellingen(deelnemerId: string) {
         this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
         return await this.deelnemerRepository.findOne(deelnemerId)
             .catch((err) => {
@@ -95,6 +98,32 @@ export class DeelnemersService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+    }
+
+    async findVoorspellingen(deelnemerId: string) {
+
+        const deelnemer = await getConnection().manager.findOne(Deelnemer, deelnemerId);
+
+        deelnemer.poules = await getConnection()
+            .createQueryBuilder()
+            .select('poule')
+            .from(Poule, 'poule')
+            .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
+            .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
+            .leftJoinAndSelect('voorspellingen.mol', 'mol')
+            .leftJoinAndSelect('voorspellingen.afvaller', 'afvaller')
+            .leftJoinAndSelect('voorspellingen.winnaar', 'winnaar')
+            .leftJoinAndSelect('poule.admins', 'admins')
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return deelnemer;
+
     }
 
     async findLoggedInDeelnemer(user_id) {

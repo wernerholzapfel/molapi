@@ -10,6 +10,8 @@ import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Quizpunt} from '../quizpunten/quizpunt.entity';
 import {Actie} from '../acties/actie.entity';
+import {Poule} from '../poules/poule.entity';
+import {Uitnodiging} from '../uitnodigingen/uitnodiging.entity';
 
 export const dbProvider =
     {
@@ -29,8 +31,10 @@ export const dbProvider =
                 Quizresultaat,
                 Quizpunt,
                 Actie,
+                Poule,
+                Uitnodiging,
             ],
-            logging: false,
+            logging: true,
             synchronize: true, // DEV only, do not use on PROD!
         }),
     };

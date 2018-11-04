@@ -39,12 +39,12 @@ export class ActiesService {
 
     determineVoorspellingAflevering(afleveringnummer: number, afleveringen: Aflevering[]): number {
         const aflevering = afleveringen.find(item => item.aflevering === afleveringnummer);
-        return !aflevering.laatseAflevering ? afleveringnummer : null;
+        return !aflevering.laatsteAflevering ? afleveringnummer : null;
     }
 
     determineTestAflevering(afleveringnummer: number, afleveringen: Aflevering[]): number {
         const aflevering = afleveringen.find(item => item.aflevering === afleveringnummer);
-        return !aflevering.laatseAflevering ? afleveringnummer : null;
+        return !aflevering.laatsteAflevering ? afleveringnummer : null;
     }
 
     async create(actie: Actie) {

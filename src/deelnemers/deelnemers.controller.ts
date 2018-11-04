@@ -1,11 +1,10 @@
 import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
 
-import {Deelnemer} from './deelnemer.interface';
 import {CreateDeelnemerDto} from './create-deelnemer.dto';
 import {DeelnemersService} from './deelnemers.service';
 import {ManagementClient} from 'auth0';
-import * as _ from 'lodash';
 import 'dotenv/config';
+import {Deelnemer} from './deelnemer.entity';
 
 const auth0Token = process.env.AUTH0_TOKEN;
 const auth0Domain = process.env.AUTH0_DOMAIN;

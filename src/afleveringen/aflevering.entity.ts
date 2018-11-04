@@ -1,5 +1,4 @@
-import {Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
-import {Kandidaat} from '../kandidaten/kandidaat.entity';
+import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 
 @Entity()
 export class Aflevering {
@@ -10,7 +9,7 @@ export class Aflevering {
     aflevering: number;
 
     @Column()
-    laatseAflevering: boolean;
+    laatsteAflevering: boolean;
 
     @Column()
     uitgezonden: boolean;

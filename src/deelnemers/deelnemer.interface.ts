@@ -1,4 +1,4 @@
-export interface Deelnemer {
+export interface IDeelnemer {
     id: string;
     display_name: string;
     email: string;

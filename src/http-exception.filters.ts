@@ -1,5 +1,3 @@
-// import { ExceptionFilter, Catch, HttpStatus } from '@nestjs/common';
-
 import {UnauthorizedError} from 'express-jwt';
 import {Catch, HttpException, HttpStatus} from '@nestjs/common';
 import {ExceptionFilter} from '@nestjs/common/interfaces/exceptions';

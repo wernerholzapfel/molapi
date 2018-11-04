@@ -1,5 +1,4 @@
 import {Module, NestModule, RequestMethod} from '@nestjs/common';
-
 import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
 import {
@@ -18,9 +17,11 @@ import {QuizMiddleware} from './quiz.middleware';
 import {ActiesModule} from './acties/acties.module';
 import {VoorspellingMiddleware} from './voorspelling.middleware';
 import {MiddlewareConsumer} from '@nestjs/common/interfaces/middleware';
+import {PoulesModule} from './poules/poules.module';
+import {UitnodigingenModule} from './uitnodigingen/uitnodigingen.module';
 
 @Module({
-    imports: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule],
+    imports: [ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, UitnodigingenModule],
 })
 
 export class ApplicationModule implements NestModule {
@@ -41,6 +42,7 @@ export class ApplicationModule implements NestModule {
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
+            {path: '/uitnodigingen/**', method: RequestMethod.GET},
         );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/acties', method: RequestMethod.POST},
@@ -48,7 +50,7 @@ export class ApplicationModule implements NestModule {
             {path: '/kandidaten', method: RequestMethod.POST},
             {path: '/quizvragen', method: RequestMethod.POST},
             {path: '/quizvragen/update', method: RequestMethod.POST},
-            {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
+            // {path: '/quizvragen/aflevering/**', method: RequestMethod.GET}, // dubbel
         );
         consumer.apply(IsUserAllowedToPostMiddleware).forRoutes(
             {path: '/quizresultaten', method: RequestMethod.POST},
@@ -60,5 +62,7 @@ export class ApplicationModule implements NestModule {
         consumer.apply(VoorspellingMiddleware).forRoutes(
             {path: '/voorspellingen', method: RequestMethod.POST},
         );
+        // middleware toevoegen dat create uitnodigingen checkt
+        // middleware toevoegen dat accept uitnodigingen checkt
     }
 }
