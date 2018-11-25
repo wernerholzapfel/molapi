@@ -4,5 +4,5 @@ export class CreateDeelnemerDto {
     readonly id: string;
     @IsString() @Length(3, 64) readonly display_name: string;
     @IsEmail() readonly email: string;
-    @IsString() readonly auth0Identifier: string;
+    @IsString() readonly firebaseIdentifier: string;
 }

@@ -16,7 +16,7 @@ export class UitnodigingenService {
         const deelnemer = await getRepository(Deelnemer)
             .createQueryBuilder('deelnemer')
             .select('deelnemer.email')
-            .where('deelnemer.auth0Identifier = :uniqueIdentifier', {uniqueIdentifier})
+            .where('deelnemer.firebaseIdentifier = :uniqueIdentifier', {uniqueIdentifier})
             .getOne()
             .catch((err) => {
                 throw new HttpException({
@@ -28,7 +28,8 @@ export class UitnodigingenService {
         return await getRepository(Uitnodiging)
             .createQueryBuilder('uitnodiging')
             .leftJoinAndSelect('uitnodiging.poule', 'poule')
-            .where('uitnodiging.uniqueIdentifier = :emailAdres', {emailAdres: deelnemer.email})
+            .leftJoinAndSelect('poule.admins', 'admins')
+            .where('uitnodiging.uniqueIdentifier = :email', {email: deelnemer.email})
             .andWhere('uitnodiging.isAccepted = false')
             .getMany()
             .catch((err) => {
@@ -58,7 +59,7 @@ export class UitnodigingenService {
 
         const deelnemer = await getRepository(Deelnemer)
             .createQueryBuilder('deelnemer')
-            .where('deelnemer.auth0Identifier = :uniqueIdentifier', {uniqueIdentifier})
+            .where('deelnemer.firebaseIdentifier = :uniqueIdentifier', {uniqueIdentifier})
             .getOne()
             .catch((err) => {
                 throw new HttpException({

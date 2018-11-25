@@ -1,5 +1,4 @@
 import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
-import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {QuizresultatenService} from './quizresultaten.service';
 import {CreateQuizresultaatDto} from './create-quizresultaat.dto';
 import {Quizresultaat} from './quizresultaat.entity';
@@ -13,7 +12,7 @@ export class QuizresultatenController {
 
     @Get()
     async findAll(@Req() req): Promise<Quizresultaat[]> {
-        return this.quizresultatenService.findAll(req.user.user_id);
+        return this.quizresultatenService.findAll(req.user.uid);
     }
 
     @Post()

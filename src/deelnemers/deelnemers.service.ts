@@ -71,12 +71,12 @@ export class DeelnemersService {
         }
     }
 
-    async create(deelnemer: IDeelnemer, auth0Identifier: string) {
-        const oldDeelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+    async create(deelnemer: IDeelnemer, firebaseIdentifier: string) {
+        const oldDeelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
         if (oldDeelnemer) deelnemer = {
             id: oldDeelnemer.id,
             display_name: deelnemer.display_name,
-            auth0Identifier: oldDeelnemer.auth0Identifier,
+            firebaseIdentifier: oldDeelnemer.firebaseIdentifier,
             email: oldDeelnemer.email,
         };
         return await this.deelnemerRepository.save(deelnemer)
@@ -100,9 +100,9 @@ export class DeelnemersService {
             });
     }
 
-    async findVoorspellingen(deelnemerId: string) {
+    async findVoorspellingen(firebaseIdentifier: string) {
 
-        const deelnemer = await getConnection().manager.findOne(Deelnemer, deelnemerId);
+        const deelnemer = await getConnection().manager.findOne(Deelnemer, {where: {firebaseIdentifier}});
 
         deelnemer.poules = await getConnection()
             .createQueryBuilder()
@@ -110,10 +110,22 @@ export class DeelnemersService {
             .from(Poule, 'poule')
             .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
             .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
+            .leftJoinAndSelect('deelnemers.tests', 'test')
+            .leftJoinAndSelect('test.vraag', 'vraag')
+            .leftJoinAndSelect('test.antwoord', 'tests')
             .leftJoinAndSelect('voorspellingen.mol', 'mol')
             .leftJoinAndSelect('voorspellingen.afvaller', 'afvaller')
             .leftJoinAndSelect('voorspellingen.winnaar', 'winnaar')
             .leftJoinAndSelect('poule.admins', 'admins')
+            .where(qb => {
+                const subQuery = qb.subQuery()
+                    .select('poule.id')
+                    .from(Poule, 'poule')
+                    .leftJoin('poule.deelnemers', 'deelnemers')
+                    .where('deelnemers.id = :deelnemerId', { deelnemerId: deelnemer.id })
+                    .getQuery();
+                return 'poule.id IN ' + subQuery;
+            })
             .getMany()
             .catch((err) => {
                 throw new HttpException({

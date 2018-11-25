@@ -41,7 +41,7 @@ export function getVoorspellingVoorAflevering(voorspellingen: Voorspelling[], af
     return voorspellingen.find(voorspelling => voorspelling.aflevering === aflevering);
 }
 
-export function hasResultaatForAflevering(resultatenLijst: any, aflevering: string) {
+export function hasResultaatForAflevering(resultatenLijst: any, aflevering: string): any {
     return _.find(resultatenLijst, {aflevering: parseInt(aflevering, 10)});
 }
 

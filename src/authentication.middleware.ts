@@ -7,6 +7,7 @@ import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
 import {expressJwtSecret} from 'jwks-rsa';
 import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
+import * as admin from 'firebase-admin';
 
 const auth0Token = process.env.AUTH0_TOKEN;
 const auth0Domain = process.env.AUTH0_DOMAIN;
@@ -15,6 +16,37 @@ const management = new ManagementClient({
     domain: auth0Domain,
     token: auth0Token,
 });
+
+@Injectable()
+export class AddFireBaseUserToRequest implements NestMiddleware {
+    private readonly logger = new Logger('AddFireBaseUserToRequest', true);
+
+    resolve(): MiddlewareFunction {
+        return (req, res, next) => {
+            const extractedToken = getToken(req.headers);
+            if (extractedToken) {
+                admin.auth().verifyIdToken(extractedToken)
+                    .then(decodedToken => {
+                        const uid = decodedToken.uid;
+                        this.logger.log('uid: ' + uid);
+                        admin.auth().getUser(uid)
+                            .then(userRecord => {
+                                // See the UserRecord reference doc for the contents of userRecord.
+                                this.logger.log('Successfully fetched user data:', JSON.stringify(userRecord));
+                                req.user = userRecord;
+                                next();
+                            })
+                            .catch(error => {
+                                this.logger.log('Error fetching user data:', error);
+                            });
+                    }).catch(error => {
+                    this.logger.log('Error verify token:', error);
+                });
+            }
+        };
+    }
+}
+
 
 @Injectable()
 export class AuthenticationMiddleware implements NestMiddleware {

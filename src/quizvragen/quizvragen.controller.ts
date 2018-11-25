@@ -14,7 +14,7 @@ export class QuizvragenController {
 
     @Get()
     async find(@Req() req): Promise<any> {
-        return this.quizvragenService.find(req.user.user_id);
+        return this.quizvragenService.find(req.user.uid);
     }
 
     @Get('aflevering/:afleveringId')

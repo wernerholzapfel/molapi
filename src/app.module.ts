@@ -1,12 +1,7 @@
 import {Module, NestModule, RequestMethod} from '@nestjs/common';
 import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
-import {
-    AddAuth0UserToRequest,
-    AdminMiddleware,
-    AuthenticationMiddleware,
-    IsUserAllowedToPostMiddleware,
-} from './authentication.middleware';
+import {AddFireBaseUserToRequest, AdminMiddleware, IsUserAllowedToPostMiddleware,} from './authentication.middleware';
 import {AfleveringenModule} from './afleveringen/afleveringen.module';
 import {KandidatenModule} from './kandidaten/kandidaten.module';
 import {StandenModule} from './standen/standen.module';
@@ -26,22 +21,23 @@ import {UitnodigingenModule} from './uitnodigingen/uitnodigingen.module';
 
 export class ApplicationModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {
-        consumer.apply(AuthenticationMiddleware).forRoutes(
-            {path: '/**', method: RequestMethod.POST},
-            {path: '/deelnemers/loggedIn', method: RequestMethod.GET},
-            {path: '/deelnemers/voorspellingen', method: RequestMethod.GET},
-            {path: '/quizvragen', method: RequestMethod.GET},
-            {path: '/quizresultaten', method: RequestMethod.GET},
-            {path: '/quizpunten/**', method: RequestMethod.GET},
-            {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
-        );
-        consumer.apply(AddAuth0UserToRequest).forRoutes(
+        // consumer.apply(AuthenticationMiddleware).forRoutes(
+        //     {path: '/**', method: RequestMethod.POST},
+        //     {path: '/deelnemers/loggedIn', method: RequestMethod.GET},
+        //     {path: '/deelnemers/voorspellingen', method: RequestMethod.GET},
+        //     {path: '/quizvragen', method: RequestMethod.GET},
+        //     {path: '/quizresultaten', method: RequestMethod.GET},
+        //     {path: '/quizpunten/**', method: RequestMethod.GET},
+        //     {path: '/quizvragen/aflevering/**', method: RequestMethod.GET},
+        // );
+        consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
             {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
+            {path: '/uitnodigingen', method: RequestMethod.GET},
             {path: '/uitnodigingen/**', method: RequestMethod.GET},
         );
         consumer.apply(AdminMiddleware).forRoutes(

@@ -12,19 +12,19 @@ export class UitnodigingenController {
 
     @Get()
     async find(@Req() req): Promise<Uitnodiging[]> {
-        return this.uitnodigingService.find(req.user.user_id);
+        return this.uitnodigingService.find(req.user.uid);
     }
 
     @Post('create')
     async create(@Req() req, @Body() createUitnodigingDto: CreateUitnodigingDto) {
         this.logger.log('UitnodigingenController: ' + createUitnodigingDto.uniqueIdentifier);
         const newEntry = Object.assign({}, createUitnodigingDto, {});
-        return await this.uitnodigingService.create(newEntry, req.user.user_id);
+        return await this.uitnodigingService.create(newEntry, req.user.uid);
     }
 
     @Post('accept')
     async accept(@Req() req, @Body() acceptUitnodigingDto: AcceptUitnodigingDto) {
         const newEntry = Object.assign({}, acceptUitnodigingDto, {});
-        return await this.uitnodigingService.accept(newEntry, req.user.user_id);
+        return await this.uitnodigingService.accept(newEntry, req.user.uid);
     }
 }

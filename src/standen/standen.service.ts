@@ -18,11 +18,12 @@ export class StandenService {
     private readonly logger = new Logger('standenService', true);
 
     constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>, public readonly cacheService: CacheService) {
-        this.findAll().then(async deelnemers => {
-            deelnemers.forEach(deelnemer => {
-                this.findByDeelnemer(deelnemer.deelnemerId).catch(err => this.logger.log('Probleem opgetreden bij het ophalen van de huidige stand voor deelnemer' + err));
-            });
-        });
+        // todo niet meer nodig?
+        // this.findAll().then(async deelnemers => {
+        //     deelnemers.forEach(deelnemer => {
+        //         this.findByDeelnemer(deelnemer.deelnemerId).catch(err => this.logger.log('Probleem opgetreden bij het ophalen van de huidige stand voor deelnemer' + err));
+        //     });
+        // });
     }
 
     createStandenFile: boolean = false;
@@ -82,14 +83,15 @@ export class StandenService {
                 }, HttpStatus.BAD_REQUEST);
             });
 
-            const afleveringsVoorspellingen: Voorspelling[] = await this.getAfleveringsVoorspellingen(aflevering);
+            const afleveringsVoorspellingen: any[] = await this.getAfleveringsVoorspellingen(aflevering);
 
             const mol = standenhelper.getMol(kandidatenlijst, aflevering);
             const previousmol = standenhelper.getMol(kandidatenlijst, aflevering - 1);
             const winnaar: Kandidaat = kandidatenlijst.find(kandidaat => kandidaat.winner);
             const previouswinnaar: Kandidaat = standenhelper.getWinnaar(kandidatenlijst, aflevering - 1);
 
-            const voorspellingenPunten = afleveringsVoorspellingen.map(voorspelling => ({
+            // @ts-ignore
+            const voorspellingenPunten: any = afleveringsVoorspellingen.map(voorspelling => ({
                 ...voorspelling,
                 molpunten: mol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, mol) : 0,
                 previousmolpunten: previousmol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, previousmol) : 0,
@@ -105,7 +107,7 @@ export class StandenService {
                 totaalpunten: voorspelling.molpunten + voorspelling.afvallerpunten + voorspelling.winnaarpunten + voorspelling.quizpunten,
             }));
 
-            const response: Stand[] = await _(voorspellingenPunten).groupBy('deelnemer.id')
+            const response: any[] = await _(voorspellingenPunten).groupBy('deelnemer.id')
                 .map((objs, key) => ({
                     deelnemerId: key,
                     display_name: _.head(objs).deelnemer.display_name,
@@ -235,7 +237,7 @@ export class StandenService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        const afleveringsVoorspellingen: Voorspelling[] = await this.getAfleveringsVoorspellingenVoorDeelnemer(deelnemerId, aflevering);
+        const afleveringsVoorspellingen: any[] = await this.getAfleveringsVoorspellingenVoorDeelnemer(deelnemerId, aflevering);
 
         const mol = standenhelper.getMol(kandidatenlijst, aflevering);
         const previousmol = standenhelper.getMol(kandidatenlijst, aflevering - 1);
