@@ -2,7 +2,6 @@ import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
 
 import {CreateDeelnemerDto} from './create-deelnemer.dto';
 import {DeelnemersService} from './deelnemers.service';
-import {ManagementClient} from 'auth0';
 import 'dotenv/config';
 import {Deelnemer} from './deelnemer.entity';
 
@@ -12,10 +11,6 @@ const auth0Domain = process.env.AUTH0_DOMAIN;
 @Controller('deelnemers')
 export class DeelnemersController {
     private readonly logger = new Logger('deelnemersController', true);
-    private management = new ManagementClient({
-        domain: auth0Domain,
-        token: auth0Token,
-    });
 
     constructor(private readonly deelnemersService: DeelnemersService) {
     }
