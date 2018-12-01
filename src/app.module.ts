@@ -1,7 +1,7 @@
 import {Module, NestModule, RequestMethod} from '@nestjs/common';
 import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
-import {AddFireBaseUserToRequest, AdminMiddleware, IsUserAllowedToPostMiddleware,} from './authentication.middleware';
+import {AddFireBaseUserToRequest, AdminMiddleware, IsUserAllowedToPostMiddleware} from './authentication.middleware';
 import {AfleveringenModule} from './afleveringen/afleveringen.module';
 import {KandidatenModule} from './kandidaten/kandidaten.module';
 import {StandenModule} from './standen/standen.module';
@@ -39,6 +39,7 @@ export class ApplicationModule implements NestModule {
             {path: '/quizpunten/**', method: RequestMethod.GET},
             {path: '/uitnodigingen', method: RequestMethod.GET},
             {path: '/uitnodigingen/**', method: RequestMethod.GET},
+            {path: '/voorspellingen/huidig', method: RequestMethod.GET},
         );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/acties', method: RequestMethod.POST},

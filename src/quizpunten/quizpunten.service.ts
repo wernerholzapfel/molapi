@@ -50,8 +50,8 @@ export class QuizpuntenService {
             });
     }
 
-    async findAllForDeelnemer(auth0Identifier: string): Promise<any[]> {
-        this.logger.log('dit is de auth0Identifier: ' + auth0Identifier);
+    async findAllForDeelnemer(firebaseIdentifier: string): Promise<any[]> {
+        this.logger.log('dit is de firebaseIdentifier: ' + firebaseIdentifier);
         const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
@@ -59,7 +59,7 @@ export class QuizpuntenService {
         this.afleveringWithLatestTest = acties.testaflevering;
 
         if (this.afleveringWithLatestTest > 0) {
-            const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+            const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
 
             const previousPuntenlijst = await this.getPuntenlijst(this.afleveringWithLatestTest === 1 ? this.afleveringWithLatestTest : this.afleveringWithLatestTest - 1, deelnemer);
             const puntenlijst: any[] = this.addPreviousPuntenToVragen(await this.getPuntenlijst(this.afleveringWithLatestTest, deelnemer), previousPuntenlijst);

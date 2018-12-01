@@ -4,7 +4,7 @@ import {Poule} from '../poules/poule.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 
 @Entity()
-@Index(['auth0Identifier'], {unique: true})
+@Index(['firebaseIdentifier'], {unique: true})
 export class Deelnemer {
     @PrimaryGeneratedColumn('uuid')
     id: string;

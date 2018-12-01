@@ -1,8 +1,9 @@
 import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {Logger} from '@nestjs/common/services/logger.service';
-import {Repository} from 'typeorm';
+import {getConnection, Repository} from 'typeorm';
 
 import {Voorspelling} from './voorspelling.entity';
+import {Deelnemer} from '../deelnemers/deelnemer.entity';
 
 @Injectable()
 export class VoorspellingenService {
@@ -31,7 +32,37 @@ export class VoorspellingenService {
         }
     }
 
-    async create(voorspelling: Voorspelling, auth0Identifier?: string) {
+    // get laatste voorspelling van deelnemer
+
+    async getHuidigeVoorspelling(firebaseIdentifier: string) {
+        const deelnemer = await getConnection().manager.findOne(Deelnemer, {where: {firebaseIdentifier}});
+
+        if (deelnemer) {
+
+            // @ts-ignore
+            deelnemer.voorspellingen = await getConnection()
+                .createQueryBuilder()
+                .select('*')
+                .from(Voorspelling, 'voorspelling')
+                .where('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .orderBy('voorspellingen.aflevering', 'ASC')
+                .getOne()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+
+            return deelnemer.voorspellingen;
+        }  else {
+            throw new HttpException({
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
+    }
+
+    async create(voorspelling: Voorspelling, firebaseIdentifier?: string) {
         return await this.voorspellingRepository.save(voorspelling)
             .catch((err) => {
                 throw new HttpException({

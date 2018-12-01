@@ -30,8 +30,8 @@ export class DeelnemersService {
         });
     }
 
-    async getVoorspellingen(auth0Identifier): Promise<any[]> {
-        const deelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+    async getVoorspellingen(firebaseIdentifier): Promise<any[]> {
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
@@ -76,7 +76,7 @@ export class DeelnemersService {
         if (oldDeelnemer) deelnemer = {
             id: oldDeelnemer.id,
             display_name: deelnemer.display_name,
-            firebaseIdentifier: oldDeelnemer.firebaseIdentifier,
+            firebaseIdentifier,
             email: oldDeelnemer.email,
         };
         return await this.deelnemerRepository.save(deelnemer)
@@ -104,43 +104,49 @@ export class DeelnemersService {
 
         const deelnemer = await getConnection().manager.findOne(Deelnemer, {where: {firebaseIdentifier}});
 
-        deelnemer.poules = await getConnection()
-            .createQueryBuilder()
-            .select('poule')
-            .from(Poule, 'poule')
-            .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
-            .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
-            .leftJoinAndSelect('deelnemers.tests', 'test')
-            .leftJoinAndSelect('test.vraag', 'vraag')
-            .leftJoinAndSelect('test.antwoord', 'tests')
-            .leftJoinAndSelect('voorspellingen.mol', 'mol')
-            .leftJoinAndSelect('voorspellingen.afvaller', 'afvaller')
-            .leftJoinAndSelect('voorspellingen.winnaar', 'winnaar')
-            .leftJoinAndSelect('poule.admins', 'admins')
-            .where(qb => {
-                const subQuery = qb.subQuery()
-                    .select('poule.id')
-                    .from(Poule, 'poule')
-                    .leftJoin('poule.deelnemers', 'deelnemers')
-                    .where('deelnemers.id = :deelnemerId', { deelnemerId: deelnemer.id })
-                    .getQuery();
-                return 'poule.id IN ' + subQuery;
-            })
-            .getMany()
-            .catch((err) => {
-                throw new HttpException({
-                    message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                }, HttpStatus.BAD_REQUEST);
-            });
+        if (deelnemer) {
 
-        return deelnemer;
+            deelnemer.poules = await getConnection()
+                .createQueryBuilder()
+                .select('poule')
+                .from(Poule, 'poule')
+                .innerJoinAndSelect('poule.deelnemers', 'deelnemers')
+                .innerJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
+                .innerJoinAndSelect('deelnemers.tests', 'test')
+                .innerJoinAndSelect('test.vraag', 'vraag')
+                .innerJoinAndSelect('test.antwoord', 'tests')
+                .innerJoinAndSelect('voorspellingen.mol', 'mol')
+                .innerJoinAndSelect('voorspellingen.afvaller', 'afvaller')
+                .innerJoinAndSelect('voorspellingen.winnaar', 'winnaar')
+                .innerJoinAndSelect('poule.admins', 'admins')
+                .where(qb => {
+                    const subQuery = qb.subQuery()
+                        .select('poule.id')
+                        .from(Poule, 'poule')
+                        .innerJoin('poule.deelnemers', 'deelnemers')
+                        .where('deelnemers.id = :deelnemerId', {deelnemerId: deelnemer.id})
+                        .getQuery();
+                    return 'poule.id IN ' + subQuery;
+                })
+                .getMany()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
 
+            return deelnemer;
+        } else {
+            throw new HttpException({
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
     }
 
     async findLoggedInDeelnemer(user_id) {
         this.logger.log(user_id);
-        const deelnemerResponse: any = await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
+        const deelnemerResponse: any = await this.deelnemerRepository.findOne({where: {firebaseIdentifier: user_id}}).then(deelnemer => {
             return deelnemer;
         }, (err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);

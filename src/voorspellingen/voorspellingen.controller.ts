@@ -25,6 +25,11 @@ export class VoorspellingenController {
         return this.voorspellingenService.findAll();
     }
 
+    @Get('huidig')
+    async getHuidigeVoorspelling(@Req() req): Promise<Voorspelling> {
+        // @ts-ignore
+        return this.voorspellingenService.getHuidigeVoorspelling(req.user.uid);
+    }
     @Post()
     async create(@Req() req, @Body() createVoorspellingDto: CreateVoorspellingDto) {
         const newVoorspelling = Object.assign({}, createVoorspellingDto, {
@@ -33,4 +38,3 @@ export class VoorspellingenController {
         return await this.voorspellingenService.create(newVoorspelling);
     }
 }
-

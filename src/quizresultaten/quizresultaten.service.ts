@@ -12,7 +12,7 @@ export class QuizresultatenService {
     constructor(@Inject('QuizresultatenRepositoryToken') private readonly quizresultaatRepository: Repository<Quizresultaat>) {
     }
 
-    async findAll(auth0Identifier: string): Promise<Quizresultaat[]> {
+    async findAll(firebaseIdentifier: string): Promise<Quizresultaat[]> {
         const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
@@ -22,7 +22,7 @@ export class QuizresultatenService {
         if (this.latestUitgezondenAflevering > 0) {
 
             this.logger.log('dit is de huidige aflevering: ' + this.latestUitgezondenAflevering);
-            const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+            const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
 
             return await getRepository(Quizresultaat)
                 .createQueryBuilder('resultaat')

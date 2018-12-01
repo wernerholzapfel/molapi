@@ -1,6 +1,5 @@
 import {HttpException, HttpStatus, Injectable, Logger, NestMiddleware} from '@nestjs/common';
 import * as jwt from 'express-jwt';
-import {ManagementClient} from 'auth0';
 import * as jwt_decode from 'jwt-decode';
 import 'dotenv/config';
 import {getRepository} from 'typeorm';
@@ -9,13 +8,7 @@ import {expressJwtSecret} from 'jwks-rsa';
 import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
 import * as admin from 'firebase-admin';
 
-const auth0Token = process.env.AUTH0_TOKEN;
-const auth0Domain = process.env.AUTH0_DOMAIN;
 const logger = new Logger('authenticationMiddleware', true);
-const management = new ManagementClient({
-    domain: auth0Domain,
-    token: auth0Token,
-});
 
 @Injectable()
 export class AddFireBaseUserToRequest implements NestMiddleware {
@@ -47,7 +40,6 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
     }
 }
 
-
 @Injectable()
 export class AuthenticationMiddleware implements NestMiddleware {
     private readonly logger = new Logger('deelnemersController', true);
@@ -75,9 +67,8 @@ export class AdminMiddleware implements NestMiddleware {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 const decoded: any = jwt_decode(extractedToken);
-                management.getUser({
-                    id: decoded.sub,
-                }).then(async user => {
+                admin.auth().verifyIdToken(extractedToken).then(async user => {
+                    // todo
                     if (user.app_metadata && user.app_metadata.hasOwnProperty('admin')) {
                         next();
                     }
@@ -99,9 +90,8 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
                 logger.log('start decoding IsEmailVerifiedMiddleware');
                 const decoded: any = jwt_decode(extractedToken);
                 logger.log(decoded.sub);
-                management.getUser({
-                    id: decoded.sub,
-                }).then(async user => {
+                admin.auth().verifyIdToken(extractedToken)
+                    .then(async user => {
                     req.user = user;
                     if (user.email_verified) next();
                     else {
@@ -114,43 +104,23 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
 }
 
 @Injectable()
-export class AddAuth0UserToRequest implements NestMiddleware {
-    resolve(): MiddlewareFunction {
-        return (req, res, next) => {
-            const extractedToken = getToken(req.headers);
-            if (extractedToken) {
-                logger.log('start decoding IsEmailVerifiedMiddleware');
-                const decoded: any = jwt_decode(extractedToken);
-                logger.log(decoded.sub);
-                management.getUser({
-                    id: decoded.sub,
-                }).then(async user => {
-                    req.user = user;
-                    next();
-                });
-            }
-        };
-    }
-}
-
-@Injectable()
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
     resolve(): MiddlewareFunction {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
-                logger.log('is user allowed to post message token known');
-                const decoded: any = jwt_decode(extractedToken);
-                logger.log(decoded.sub);
-                const user = await management.getUser({
-                    id: decoded.sub,
-                });
-                await getRepository(Deelnemer).findOne({auth0Identifier: user.user_id}).then( async deelnemer => {
-                    if (deelnemer.id !== req.body.deelnemer.id){
-                                throw new HttpException({message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan', statusCode: HttpStatus.FORBIDDEN}, HttpStatus.FORBIDDEN);
-                    }
-                    next();
-                });
+                admin.auth().verifyIdToken(extractedToken).then(
+                    async userRecord => {
+                        await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid}).then(async deelnemer => {
+                                if (deelnemer.id !== req.body.deelnemer.id) {
+                                    throw new HttpException({
+                                        message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
+                                        statusCode: HttpStatus.FORBIDDEN,
+                                    }, HttpStatus.FORBIDDEN);
+                                }
+                                next();
+                            });
+                    });
             }
         };
     }

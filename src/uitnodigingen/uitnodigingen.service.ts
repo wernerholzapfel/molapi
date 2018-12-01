@@ -40,7 +40,7 @@ export class UitnodigingenService {
             });
     }
 
-    async create(uitnodiging: Uitnodiging, auth0Identifier: string) {
+    async create(uitnodiging: Uitnodiging, firebaseIdentifier: string) {
         // todo check if admin of poule
         this.logger.log(uitnodiging.uniqueIdentifier);
         return await this.uitnodigingRepository

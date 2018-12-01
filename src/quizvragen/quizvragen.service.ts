@@ -14,7 +14,7 @@ export class QuizvragenService {
     constructor(@Inject('QuizvragenRepositoryToken') private readonly quizvraagRepository: Repository<Quizvraag>) {
     }
 
-    async find(auth0Identifier: string): Promise<any> {
+    async find(firebaseIdentifier: string): Promise<any> {
 
         const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
@@ -24,9 +24,9 @@ export class QuizvragenService {
         const aflevering: number = acties.testaflevering;
         this.logger.log('dit is de huidige aflevering: ' + aflevering);
 
-        const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+        const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
 
-        this.logger.log('dit is de huidige deelnemer: ' + auth0Identifier);
+        this.logger.log('dit is de huidige deelnemer: ' + firebaseIdentifier);
 
         const answeredQuestions = await getRepository(Quizresultaat)
             .createQueryBuilder('resultaat')
