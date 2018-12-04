@@ -36,6 +36,11 @@ export class DeelnemersController {
         return await this.deelnemersService.findVoorspellingen(req.user.uid);
     }
 
+    @Get('actualvoorspelling')
+    async actualvoorspelling(@Req() req) {
+        return await this.deelnemersService.findLoggedInDeelnemer(req.user.uid);
+    }
+
     @Get('voorspellingen')
     async getVoorspellingen(@Req() req) {
         return await this.deelnemersService.getVoorspellingen(req.user.uid);
