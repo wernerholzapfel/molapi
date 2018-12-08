@@ -1,4 +1,4 @@
-import {Module, NestModule, RequestMethod} from '@nestjs/common';
+import {Logger, Module, NestModule, RequestMethod} from '@nestjs/common';
 import {VoorspellingenModule} from './voorspellingen/voorspellingen.module';
 import {DeelnemersModule} from './deelnemers/deelnemers.module';
 import {AddFireBaseUserToRequest, AdminMiddleware, IsUserAllowedToPostMiddleware} from './authentication.middleware';
@@ -20,6 +20,8 @@ import {UitnodigingenModule} from './uitnodigingen/uitnodigingen.module';
 })
 
 export class ApplicationModule implements NestModule {
+    private readonly logger = new Logger('AppModule', true);
+
     configure(consumer: MiddlewareConsumer): void {
         // consumer.apply(AuthenticationMiddleware).forRoutes(
         //     {path: '/**', method: RequestMethod.POST},
@@ -63,5 +65,9 @@ export class ApplicationModule implements NestModule {
         );
         // middleware toevoegen dat create uitnodigingen checkt
         // middleware toevoegen dat accept uitnodigingen checkt
+
+        // admin.auth().setCustomUserClaims('YJQKN3IjdqPyNGtLuARrxtqq0If1', {admin: true}).then(() => {
+        //     this.logger.log('customerset');
+        // });
     }
 }

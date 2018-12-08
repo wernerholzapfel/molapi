@@ -48,7 +48,7 @@ export class ActiesService {
 
     determineTestAflevering(afleveringnummer: number, afleveringen: Aflevering[]): number {
         const aflevering = afleveringen.find(item => item.aflevering === afleveringnummer);
-        return !aflevering.laatsteAflevering ? afleveringnummer : null;
+        return (!aflevering || !aflevering.laatsteAflevering) ? afleveringnummer : null;
     }
 
     async create(actie: Actie) {
