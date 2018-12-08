@@ -16,6 +16,10 @@ export class QuizvragenController {
     async find(@Req() req): Promise<any> {
         return this.quizvragenService.find(req.user.uid);
     }
+   @Get('aantalopenvragen')
+    async aantalOnbeantwoordeVragen(@Req() req): Promise<any> {
+        return this.quizvragenService.aantalOnbeantwoordeVragen(req.user.uid);
+    }
 
     @Get('aflevering/:afleveringId')
     async getQuizVoorAflevering(@Param('afleveringId') afleveringId): Promise<Quizvraag[]> {

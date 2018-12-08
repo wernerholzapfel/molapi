@@ -7,8 +7,15 @@ import {Deelnemer} from './deelnemers/deelnemer.entity';
 import {expressJwtSecret} from 'jwks-rsa';
 import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
 import * as admin from 'firebase-admin';
+import {ManagementClient} from 'auth0';
 
+const auth0Token = process.env.AUTH0_TOKEN;
+const auth0Domain = process.env.AUTH0_DOMAIN;
 const logger = new Logger('authenticationMiddleware', true);
+const management = new ManagementClient({
+    domain: auth0Domain,
+    token: auth0Token,
+});
 
 @Injectable()
 export class AddFireBaseUserToRequest implements NestMiddleware {
@@ -67,8 +74,9 @@ export class AdminMiddleware implements NestMiddleware {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 const decoded: any = jwt_decode(extractedToken);
-                admin.auth().verifyIdToken(extractedToken).then(async user => {
-                    // todo
+                management.getUser({
+                    id: decoded.sub,
+                }).then(async user => {
                     if (user.app_metadata && user.app_metadata.hasOwnProperty('admin')) {
                         next();
                     }

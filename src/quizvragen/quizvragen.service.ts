@@ -14,6 +14,62 @@ export class QuizvragenService {
     constructor(@Inject('QuizvragenRepositoryToken') private readonly quizvraagRepository: Repository<Quizvraag>) {
     }
 
+    async aantalOnbeantwoordeVragen(firebaseIdentifier: string): Promise<any> {
+        const acties = await getRepository(Actie).findOne().catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+
+        const aflevering: number = acties.testaflevering;
+        this.logger.log('dit is de huidige aflevering: ' + aflevering);
+
+        const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
+
+        this.logger.log('dit is de huidige deelnemer: ' + firebaseIdentifier);
+
+        const answeredQuestions = await getRepository(Quizresultaat)
+            .createQueryBuilder('resultaat')
+            .leftJoinAndSelect('resultaat.vraag', 'vraag')
+            .where('resultaat.aflevering = :aflevering', {aflevering})
+            .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+        this.logger.log('answeredQuestions: ' + answeredQuestions.length);
+
+        const afleveringQuestions = await getRepository(Quizvraag)
+            .createQueryBuilder('quizvraag')
+            .leftJoinAndSelect('quizvraag.antwoorden', 'antwoorden')
+            .where('quizvraag.aflevering = :aflevering', {aflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+        this.logger.log('afleveringQuestions: ' + afleveringQuestions.length);
+
+        answeredQuestions.forEach(answer => {
+            const index = afleveringQuestions.findIndex(question => {
+                return question.id === answer.vraag.id;
+            });
+            afleveringQuestions.splice(index, 1);
+        });
+
+        this.logger.log(deelnemer.display_name + ' heeft nog ' + afleveringQuestions.length + ' vragen te beantwoorden');
+        const activeQuestion = afleveringQuestions.sort((a, b) => 0.5 - Math.random())[0];
+        if (activeQuestion) {
+            return {
+                aantalOpenVragen: afleveringQuestions.length,
+            };
+        }
+        return {aantalOpenVragen: 0};
+    }
+
     async find(firebaseIdentifier: string): Promise<any> {
 
         const acties = await getRepository(Actie).findOne().catch((err) => {

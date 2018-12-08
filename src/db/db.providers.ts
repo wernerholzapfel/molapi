@@ -34,7 +34,7 @@ export const dbProvider =
                 Poule,
                 Uitnodiging,
             ],
-            logging: true,
+            logging: false,
             synchronize: true, // DEV only, do not use on PROD!
         }),
     };

@@ -114,20 +114,20 @@ export class DeelnemersService {
                 .createQueryBuilder()
                 .select('poule')
                 .from(Poule, 'poule')
-                .innerJoinAndSelect('poule.deelnemers', 'deelnemers')
-                .innerJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
-                .innerJoinAndSelect('deelnemers.tests', 'test')
-                .innerJoinAndSelect('test.vraag', 'vraag')
-                .innerJoinAndSelect('test.antwoord', 'tests')
-                .innerJoinAndSelect('voorspellingen.mol', 'mol')
-                .innerJoinAndSelect('voorspellingen.afvaller', 'afvaller')
-                .innerJoinAndSelect('voorspellingen.winnaar', 'winnaar')
-                .innerJoinAndSelect('poule.admins', 'admins')
+                .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
+                .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
+                .leftJoinAndSelect('deelnemers.tests', 'test')
+                .leftJoinAndSelect('test.vraag', 'vraag')
+                .leftJoinAndSelect('test.antwoord', 'tests')
+                .leftJoinAndSelect('voorspellingen.mol', 'mol')
+                .leftJoinAndSelect('voorspellingen.afvaller', 'afvaller')
+                .leftJoinAndSelect('voorspellingen.winnaar', 'winnaar')
+                .leftJoinAndSelect('poule.admins', 'admins')
                 .where(qb => {
                     const subQuery = qb.subQuery()
                         .select('poule.id')
                         .from(Poule, 'poule')
-                        .innerJoin('poule.deelnemers', 'deelnemers')
+                        .leftJoin('poule.deelnemers', 'deelnemers')
                         .where('deelnemers.id = :deelnemerId', {deelnemerId: deelnemer.id})
                         .getQuery();
                     return 'poule.id IN ' + subQuery;
@@ -152,27 +152,21 @@ export class DeelnemersService {
         this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 
-        const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
-            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-        });
-
-        const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
-
         const voorspelling: any = await getRepository(Voorspelling)
             .createQueryBuilder('voorspelling')
             .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
             .leftJoinAndSelect('voorspelling.mol', 'mol')
             .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
             .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
-            .where('voorspelling.aflevering = :aflevering', {aflevering: laatsteAflevering ? laatsteAflevering.aflevering : 1})
-            .andWhere('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
-            .getOne()
+            .where('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .getMany()
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
-        return voorspelling;
+
+        return _.maxBy(voorspelling, 'aflevering');
     }
 }

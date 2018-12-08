@@ -35,6 +35,7 @@ export class ApplicationModule implements NestModule {
             {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
             {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
             {path: '/quizvragen', method: RequestMethod.GET},
+            {path: '/quizvragen/aantalopenvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
             {path: '/quizpunten/**', method: RequestMethod.GET},
             {path: '/uitnodigingen', method: RequestMethod.GET},
