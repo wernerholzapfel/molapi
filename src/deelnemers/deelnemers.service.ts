@@ -100,7 +100,9 @@ export class DeelnemersService {
             display_name: deelnemer.display_name,
             firebaseIdentifier,
             email: oldDeelnemer.email,
-        };
+        }; else {
+            deelnemer.firebaseIdentifier = firebaseIdentifier;
+        }
         return await this.deelnemerRepository.save(deelnemer)
             .catch((err) => {
                 throw new HttpException({

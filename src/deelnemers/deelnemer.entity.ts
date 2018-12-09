@@ -12,11 +12,8 @@ export class Deelnemer {
     @Column()
     display_name: string;
 
-    @Column({select: false})
-    auth0Identifier: string;
-
     // todo voor livegang nullable weghalen
-    @Column({select: false, nullable: true})
+    @Column({select: false})
     firebaseIdentifier: string;
 
     @Column({select: false})
