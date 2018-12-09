@@ -45,9 +45,9 @@ export class KandidatenService {
 
         this.updateAntwoorden(kandidaat);
 
-        this.updateQuizResultaten(kandidaat.aflevering);
-
-        this.updateAfleveringPunten(kandidaat);
+        // this.updateQuizResultaten(kandidaat.aflevering);
+        //
+        // this.updateAfleveringPunten(kandidaat);
 
         return response;
     }

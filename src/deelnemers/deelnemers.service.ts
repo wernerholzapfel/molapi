@@ -3,11 +3,12 @@ import {getConnection, getRepository, Repository} from 'typeorm';
 
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
-import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {Poule} from '../poules/poule.entity';
 import {Deelnemer} from './deelnemer.entity';
 import {IDeelnemer} from './deelnemer.interface';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
+import {Actie} from '../acties/actie.entity';
+import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 
 @Injectable()
 export class DeelnemersService {
@@ -31,6 +32,29 @@ export class DeelnemersService {
         });
     }
 
+    async getTests(firebaseIdentifier): Promise<any[]> {
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
+        const acties = await getRepository(Actie).findOne();
+
+        this.logger.log('acties.voorspellingaflevering: ' + acties.voorspellingaflevering);
+        const test: any = await getRepository(Quizresultaat)
+            .createQueryBuilder('quizresultaat')
+            .leftJoinAndSelect('quizresultaat.vraag', 'vraag')
+            .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
+            .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
+            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.voorspellingaflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return _.sortBy(test, [v => -v.aflevering]);
+    }
+
     async getVoorspellingen(firebaseIdentifier): Promise<any[]> {
         this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
@@ -41,15 +65,16 @@ export class DeelnemersService {
 
         const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
         if (laatsteAflevering) {
-            const voorspellingen: any = await getRepository(Afleveringpunten)
-                .createQueryBuilder('afleveringpunten')
-                .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
-                .leftJoinAndSelect('afleveringpunten.voorspelling', 'voorspelling')
+            this.logger.log(laatsteAflevering.aflevering);
+
+            const voorspellingen: any = await getRepository(Voorspelling)
+                .createQueryBuilder('voorspelling')
+                .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
                 .leftJoinAndSelect('voorspelling.mol', 'mol')
                 .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
                 .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
-                .where('afleveringpunten.afleveringstand = :aflevering', {aflevering: laatsteAflevering.aflevering})
-                .andWhere('afleveringpunten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
+                .andWhere('voorspelling.aflevering <= :aflevering', {aflevering: laatsteAflevering.aflevering})
                 .getMany()
                 .catch((err) => {
                     throw new HttpException({
@@ -58,11 +83,6 @@ export class DeelnemersService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-            const aflevering = await getRepository(Aflevering).find();
-
-            voorspellingen.forEach(voorspelling => {
-                voorspelling.voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
-            });
             return _.sortBy(voorspellingen, [v => -v.aflevering]);
         }
         else {
@@ -148,7 +168,7 @@ export class DeelnemersService {
         }
     }
 
-    async findLoggedInDeelnemer(firebaseIdentifier) {
+    async actualvoorspelling(firebaseIdentifier) {
         this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 

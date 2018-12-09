@@ -35,7 +35,9 @@ export class ApplicationModule implements NestModule {
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
             {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
+            {path: 'deelnemers/tests', method: RequestMethod.GET},
             {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
+            {path: '/deelnemers/actualvoorspelling', method: RequestMethod.GET},
             {path: '/quizvragen', method: RequestMethod.GET},
             {path: '/quizvragen/aantalopenvragen', method: RequestMethod.GET},
             {path: '/quizresultaten', method: RequestMethod.GET},
@@ -43,7 +45,6 @@ export class ApplicationModule implements NestModule {
             {path: '/uitnodigingen', method: RequestMethod.GET},
             {path: '/uitnodigingen/**', method: RequestMethod.GET},
             {path: '/voorspellingen/huidig', method: RequestMethod.GET},
-            {path: '/deelnemers/actualvoorspelling', method: RequestMethod.GET},
         );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/acties', method: RequestMethod.POST},

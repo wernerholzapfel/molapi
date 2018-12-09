@@ -38,12 +38,17 @@ export class DeelnemersController {
 
     @Get('actualvoorspelling')
     async actualvoorspelling(@Req() req) {
-        return await this.deelnemersService.findLoggedInDeelnemer(req.user.uid);
+        return await this.deelnemersService.actualvoorspelling(req.user.uid);
     }
 
     @Get('voorspellingen')
     async getVoorspellingen(@Req() req) {
         return await this.deelnemersService.getVoorspellingen(req.user.uid);
+    }
+
+    @Get('tests')
+    async getTests(@Req() req) {
+        return await this.deelnemersService.getTests(req.user.uid);
     }
 
     getToken = headers => {
