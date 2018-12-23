@@ -23,6 +23,7 @@ export class ActiesService {
                     testaflevering: this.determineTestAflevering(response.testaflevering, afleveringen),
                     testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
+                    updatedDate: response.updatedDate,
                 };
             }).catch((err) => {
                 throw new HttpException({
