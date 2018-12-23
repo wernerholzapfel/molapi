@@ -63,9 +63,9 @@ export class DeelnemersService {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
-        if (laatsteAflevering) {
-            this.logger.log(laatsteAflevering.aflevering);
+        const laatstUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+        if (laatstUitgezondenAflevering) {
+            this.logger.log(laatstUitgezondenAflevering.aflevering);
 
             const voorspellingen: any = await getRepository(Voorspelling)
                 .createQueryBuilder('voorspelling')
@@ -74,7 +74,7 @@ export class DeelnemersService {
                 .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
                 .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
                 .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
-                .andWhere('voorspelling.aflevering <= :aflevering', {aflevering: laatsteAflevering.aflevering})
+                .andWhere('voorspelling.aflevering <= :aflevering', {aflevering: laatstUitgezondenAflevering.aflevering})
                 .getMany()
                 .catch((err) => {
                     throw new HttpException({
@@ -132,13 +132,26 @@ export class DeelnemersService {
 
         if (deelnemer) {
 
+            const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+            let laatsteUitgezondenAfleveringAflevering = 0;
+            const laatstUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+            if (laatstUitgezondenAflevering) {
+                laatsteUitgezondenAfleveringAflevering = laatstUitgezondenAflevering.aflevering;
+            }
+
             deelnemer.poules = await getConnection()
                 .createQueryBuilder()
                 .select('poule')
                 .from(Poule, 'poule')
                 .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
-                .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen')
-                .leftJoinAndSelect('deelnemers.tests', 'test')
+                .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen', 'voorspellingen.aflevering <= :laatsteVoorspellingAflevering', {laatsteVoorspellingAflevering: laatsteUitgezondenAfleveringAflevering})
+                .leftJoinAndSelect('deelnemers.tests', 'test', 'test.aflevering <= :laatsteTestAflevering', {laatsteTestAflevering: laatsteUitgezondenAfleveringAflevering - 1})
                 .leftJoinAndSelect('test.vraag', 'vraag')
                 .leftJoinAndSelect('test.antwoord', 'tests')
                 .leftJoinAndSelect('voorspellingen.mol', 'mol')
