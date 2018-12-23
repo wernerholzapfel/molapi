@@ -1,6 +1,4 @@
-import {Column, Entity, Index, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
-import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import {Voorspelling} from '../voorspellingen/voorspelling.entity';
+import {Column, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 
 @Entity()
 @Index(['voorspellingaflevering', 'testaflevering'], {unique: true})
@@ -13,4 +11,8 @@ export class Actie {
 
     @Column({nullable: true})
     testaflevering: number;
+
+    @UpdateDateColumn()
+    updatedDate: Date;
+
 }

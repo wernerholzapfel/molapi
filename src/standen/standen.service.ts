@@ -173,7 +173,7 @@ export class StandenService {
             .map((objs, key) => ({
                 mol: _.head(objs).mol,
                 count: objs.length,
-                percentage: objs.length / laatsteVoorspellingPerDeelnemer.length * 100,
+                percentage: Math.round(objs.length / laatsteVoorspellingPerDeelnemer.length * 100),
             }))
             .value();
 
