@@ -36,14 +36,14 @@ export class DeelnemersService {
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
         const acties = await getRepository(Actie).findOne();
 
-        this.logger.log('acties.voorspellingaflevering: ' + acties.voorspellingaflevering);
+        this.logger.log('acties.voorspellingaflevering: ' + acties.testaflevering);
         const test: any = await getRepository(Quizresultaat)
             .createQueryBuilder('quizresultaat')
             .leftJoinAndSelect('quizresultaat.vraag', 'vraag')
             .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
             .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
             .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
-            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.voorspellingaflevering})
+            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.testaflevering})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
