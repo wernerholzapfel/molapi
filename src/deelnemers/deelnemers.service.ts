@@ -187,21 +187,25 @@ export class DeelnemersService {
         this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 
-        const voorspelling: any = await getRepository(Voorspelling)
-            .createQueryBuilder('voorspelling')
-            .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
-            .leftJoinAndSelect('voorspelling.mol', 'mol')
-            .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
-            .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
-            .where('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
-            .getMany()
-            .catch((err) => {
-                throw new HttpException({
-                    message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                }, HttpStatus.BAD_REQUEST);
-            });
+        if (deelnemer) {
+            const voorspelling: any = await getRepository(Voorspelling)
+                .createQueryBuilder('voorspelling')
+                .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
+                .leftJoinAndSelect('voorspelling.mol', 'mol')
+                .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+                .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+                .where('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .getMany()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
 
-        return _.maxBy(voorspelling, 'aflevering');
+            return _.maxBy(voorspelling, 'aflevering');
+        } else {
+            return [];
+        }
     }
 }

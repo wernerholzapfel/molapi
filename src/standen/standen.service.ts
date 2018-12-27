@@ -177,7 +177,7 @@ export class StandenService {
             }))
             .value();
 
-        return _.sortBy(molPercentaPerKandidaat, 'count');
+        return _.sortBy(molPercentaPerKandidaat, '-count');
     }
 
     async getPossibleStand(molId, winnaarId): Promise<any[]> {
