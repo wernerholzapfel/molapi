@@ -9,9 +9,15 @@ export class CreateUitnodigingDto {
     @IsDefined() readonly poule: Poule;
 
     readonly isAccepted: boolean;
+    readonly isDeclined: boolean;
 }
 
 export class AcceptUitnodigingDto {
+    @IsDefined() readonly poule: Poule;
+    @IsDefined() readonly uitnodigingId: string;
+}
+
+export class DeclineUitnodigingDto {
     @IsDefined() readonly poule: Poule;
     @IsDefined() readonly uitnodigingId: string;
 }

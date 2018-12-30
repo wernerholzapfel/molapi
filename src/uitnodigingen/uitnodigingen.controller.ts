@@ -1,7 +1,7 @@
 import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
 import {Uitnodiging} from './uitnodiging.entity';
 import {UitnodigingenService} from './uitnodigingen.service';
-import {AcceptUitnodigingDto, CreateUitnodigingDto} from './create-uitnodiging.dto';
+import {AcceptUitnodigingDto, CreateUitnodigingDto, DeclineUitnodigingDto} from './create-uitnodiging.dto';
 
 @Controller('uitnodigingen')
 export class UitnodigingenController {
@@ -31,5 +31,10 @@ export class UitnodigingenController {
     async accept(@Req() req, @Body() acceptUitnodigingDto: AcceptUitnodigingDto) {
         const newEntry = Object.assign({}, acceptUitnodigingDto, {});
         return await this.uitnodigingService.accept(newEntry, req.user.uid);
+    }
+    @Post('decline')
+    async decline(@Req() req, @Body() declineUitnodigingDto: DeclineUitnodigingDto) {
+        const newEntry = Object.assign({}, declineUitnodigingDto, {});
+        return await this.uitnodigingService.decline(newEntry, req.user.uid);
     }
 }

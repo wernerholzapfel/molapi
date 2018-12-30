@@ -15,4 +15,7 @@ export class Uitnodiging {
 
     @Column({default: false})
     isAccepted: boolean;
+
+    @Column({default: false})
+    isDeclined: boolean;
 }

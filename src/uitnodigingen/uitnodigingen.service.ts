@@ -2,7 +2,7 @@ import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/com
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Uitnodiging} from './uitnodiging.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
-import {AcceptUitnodigingDto} from './create-uitnodiging.dto';
+import {AcceptUitnodigingDto, DeclineUitnodigingDto} from './create-uitnodiging.dto';
 import {Poule} from '../poules/poule.entity';
 
 @Injectable()
@@ -31,6 +31,7 @@ export class UitnodigingenService {
             .leftJoinAndSelect('poule.admins', 'admins')
             .where('uitnodiging.uniqueIdentifier = :email', {email: deelnemer.email})
             .andWhere('uitnodiging.isAccepted = false')
+            .andWhere('uitnodiging.isDeclined = false')
             .getMany()
             .catch((err) => {
                 throw new HttpException({
@@ -95,6 +96,44 @@ export class UitnodigingenService {
                 }, HttpStatus.BAD_REQUEST);
             });
 
+    }
+
+    async decline(declineUitnodiging: DeclineUitnodigingDto, uniqueIdentifier: string) {
+        // versimpelen door alleen uitnodigingId mee te sturen en adhv  de uitndoging ophalen en de pouleId gebruiken
+
+        const deelnemer = await getRepository(Deelnemer)
+            .createQueryBuilder('deelnemer')
+            .select('deelnemer.email')
+            .where('deelnemer.firebaseIdentifier = :uniqueIdentifier', {uniqueIdentifier})
+            .getOne()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        if (deelnemer) {
+            this.logger.log('declinde please ' + declineUitnodiging.uitnodigingId + deelnemer.email);
+            // update uitnoding set isDeclined
+            return await getConnection()
+                .createQueryBuilder()
+                .update(Uitnodiging)
+                .set({isDeclined: true})
+                .where('id = :id', {id: declineUitnodiging.uitnodigingId})
+                .andWhere('uniqueIdentifier = :email', {email: deelnemer.email})
+                .execute()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+        } else {
+            throw new HttpException({
+                statusCode: HttpStatus.FORBIDDEN,
+            }, HttpStatus.FORBIDDEN);
+        }
     }
 
     async findByPouleId(uniqueIdentifier, pouleId): Promise<any> {
