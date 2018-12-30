@@ -96,4 +96,40 @@ export class UitnodigingenService {
             });
 
     }
+
+    async findByPouleId(uniqueIdentifier, pouleId): Promise<any> {
+
+        // todo mooier maken.
+
+        const deelnemer = await getRepository(Deelnemer)
+            .createQueryBuilder('deelnemer')
+            .select('deelnemer.id')
+            .where('deelnemer.firebaseIdentifier = :uniqueIdentifier', {uniqueIdentifier})
+            .getOne()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        const uitnodigingen = await getRepository(Uitnodiging)
+            .createQueryBuilder('uitnodiging')
+            .leftJoinAndSelect('uitnodiging.poule', 'poule')
+            .leftJoinAndSelect('poule.admins', 'admins')
+            .where('poule.id = :pouleId', {pouleId})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        if (uitnodigingen[0].poule.admins[0].id === deelnemer.id) {
+            return uitnodigingen;
+        } else {
+            return [];
+        }
+    }
 }

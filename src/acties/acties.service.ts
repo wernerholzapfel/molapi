@@ -24,6 +24,7 @@ export class ActiesService {
                     testDeadlineDatetime: this.getDeadlineDatetime(response.testaflevering + 1, afleveringen),
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
                     updatedDate: response.updatedDate,
+                    alwaysUpdate: response.alwaysUpdate,
                 };
             }).catch((err) => {
                 throw new HttpException({

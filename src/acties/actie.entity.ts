@@ -12,7 +12,10 @@ export class Actie {
     @Column({nullable: true})
     testaflevering: number;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type: 'timestamp with time zone'})
     updatedDate: Date;
+
+    @Column({nullable: true})
+    alwaysUpdate: boolean;
 
 }

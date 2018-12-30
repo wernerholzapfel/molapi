@@ -20,6 +20,6 @@ export class Aflevering {
     @Column({ default: false })
     hasVoorspelling: boolean;
 
-    @Column()
+    @Column({ type: 'timestamp with time zone'})
     deadlineDatetime: Date;
 }

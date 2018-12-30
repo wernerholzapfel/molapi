@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, Logger, Param, Post, Req} from '@nestjs/common';
 import {Uitnodiging} from './uitnodiging.entity';
 import {UitnodigingenService} from './uitnodigingen.service';
 import {AcceptUitnodigingDto, CreateUitnodigingDto} from './create-uitnodiging.dto';
@@ -13,6 +13,11 @@ export class UitnodigingenController {
     @Get()
     async find(@Req() req): Promise<Uitnodiging[]> {
         return this.uitnodigingService.find(req.user.uid);
+    }
+
+    @Get('poule/:pouleId')
+    async findByPouleId(@Req() req, @Param('pouleId') pouleId): Promise<Uitnodiging[]> {
+        return this.uitnodigingService.findByPouleId(req.user.uid, pouleId);
     }
 
     @Post('create')
