@@ -169,7 +169,7 @@ export class StandenService {
             }))
             .value().filter(voorspelling => !voorspelling.mol.afgevallen);
 
-        const molPercentaPerKandidaat = await _(laatsteVoorspellingPerDeelnemer).groupBy('mol.id')
+        const molPercentaPerKandidaat: any = await _(laatsteVoorspellingPerDeelnemer).groupBy('mol.id')
             .map((objs, key) => ({
                 mol: _.head(objs).mol,
                 count: objs.length,
@@ -177,7 +177,7 @@ export class StandenService {
             }))
             .value();
 
-        return _.sortBy(molPercentaPerKandidaat, '-count');
+        return _.orderBy(molPercentaPerKandidaat, 'count', 'desc');
     }
 
     async getPossibleStand(molId, winnaarId): Promise<any[]> {
