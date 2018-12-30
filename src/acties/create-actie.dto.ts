@@ -1,4 +1,4 @@
-import {IsInt, IsOptional} from 'class-validator';
+import {IsBoolean, IsInt, IsOptional} from 'class-validator';
 
 export class CreateActiesDto {
     readonly id: string;
@@ -6,5 +6,6 @@ export class CreateActiesDto {
 
     @IsOptional() @IsInt() readonly voorspellingaflevering: number;
     @IsOptional() @IsInt()  readonly testaflevering: number;
+    @IsOptional() @IsBoolean()  readonly alwaysUpdate: boolean;
 
 }
