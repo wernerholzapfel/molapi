@@ -35,6 +35,8 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                     }).catch(error => {
                     this.logger.log('Error verify token:', error);
                 });
+            } else {
+                return res.sendStatus(401);
             }
         };
     }
@@ -77,6 +79,8 @@ export class AdminMiddleware implements NestMiddleware {
                         return res.sendStatus(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
                     }
                 });
+            } else {
+                return res.sendStatus(401);
             }
         };
     }
@@ -99,6 +103,8 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
                         return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
                     }
                 });
+            } else {
+                return res.sendStatus(401);
             }
         };
     }
