@@ -30,10 +30,10 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                                 next();
                             })
                             .catch(error => {
-                                this.logger.log('Error fetching user data:', error);
+                                this.logger.error('Error fetching user data:', error);
                             });
                     }).catch(error => {
-                    this.logger.log('Error verify token:', error);
+                    this.logger.error('Error verify token:', error);
                 });
             } else {
                 return res.sendStatus(401);
@@ -112,6 +112,8 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
 
 @Injectable()
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
+    private readonly logger = new Logger('IsUserAllowedToPostMiddleware', true);
+
     resolve(): MiddlewareFunction {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
@@ -126,8 +128,12 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                                     }, HttpStatus.FORBIDDEN);
                                 }
                                 next();
-                            });
+                            }).catch(error => {
+                            this.logger.error('Error verify token:', error);
+                        });
                     });
+            } else {
+                return res.sendStatus(401);
             }
         };
     }
