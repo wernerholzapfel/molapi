@@ -42,17 +42,47 @@ export class UitnodigingenService {
     }
 
     async create(uitnodiging: Uitnodiging, firebaseIdentifier: string) {
-        // todo check if admin of poule
-        this.logger.log(uitnodiging.uniqueIdentifier);
-        return await this.uitnodigingRepository
-            .save(uitnodiging)
+
+        const deelnemer = await getRepository(Deelnemer)
+            .createQueryBuilder('deelnemer')
+            .select('deelnemer.id')
+            .where('deelnemer.firebaseIdentifier = :uniqueIdentifier', {uniqueIdentifier : firebaseIdentifier})
+            .getOne()
             .catch((err) => {
                 throw new HttpException({
-                        message: err.message,
-                        statusCode: HttpStatus.BAD_REQUEST,
-                    },
-                    HttpStatus.BAD_REQUEST);
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
             });
+
+        const poule = await getRepository(Poule)
+            .createQueryBuilder('poule')
+            .leftJoinAndSelect('poule.admins', 'admins')
+            .where('poule.id = :pouleId', {pouleId: uitnodiging.poule.id})
+            .getOne()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        if (poule && deelnemer && poule.admins[0].id === deelnemer.id) {
+            return await this.uitnodigingRepository
+                .save(uitnodiging)
+                .catch((err) => {
+                    throw new HttpException({
+                            message: err.message,
+                            statusCode: HttpStatus.BAD_REQUEST,
+                        },
+                        HttpStatus.BAD_REQUEST);
+                });
+        } else {
+            throw new HttpException({
+                statusCode: HttpStatus.FORBIDDEN,
+            }, HttpStatus.FORBIDDEN);
+        }
+
     }
 
     async accept(acceptUitnodiging: AcceptUitnodigingDto, uniqueIdentifier: string) {
@@ -77,13 +107,6 @@ export class UitnodigingenService {
             .where('id = :id', {id: acceptUitnodiging.uitnodigingId})
             .execute();
 
-        const poule = await getRepository(Poule)
-            .createQueryBuilder('poule')
-            .select('*')
-            .where('poule.id = :pouleId', {pouleId: acceptUitnodiging.poule.id})
-            .getOne();
-
-        this.logger.log('deelnemerId: ' + deelnemer.id);
         return await getConnection()
             .createQueryBuilder()
             .relation(Poule, 'deelnemers')
