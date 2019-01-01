@@ -29,7 +29,7 @@ export class UitnodigingenService {
             .createQueryBuilder('uitnodiging')
             .leftJoinAndSelect('uitnodiging.poule', 'poule')
             .leftJoinAndSelect('poule.admins', 'admins')
-            .where('uitnodiging.uniqueIdentifier = :email', {email: deelnemer.email})
+            .where('LOWER(uitnodiging.uniqueIdentifier) = LOWER(:email)', {email: deelnemer.email})
             .andWhere('uitnodiging.isAccepted = false')
             .andWhere('uitnodiging.isDeclined = false')
             .getMany()
@@ -121,7 +121,7 @@ export class UitnodigingenService {
                 .update(Uitnodiging)
                 .set({isDeclined: true})
                 .where('id = :id', {id: declineUitnodiging.uitnodigingId})
-                .andWhere('uniqueIdentifier = :email', {email: deelnemer.email})
+                .andWhere('LOWER(uniqueIdentifier) = LOWER(:email)', {email: deelnemer.email})
                 .execute()
                 .catch((err) => {
                     throw new HttpException({
