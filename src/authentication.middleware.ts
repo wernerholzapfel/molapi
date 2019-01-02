@@ -30,10 +30,10 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                                 next();
                             })
                             .catch(error => {
-                                this.logger.error('Error fetching user data:', error);
+                                this.logger.log('Error fetching user data:', uid);
                             });
                     }).catch(error => {
-                    this.logger.error('Error verify token:', error);
+                    this.logger.log('Error verify token:', error);
                 });
             } else {
                 return res.sendStatus(401);
@@ -97,12 +97,12 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
                 logger.log(decoded.sub);
                 admin.auth().verifyIdToken(extractedToken)
                     .then(async user => {
-                    req.user = user;
-                    if (user.email_verified) next();
-                    else {
-                        return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
-                    }
-                });
+                        req.user = user;
+                        if (user.email_verified) next();
+                        else {
+                            return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
+                        }
+                    });
             } else {
                 return res.sendStatus(401);
             }
@@ -120,7 +120,8 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
             if (extractedToken) {
                 admin.auth().verifyIdToken(extractedToken).then(
                     async userRecord => {
-                        await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid}).then(async deelnemer => {
+                        await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid})
+                            .then(async deelnemer => {
                                 if (deelnemer.id !== req.body.deelnemer.id) {
                                     throw new HttpException({
                                         message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
@@ -129,8 +130,8 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                                 }
                                 next();
                             }).catch(error => {
-                            this.logger.error('Error verify token:', error);
-                        });
+                                this.logger.log('Ophalen deelnemer mislukt', userRecord.uid);
+                            });
                     });
             } else {
                 return res.sendStatus(401);
