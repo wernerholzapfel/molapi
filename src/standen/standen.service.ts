@@ -114,7 +114,7 @@ export class StandenService {
                     molpunten: _.sumBy(objs, 'molpunten'),
                     afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                     winnaarpunten: _.sumBy(objs, 'winnaarpunten'),
-                    quizpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
+                    testpunten: quizStand.find(item => item.deelnemerId === key) ? quizStand.find(item => item.deelnemerId === key).quizpunten : 0,
                     previousmolpunten: _.sumBy(objs, 'previousmolpunten'),
                     previousafvallerpunten: _.sumBy(objs, 'previousafvallerpunten'),
                     previouswinnaarpunten: _.sumBy(objs, 'previouswinnaarpunten'),
@@ -126,8 +126,6 @@ export class StandenService {
                 }))
                 .value();
 
-            this.cacheService.set('api/v1/standen', _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
-
             if (this.createStandenFile) {
                 const jsonStand = JSON.stringify(_.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
                 fs.writeFile('output/stand.json', jsonStand, 'utf8', (err) => {
@@ -136,7 +134,22 @@ export class StandenService {
                 });
             }
 
-            return _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]);
+            const sortedStand = _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]);
+
+            let previousPosition = 1;
+
+            const standmetpositie = sortedStand.map((participant, index) => {
+                if (index > 0 && participant.totaalpunten === sortedStand[index - 1].totaalpunten) {
+                     return Object.assign(participant, {positie: previousPosition});
+                } else {
+                    previousPosition = index + 1;
+                    return Object.assign(participant, {positie: previousPosition});
+                }
+            });
+
+            this.cacheService.set('api/v1/standen', {data: standmetpositie});
+
+            return standmetpositie;
         }
         else {
             throw new HttpException({
@@ -167,7 +180,7 @@ export class StandenService {
                 aflevering: _.maxBy(objs, 'aflevering').aflevering,
                 mol: _.maxBy(objs, 'aflevering').mol,
             }))
-            .value().filter(voorspelling => !voorspelling.mol.afgevallen);
+            .value().filter(voorspelling => voorspelling.mol && !voorspelling.mol.afgevallen);
 
         const molPercentaPerKandidaat: any = await _(laatsteVoorspellingPerDeelnemer).groupBy('mol.id')
             .map((objs, key) => ({

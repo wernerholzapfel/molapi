@@ -7,8 +7,12 @@ export interface Stand {
     quizpunten: number;
     totaalpunten: number;
     delta_totaalpunten: number;
+    positie?: number;
 }
 
+export interface Stand2 {
+    deelnemers: Stand[];
+}
 export interface TestStand {
     deelnemerId: string;
     quizpunten: number;

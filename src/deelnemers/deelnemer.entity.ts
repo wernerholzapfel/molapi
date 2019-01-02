@@ -12,7 +12,6 @@ export class Deelnemer {
     @Column()
     display_name: string;
 
-    // todo voor livegang nullable weghalen
     @Column({select: false})
     firebaseIdentifier: string;
 

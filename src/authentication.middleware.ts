@@ -118,11 +118,12 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
+                this.logger.log('dit is de extracted token in IsUserAllowedToPostMiddleware: ' + extractedToken);
                 admin.auth().verifyIdToken(extractedToken).then(
                     async userRecord => {
                         await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid})
                             .then(async deelnemer => {
-                                if (deelnemer.id !== req.body.deelnemer.id) {
+                                if (req && req.body && req.body.deelnemer && deelnemer.id !== req.body.deelnemer.id) {
                                     throw new HttpException({
                                         message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
                                         statusCode: HttpStatus.FORBIDDEN,
@@ -130,7 +131,7 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                                 }
                                 next();
                             }).catch(error => {
-                                this.logger.log('Ophalen deelnemer mislukt', userRecord.uid);
+                                this.logger.log('Ophalen deelnemer mislukt', error.code);
                             });
                     });
             } else {
