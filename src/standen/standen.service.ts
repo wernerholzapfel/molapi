@@ -33,8 +33,12 @@ export class StandenService {
         const afleveringen: Aflevering[] = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
 
-        return this.getStandByAflevering(latestUitgezondenAflevering.aflevering);
-    }
+        if (latestUitgezondenAflevering && latestUitgezondenAflevering.aflevering) {
+            return this.getStandByAflevering(latestUitgezondenAflevering.aflevering);
+        } else {
+            return [];
+        }
+    }x;
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
         const alleUitgezondenAfleveringen = await this.getAlleUitgezondenAfleveringen();
@@ -140,7 +144,7 @@ export class StandenService {
 
             const standmetpositie = sortedStand.map((participant, index) => {
                 if (index > 0 && participant.totaalpunten === sortedStand[index - 1].totaalpunten) {
-                     return Object.assign(participant, {positie: previousPosition});
+                    return Object.assign(participant, {positie: previousPosition});
                 } else {
                     previousPosition = index + 1;
                     return Object.assign(participant, {positie: previousPosition});
