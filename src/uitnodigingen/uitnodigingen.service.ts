@@ -188,7 +188,7 @@ export class UitnodigingenService {
                 }, HttpStatus.BAD_REQUEST);
             });
 
-        if (uitnodigingen[0].poule.admins[0].id === deelnemer.id) {
+        if (uitnodigingen && uitnodigingen[0] && uitnodigingen[0].poule.admins[0].id === deelnemer.id) {
             return uitnodigingen;
         } else {
             return [];

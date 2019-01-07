@@ -88,6 +88,8 @@ export class AdminMiddleware implements NestMiddleware {
 
 @Injectable()
 export class IsEmailVerifiedMiddleware implements NestMiddleware {
+    private readonly logger = new Logger('IsEmailVerifiedMiddleware', true);
+
     resolve(): MiddlewareFunction {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
@@ -102,6 +104,12 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
                         else {
                             return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
                         }
+                    }).catch(error => {
+                    this.logger.log('kan deelnemer niet verifieren');
+                    throw new HttpException({
+                        message: 'kan deelnemer niet verifieren',
+                        statusCode: HttpStatus.FORBIDDEN,
+                    }, HttpStatus.FORBIDDEN);
                     });
             } else {
                 return res.sendStatus(401);
@@ -133,7 +141,13 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                             }).catch(error => {
                                 this.logger.log('Ophalen deelnemer mislukt', error.code);
                             });
-                    });
+                    }).catch(error => {
+                        this.logger.log('kan deelnemer niet verifieren ' + extractedToken);
+                        throw new HttpException({
+                        message: 'kan deelnemer niet verifieren',
+                        statusCode: HttpStatus.FORBIDDEN,
+                    }, HttpStatus.FORBIDDEN);
+                });
             } else {
                 return res.sendStatus(401);
             }
