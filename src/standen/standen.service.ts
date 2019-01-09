@@ -33,12 +33,12 @@ export class StandenService {
         const afleveringen: Aflevering[] = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
 
-        if (latestUitgezondenAflevering && latestUitgezondenAflevering.aflevering) {
+        if (false && latestUitgezondenAflevering && latestUitgezondenAflevering.aflevering) {
             return this.getStandByAflevering(latestUitgezondenAflevering.aflevering);
         } else {
             return [];
         }
-    }x;
+    }
 
     async findByDeelnemer(deelnemerId): Promise<any[]> {
         const alleUitgezondenAfleveringen = await this.getAlleUitgezondenAfleveringen();
@@ -70,7 +70,7 @@ export class StandenService {
 
     async getStandByAflevering(aflevering: number): Promise<Stand[]> {
         if (aflevering) {
-            const testantwoorden: Quizresultaat[] = await this.getGemaakteTests();
+            const testantwoorden: Quizresultaat[] = await this.getGemaakteTests(aflevering);
 
             const quizStand: TestStand[] = await _(testantwoorden).groupBy('deelnemer.id')
                 .map((objs, key) => ({
@@ -376,11 +376,13 @@ export class StandenService {
             });
     }
 
-    private async getGemaakteTests(): Promise<Quizresultaat[]> {
+    private async getGemaakteTests(aflevering): Promise<Quizresultaat[]> {
+        if (aflevering > 1) {
         return await getConnection()
             .createQueryBuilder()
             .select('quizresultaat')
             .from(Quizresultaat, 'quizresultaat')
+            .where('quizresultaat.aflevering <= :aflevering', {aflevering})
             .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
             .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
             .getMany()
@@ -391,6 +393,9 @@ export class StandenService {
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+        } else {
+            return null;
+        }
     }
 
     private async getGemaakteTestsForDeelnemer(deelnemerId: string, aflevering: number): Promise<Quizresultaat[]> {
