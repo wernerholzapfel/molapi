@@ -33,7 +33,7 @@ export class StandenService {
         const afleveringen: Aflevering[] = await this.getAlleUitgezondenAfleveringen();
         const latestUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
 
-        if (false && latestUitgezondenAflevering && latestUitgezondenAflevering.aflevering) {
+        if (latestUitgezondenAflevering && latestUitgezondenAflevering.aflevering) {
             return this.getStandByAflevering(latestUitgezondenAflevering.aflevering);
         } else {
             return [];
@@ -113,7 +113,7 @@ export class StandenService {
 
             const response: any[] = await _(voorspellingenPunten).groupBy('deelnemer.id')
                 .map((objs, key) => ({
-                    deelnemerId: key,
+                    id: key,
                     display_name: _.head(objs).deelnemer.display_name,
                     molpunten: _.sumBy(objs, 'molpunten'),
                     afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
