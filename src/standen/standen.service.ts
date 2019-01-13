@@ -382,7 +382,7 @@ export class StandenService {
             .createQueryBuilder()
             .select('quizresultaat')
             .from(Quizresultaat, 'quizresultaat')
-            .where('quizresultaat.aflevering <= :aflevering', {aflevering})
+            .where('quizresultaat.aflevering < :aflevering', {aflevering})
             .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
             .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
             .getMany()
