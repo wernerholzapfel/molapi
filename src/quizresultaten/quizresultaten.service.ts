@@ -45,7 +45,9 @@ export class QuizresultatenService {
 
     async create(quizresultaat: Quizresultaat) {
         this.logger.log('er wordt een antwoord opgeslagen');
-        return await this.quizresultaatRepository.save(quizresultaat).catch((err) => {
+        return await getRepository(Quizresultaat).save(quizresultaat)
+            .catch((err) => {
+            this.logger.log('opslaan van atnwoord fout gegaan: ' + quizresultaat.deelnemer.id);
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }
