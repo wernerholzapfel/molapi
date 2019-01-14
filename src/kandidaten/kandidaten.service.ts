@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Kandidaat} from './kandidaat.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
@@ -16,13 +16,16 @@ import {
     winnaarPunten,
     winnaarStrafpunten,
 } from '../shared/puntentelling.constanten';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class KandidatenService {
     private readonly logger = new Logger('KandidatenService', true);
     private readonly calclogger = new Logger('calculatieLogger', true);
 
-    constructor(@Inject('kandidaatRepositoryToken') private readonly kandidaatRepository: Repository<Kandidaat>, private readonly cacheService: CacheService) {
+    constructor(@InjectRepository(Kandidaat)
+                private readonly kandidaatRepository: Repository<Kandidaat>,
+                private readonly cacheService: CacheService) {
     }
 
     async findAll(): Promise<Kandidaat[]> {

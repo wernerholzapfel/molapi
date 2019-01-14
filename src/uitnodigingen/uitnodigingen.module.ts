@@ -1,14 +1,14 @@
 import {Module} from '@nestjs/common';
-import {DBModule} from '../db/db.module';
 import {UitnodigingenController} from './uitnodigingen.controller';
-import {uitnodigingProviders} from './uitnodiging.providers';
 import {UitnodigingenService} from './uitnodigingen.service';
-import {VoorspellingenModule} from '../voorspellingen/voorspellingen.module';
+import {Uitnodiging} from './uitnodiging.entity';
+import {TypeOrmModule} from '@nestjs/typeorm';
 
 @Module({
-    imports: [DBModule, VoorspellingenModule],
+    imports: [TypeOrmModule.forFeature([Uitnodiging])],
     controllers: [UitnodigingenController],
-    providers: [...uitnodigingProviders, UitnodigingenService],
+    providers: [UitnodigingenService],
 })
 
-export class UitnodigingenModule {}
+export class UitnodigingenModule {
+}

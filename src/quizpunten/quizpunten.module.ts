@@ -1,15 +1,13 @@
 import {Module} from '@nestjs/common';
-
-import {DBModule} from '../db/db.module';
-import {quizpuntProviders} from './quizpunt.providers';
 import {QuizpuntenService} from './quizpunten.service';
 import {QuizquizpuntenController} from './quizpunten.controller';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Quizpunt} from './quizpunt.entity';
 
 @Module({
-    imports: [DBModule],
+    imports: [TypeOrmModule.forFeature([Quizpunt])],
     controllers: [QuizquizpuntenController],
     providers: [
-        ...quizpuntProviders,
         QuizpuntenService,
     ],
 })

@@ -25,6 +25,13 @@ export class QuizMiddleware implements NestMiddleware {
                         message: err,
                         statusCode: HttpStatus.BAD_REQUEST,
                     }, HttpStatus.BAD_REQUEST);
+                }).catch(error => {
+                    this.logger.log('kan aflevering niet ophalen');
+                    this.logger.log('kan aflevering niet ophalen: ' + error);
+                    throw new HttpException({
+                        message: 'kan aflevering niet ophalen',
+                        statusCode: HttpStatus.FORBIDDEN,
+                    }, HttpStatus.FORBIDDEN);
                 });
         };
     }

@@ -1,10 +1,12 @@
-import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {getConnection, Repository} from 'typeorm';
 import {Poule} from './poule.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class PoulesService {
-    constructor(@Inject('PouleRepositoryToken') private readonly pouleRepository: Repository<Poule>) {
+    constructor(@InjectRepository(Poule)
+                private readonly pouleRepository: Repository<Poule>) {
     }
 
     async find(): Promise<Poule[]> {

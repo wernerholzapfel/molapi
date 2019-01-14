@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import * as _ from 'lodash';
@@ -12,18 +12,15 @@ import * as fs from 'fs';
 import {Stand, TestStand} from './standen.interface';
 import {vragenPunten} from '../shared/puntentelling.constanten';
 import * as standenhelper from './standen.helper';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class StandenService {
     private readonly logger = new Logger('standenService', true);
 
-    constructor(@Inject('AfleveringpuntRepositoryToken') private readonly afleveringpuntRepository: Repository<Afleveringpunten>, public readonly cacheService: CacheService) {
-        // todo niet meer nodig?
-        // this.findAll().then(async deelnemers => {
-        //     deelnemers.forEach(deelnemer => {
-        //         this.findByDeelnemer(deelnemer.deelnemerId).catch(err => this.logger.log('Probleem opgetreden bij het ophalen van de huidige stand voor deelnemer' + err));
-        //     });
-        // });
+    constructor(@InjectRepository(Afleveringpunten)
+                private readonly afleveringpuntRepository: Repository<Afleveringpunten>,
+                public readonly cacheService: CacheService) {
     }
 
     createStandenFile: boolean = false;

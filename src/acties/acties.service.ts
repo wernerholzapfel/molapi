@@ -1,14 +1,16 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Actie} from './actie.entity';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {ActieResponse} from './actieresponse.interface';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class ActiesService {
     private readonly logger = new Logger('ActiesService', true);
 
-    constructor(@Inject('ActieRepositoryToken') private readonly actieRepository: Repository<Actie>) {
+    constructor(@InjectRepository(Actie)
+                private readonly actieRepository: Repository<Actie>) {
     }
 
     async find(): Promise<ActieResponse> {

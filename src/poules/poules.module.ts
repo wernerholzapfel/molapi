@@ -1,17 +1,16 @@
 import {Module} from '@nestjs/common';
-
-import {DBModule} from '../db/db.module';
 import {PoulesController} from './poules.controller';
-import {pouleProviders} from './poule.providers';
 import {PoulesService} from './poules.service';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Poule} from './poule.entity';
 
 @Module({
-    imports: [DBModule],
+    imports: [TypeOrmModule.forFeature([Poule])],
     controllers: [PoulesController],
     providers: [
-        ...pouleProviders,
         PoulesService,
     ],
 })
 
-export class PoulesModule { }
+export class PoulesModule {
+}

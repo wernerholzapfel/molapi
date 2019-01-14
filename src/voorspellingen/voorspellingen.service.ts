@@ -1,15 +1,17 @@
-import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Logger} from '@nestjs/common/services/logger.service';
 import {getConnection, Repository} from 'typeorm';
 
 import {Voorspelling} from './voorspelling.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class VoorspellingenService {
     private readonly logger = new Logger('voorspellingenService', true);
 
-    constructor(@Inject('VoorspellingRepositoryToken') private readonly voorspellingRepository: Repository<Voorspelling>) {
+    constructor(@InjectRepository(Voorspelling)
+                private readonly voorspellingRepository: Repository<Voorspelling>) {
     }
 
     async findAll(): Promise<Voorspelling[]> {

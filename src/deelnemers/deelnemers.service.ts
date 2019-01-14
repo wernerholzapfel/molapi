@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 
 import {Aflevering} from '../afleveringen/aflevering.entity';
@@ -9,12 +9,14 @@ import {IDeelnemer} from './deelnemer.interface';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Actie} from '../acties/actie.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class DeelnemersService {
     private readonly logger = new Logger('deelnemerService', true);
 
-    constructor(@Inject('DeelnemerRepositoryToken') private readonly deelnemerRepository: Repository<Deelnemer>) {
+    constructor(@InjectRepository(Deelnemer)
+                private readonly deelnemerRepository: Repository<Deelnemer>) {
     }
 
     async findAll(): Promise<Deelnemer[]> {
@@ -135,7 +137,7 @@ export class DeelnemersService {
             const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
 

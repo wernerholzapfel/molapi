@@ -1,15 +1,17 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Quizresultaat} from './quizresultaat.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Actie} from '../acties/actie.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class QuizresultatenService {
     private readonly logger = new Logger('quizresultatenService', true);
     latestUitgezondenAflevering: number;
 
-    constructor(@Inject('QuizresultatenRepositoryToken') private readonly quizresultaatRepository: Repository<Quizresultaat>) {
+    constructor(@InjectRepository(Quizresultaat)
+                private readonly quizresultaatRepository: Repository<Quizresultaat>) {
     }
 
     async findAll(firebaseIdentifier: string): Promise<Quizresultaat[]> {

@@ -1,17 +1,16 @@
 import {Module} from '@nestjs/common';
-
-import {DBModule} from '../db/db.module';
-import {quizresultatenProviders} from './quizresultaat.providers';
 import {QuizresultatenService} from './quizresultaten.service';
 import {QuizresultatenController} from './quizresultaten.controller';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Quizresultaat} from './quizresultaat.entity';
 
 @Module({
-    imports: [DBModule],
+    imports: [TypeOrmModule.forFeature([Quizresultaat])],
     controllers: [QuizresultatenController],
     providers: [
-        ...quizresultatenProviders,
         QuizresultatenService,
     ],
 })
 
-export class QuizresultatenModule {}
+export class QuizresultatenModule {
+}

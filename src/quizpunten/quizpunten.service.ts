@@ -1,17 +1,19 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getRepository, Repository} from 'typeorm';
 import {Quizpunt} from './quizpunt.entity';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import * as _ from 'lodash';
 import {Actie} from '../acties/actie.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class QuizpuntenService {
     private readonly logger = new Logger('quizpuntenService', true);
     afleveringWithLatestTest: number;
 
-    constructor(@Inject('QuizpuntRepositoryToken') private readonly quizpuntRepository: Repository<Quizpunt>) {
+    constructor(@InjectRepository(Quizpunt)
+                private readonly quizpuntRepository: Repository<Quizpunt>) {
     }
 
     // todo groeperen op deelnemer

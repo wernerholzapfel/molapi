@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Quizvraag} from './quizvraag.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
@@ -6,12 +6,14 @@ import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {Actie} from '../acties/actie.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class QuizvragenService {
     private readonly logger = new Logger('quizvragenService', true);
 
-    constructor(@Inject('QuizvragenRepositoryToken') private readonly quizvraagRepository: Repository<Quizvraag>) {
+    constructor(@InjectRepository(Quizvraag)
+                private readonly quizvraagRepository: Repository<Quizvraag>) {
     }
 
     async aantalOnbeantwoordeVragen(firebaseIdentifier: string): Promise<any> {

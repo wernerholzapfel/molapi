@@ -1,15 +1,17 @@
-import {HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Uitnodiging} from './uitnodiging.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {AcceptUitnodigingDto, DeclineUitnodigingDto} from './create-uitnodiging.dto';
 import {Poule} from '../poules/poule.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class UitnodigingenService {
     private readonly logger = new Logger('UitnodigingenService', true);
 
-    constructor(@Inject('UitnodigingRepositoryToken') private readonly uitnodigingRepository: Repository<Uitnodiging>) {
+    constructor(@InjectRepository(Uitnodiging)
+                private readonly uitnodigingRepository: Repository<Uitnodiging>) {
     }
 
     async find(uniqueIdentifier): Promise<any> {

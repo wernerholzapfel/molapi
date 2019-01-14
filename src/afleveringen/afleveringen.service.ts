@@ -1,12 +1,15 @@
-import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Repository} from 'typeorm';
 import {Aflevering} from './aflevering.entity';
 import * as _ from 'lodash';
 import {CacheService} from '../cache.service';
+import {InjectRepository} from '@nestjs/typeorm';
 
 @Injectable()
 export class AfleveringenService {
-    constructor(@Inject('AfleveringRepositoryToken') private readonly afleveringRepository: Repository<Aflevering>,  private readonly cacheService: CacheService) {
+    constructor(@InjectRepository(Aflevering)
+                private readonly afleveringRepository: Repository<Aflevering>,
+                private readonly cacheService: CacheService) {
     }
 
     async findAll(): Promise<Aflevering[]> {
