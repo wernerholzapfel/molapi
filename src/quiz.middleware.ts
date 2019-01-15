@@ -7,31 +7,31 @@ import {MiddlewareFunction, NestMiddleware} from '@nestjs/common/interfaces/midd
 export class QuizMiddleware implements NestMiddleware {
     private readonly logger = new Logger('QuizMiddleware', true);
 
-    resolve(): MiddlewareFunction {
+    async resolve(): Promise<MiddlewareFunction> {
         return (req, res, next) => {
             this.logger.log(req.body.aflevering);
 
             return getRepository(Aflevering).findOne({aflevering: req.body.aflevering + 1})
                 .then(aflevering => {
                     if (aflevering && Date.parse(aflevering.deadlineDatetime.toString()) < Date.now()) {
-                        throw new HttpException({
-                            message: 'Je kan geen vragen meer beantwoorden voor aflevering ' + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
-                            statusCode: HttpStatus.FORBIDDEN,
-                        }, HttpStatus.FORBIDDEN);
+                        next(new HttpException({
+                            error: 'Je kan geen vragen meer beantwoorden voor aflevering ' + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
+                            status: HttpStatus.FORBIDDEN,
+                        }, HttpStatus.FORBIDDEN));
                     }
                     else next();
                 }, err => {
-                    throw new HttpException({
+                    next(new HttpException({
                         message: err,
                         statusCode: HttpStatus.BAD_REQUEST,
-                    }, HttpStatus.BAD_REQUEST);
+                    }, HttpStatus.BAD_REQUEST));
                 }).catch(error => {
                     this.logger.log('kan aflevering niet ophalen');
                     this.logger.log('kan aflevering niet ophalen: ' + error);
-                    throw new HttpException({
-                        message: 'kan aflevering niet ophalen',
-                        statusCode: HttpStatus.FORBIDDEN,
-                    }, HttpStatus.FORBIDDEN);
+                    next(new HttpException({
+                        error,
+                        status: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST));
                 });
         };
     }

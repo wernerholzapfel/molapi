@@ -1,10 +1,7 @@
 import {HttpException, HttpStatus, Injectable, Logger, NestMiddleware} from '@nestjs/common';
-import * as jwt from 'express-jwt';
-import * as jwt_decode from 'jwt-decode';
 import 'dotenv/config';
 import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
-import {expressJwtSecret} from 'jwks-rsa';
 import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
 import * as admin from 'firebase-admin';
 
@@ -14,7 +11,7 @@ const logger = new Logger('authenticationMiddleware', true);
 export class AddFireBaseUserToRequest implements NestMiddleware {
     private readonly logger = new Logger('AddFireBaseUserToRequest', true);
 
-    resolve(): MiddlewareFunction {
+    async resolve(): Promise<MiddlewareFunction> {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
@@ -31,34 +28,25 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                             })
                             .catch(error => {
                                 this.logger.log('Error fetching user data:', uid);
+                                next(new HttpException({
+                                    status: HttpStatus.FORBIDDEN,
+                                    error: 'Could not fetch userdata',
+                                }, HttpStatus.FORBIDDEN));
                             });
                     }).catch(error => {
                     this.logger.log('Error verify token:', error);
+                    next(new HttpException({
+                        status: HttpStatus.FORBIDDEN,
+                        error: 'Could not fetch userdata',
+                    }, HttpStatus.FORBIDDEN));
                 });
             } else {
-                return res.sendStatus(401);
+                next(new HttpException({
+                    status: HttpStatus.UNAUTHORIZED,
+                    error: 'We konden je niet verifieren, log opnieuw in.',
+                }, HttpStatus.UNAUTHORIZED));
             }
         };
-    }
-}
-
-@Injectable()
-export class AuthenticationMiddleware implements NestMiddleware {
-    private readonly logger = new Logger('deelnemersController', true);
-
-    resolve(): MiddlewareFunction {
-        this.logger.log('AuthenticationMiddleware');
-        return jwt({
-            secret: expressJwtSecret({
-                cache: true,
-                rateLimit: true,
-                jwksRequestsPerMinute: 5,
-                jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
-            }),
-            audience: 'EiV9guRsd4g8R360ifx3nkIhdc1iezQD',
-            issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-            algorithm: 'RS256',
-        });
     }
 }
 
@@ -66,7 +54,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
 export class AdminMiddleware implements NestMiddleware {
     private readonly logger = new Logger('AdminMiddleware', true);
 
-    resolve(): MiddlewareFunction {
+    async resolve(): Promise<MiddlewareFunction> {
         return (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
@@ -76,43 +64,17 @@ export class AdminMiddleware implements NestMiddleware {
                         next();
                     }
                     else {
-                        return res.sendStatus(403).json('Om wijzigingen door te kunnen voeren moet je admin zijn');
+                        next(new HttpException({
+                            status: HttpStatus.FORBIDDEN,
+                            error: 'Om wijzigingen door te kunnen voeren moet je admin zijn',
+                        }, HttpStatus.FORBIDDEN));
                     }
                 });
             } else {
-                return res.sendStatus(401);
-            }
-        };
-    }
-}
-
-@Injectable()
-export class IsEmailVerifiedMiddleware implements NestMiddleware {
-    private readonly logger = new Logger('IsEmailVerifiedMiddleware', true);
-
-    resolve(): MiddlewareFunction {
-        return (req, res, next) => {
-            const extractedToken = getToken(req.headers);
-            if (extractedToken) {
-                logger.log('start decoding IsEmailVerifiedMiddleware');
-                const decoded: any = jwt_decode(extractedToken);
-                logger.log(decoded.sub);
-                admin.auth().verifyIdToken(extractedToken)
-                    .then(async user => {
-                        req.user = user;
-                        if (user.email_verified) next();
-                        else {
-                            return res.sendStatus(200).json('Om wijzigingen door te kunnen voeren moet je eerst je mail verifieren. Kijk in je mailbox voor meer informatie.');
-                        }
-                    }).catch(error => {
-                    this.logger.log('kan deelnemer niet verifieren');
-                    throw new HttpException({
-                        message: 'kan deelnemer niet verifieren',
-                        statusCode: HttpStatus.FORBIDDEN,
-                    }, HttpStatus.FORBIDDEN);
-                    });
-            } else {
-                return res.sendStatus(401);
+                next(new HttpException({
+                    status: HttpStatus.UNAUTHORIZED,
+                    error: 'We konden je niet verifieren, log opnieuw in.',
+                }, HttpStatus.UNAUTHORIZED));
             }
         };
     }
@@ -122,34 +84,37 @@ export class IsEmailVerifiedMiddleware implements NestMiddleware {
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
     private readonly logger = new Logger('IsUserAllowedToPostMiddleware', true);
 
-    resolve(): MiddlewareFunction {
+    async resolve(): Promise<MiddlewareFunction> {
         return async (req, res, next) => {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 this.logger.log('dit is de extracted token in IsUserAllowedToPostMiddleware: ' + extractedToken);
-                admin.auth().verifyIdToken(extractedToken).then(
-                    async userRecord => {
+                admin.auth().verifyIdToken(extractedToken)
+                    .then(async userRecord => {
                         await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid})
                             .then(async deelnemer => {
                                 if (req && req.body && req.body.deelnemer && deelnemer.id !== req.body.deelnemer.id) {
-                                    throw new HttpException({
-                                        message: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
-                                        statusCode: HttpStatus.FORBIDDEN,
-                                    }, HttpStatus.FORBIDDEN);
+                                    next(new HttpException({
+                                        status: HttpStatus.FORBIDDEN,
+                                        error: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
+                                    }, HttpStatus.FORBIDDEN));
                                 }
                                 next();
-                            }).catch(error => {
-                                this.logger.log('Ophalen deelnemer mislukt', error.code);
                             });
-                    }).catch(error => {
-                        this.logger.log('kan deelnemer niet verifieren ' + extractedToken);
-                        throw new HttpException({
-                        message: 'kan deelnemer niet verifieren',
-                        statusCode: HttpStatus.FORBIDDEN,
-                    }, HttpStatus.FORBIDDEN);
+                    })
+                    .catch(error => {
+                    this.logger.log('kan deelnemer niet verifieren ' + extractedToken);
+                    next(new HttpException({
+                        status: HttpStatus.FORBIDDEN,
+                        error: 'kan deelnemer niet verifieren',
+                    }, HttpStatus.FORBIDDEN));
                 });
             } else {
-                return res.sendStatus(401);
+                this.logger.log('geen extracted token');
+                next(new HttpException({
+                    status: HttpStatus.UNAUTHORIZED,
+                    error: 'Kan deelnemer niet verifieren, log op nieuw in.',
+                }, HttpStatus.UNAUTHORIZED));
             }
         };
     }
