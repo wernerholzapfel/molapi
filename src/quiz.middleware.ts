@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {ForbiddenException, HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {Aflevering} from './afleveringen/aflevering.entity';
 import {getRepository} from 'typeorm';
 import {MiddlewareFunction, NestMiddleware} from '@nestjs/common/interfaces/middleware';
@@ -14,10 +14,8 @@ export class QuizMiddleware implements NestMiddleware {
             return getRepository(Aflevering).findOne({aflevering: req.body.aflevering + 1})
                 .then(aflevering => {
                     if (aflevering && Date.parse(aflevering.deadlineDatetime.toString()) < Date.now()) {
-                        next(new HttpException({
-                            error: 'Je kan geen vragen meer beantwoorden voor aflevering ' + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
-                            status: HttpStatus.FORBIDDEN,
-                        }, HttpStatus.FORBIDDEN));
+                        next(new ForbiddenException('Je kan geen vragen meer beantwoorden voor aflevering ' + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
+                        ));
                     }
                     else next();
                 }, err => {

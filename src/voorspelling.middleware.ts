@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {BadRequestException, ForbiddenException, Injectable, Logger} from '@nestjs/common';
 import {Aflevering} from './afleveringen/aflevering.entity';
 import {getRepository} from 'typeorm';
 import {MiddlewareFunction, NestMiddleware} from '@nestjs/common/interfaces/middleware';
@@ -14,18 +14,12 @@ export class VoorspellingMiddleware implements NestMiddleware {
             return await getRepository(Aflevering).findOne({aflevering: req.body.aflevering})
                 .then(aflevering => {
                     if (aflevering && Date.parse(aflevering.deadlineDatetime.toString()) < Date.now()) {
-                        next(new HttpException({
-                            error: 'Je kan geen voorspellingen meer opslaan voor aflevering'
-                                + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime,
-                            status: HttpStatus.FORBIDDEN,
-                        }, HttpStatus.FORBIDDEN));
+                        next(new ForbiddenException('Je kan geen voorspellingen meer opslaan voor aflevering '
+                                + aflevering.aflevering + ' de deadline was ' + aflevering.deadlineDatetime));
                     }
                     else next();
                 }, err => {
-                    next(new HttpException({
-                        error: err,
-                        status: HttpStatus.BAD_REQUEST,
-                    }, HttpStatus.BAD_REQUEST));
+                    next(new BadRequestException());
                 });
         };
     }

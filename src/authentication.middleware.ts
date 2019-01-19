@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger, NestMiddleware} from '@nestjs/common';
+import {ForbiddenException, Injectable, Logger, NestMiddleware, UnauthorizedException} from '@nestjs/common';
 import 'dotenv/config';
 import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
@@ -28,23 +28,15 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                             })
                             .catch(error => {
                                 this.logger.log('Error fetching user data:', uid);
-                                next(new HttpException({
-                                    status: HttpStatus.FORBIDDEN,
-                                    error: 'Could not fetch userdata',
-                                }, HttpStatus.FORBIDDEN));
+                                next(new ForbiddenException('Could not fetch userdata'));
                             });
                     }).catch(error => {
                     this.logger.log('Error verify token:', error);
-                    next(new HttpException({
-                        status: HttpStatus.FORBIDDEN,
-                        error: 'Could not fetch userdata',
-                    }, HttpStatus.FORBIDDEN));
+                    next(new ForbiddenException('Could not fetch userdata'));
                 });
             } else {
-                next(new HttpException({
-                    status: HttpStatus.UNAUTHORIZED,
-                    error: 'We konden je niet verifieren, log opnieuw in.',
-                }, HttpStatus.UNAUTHORIZED));
+                next(new UnauthorizedException(
+                    'We konden je niet verifieren, log opnieuw in.'));
             }
         };
     }
@@ -64,17 +56,11 @@ export class AdminMiddleware implements NestMiddleware {
                         next();
                     }
                     else {
-                        next(new HttpException({
-                            status: HttpStatus.FORBIDDEN,
-                            error: 'Om wijzigingen door te kunnen voeren moet je admin zijn',
-                        }, HttpStatus.FORBIDDEN));
+                        next(new ForbiddenException('Om wijzigingen door te kunnen voeren moet je admin zijn'));
                     }
                 });
             } else {
-                next(new HttpException({
-                    status: HttpStatus.UNAUTHORIZED,
-                    error: 'We konden je niet verifieren, log opnieuw in.',
-                }, HttpStatus.UNAUTHORIZED));
+                next(new UnauthorizedException('We konden je niet verifieren, log opnieuw in.'));
             }
         };
     }
@@ -94,27 +80,18 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                         await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid})
                             .then(async deelnemer => {
                                 if (req && req.body && req.body.deelnemer && deelnemer.id !== req.body.deelnemer.id) {
-                                    next(new HttpException({
-                                        status: HttpStatus.FORBIDDEN,
-                                        error: deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan',
-                                    }, HttpStatus.FORBIDDEN));
+                                    next(new ForbiddenException(deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan'));
                                 }
                                 next();
                             });
                     })
                     .catch(error => {
-                    this.logger.log('kan deelnemer niet verifieren ' + extractedToken);
-                    next(new HttpException({
-                        status: HttpStatus.FORBIDDEN,
-                        error: 'kan deelnemer niet verifieren',
-                    }, HttpStatus.FORBIDDEN));
-                });
+                        this.logger.log('kan deelnemer niet verifieren ' + extractedToken);
+                        next(new ForbiddenException('kan deelnemer niet verifieren'));
+                    });
             } else {
                 this.logger.log('geen extracted token');
-                next(new HttpException({
-                    status: HttpStatus.UNAUTHORIZED,
-                    error: 'Kan deelnemer niet verifieren, log op nieuw in.',
-                }, HttpStatus.UNAUTHORIZED));
+                next(new UnauthorizedException('Kan deelnemer niet verifieren, log op nieuw in.'));
             }
         };
     }
