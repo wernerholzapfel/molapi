@@ -1,3 +1,4 @@
+import * as newrelic from 'newrelic';
 import {NestFactory} from '@nestjs/core';
 import * as bodyParser from 'body-parser';
 
@@ -6,7 +7,6 @@ import {ValidationPipe} from './validation.pipe';
 import 'dotenv/config';
 import 'reflect-metadata';
 import {AppExceptionFilter} from './http-exception.filters';
-
 import * as admin from 'firebase-admin';
 
 admin.initializeApp({
