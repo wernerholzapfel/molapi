@@ -94,10 +94,10 @@ export class StandenService {
             // @ts-ignore
             const voorspellingenPunten: any = afleveringsVoorspellingen.map(voorspelling => ({
                 ...voorspelling,
-                molpunten: mol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, mol) : 0,
-                previousmolpunten: previousmol ? standenhelper.determineMolPunten(voorspelling, kandidatenlijst, previousmol) : 0,
-                winnaarpunten: winnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, winnaar) : 0,
-                previouswinnaarpunten: previouswinnaar ? standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar) : 0,
+                molpunten: standenhelper.determineMolPunten(voorspelling, kandidatenlijst, mol),
+                previousmolpunten: standenhelper.determineMolPunten(voorspelling, kandidatenlijst, previousmol),
+                winnaarpunten: standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, winnaar),
+                previouswinnaarpunten:  standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar),
                 afvallerpunten: standenhelper.determineAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering),
                 previousafvallerpunten: voorspelling.aflevering < aflevering ? standenhelper.determinePreviousAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering) : 0,
                 quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).quizpunten : 0,

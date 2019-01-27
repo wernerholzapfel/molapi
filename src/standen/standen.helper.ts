@@ -67,8 +67,9 @@ export function determinePreviousAfvallerPunten(voorspelling: Voorspelling, kand
 }
 
 export function determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], mol: Kandidaat) {
-    if (voorspelling && voorspelling.mol && voorspelling.mol.id === mol.id) return molPunten;
-    if (voorspelling && voorspelling.mol && kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
+    if (voorspelling && mol && voorspelling.mol && voorspelling.mol.id === mol.id) return molPunten;
+    if (voorspelling && voorspelling.mol &&
+        kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
             voorspelling.mol.id === kandidaat.id && kandidaat.afgevallen)) {
         return molStrafpunten;
     }
@@ -76,7 +77,7 @@ export function determineMolPunten(voorspelling: Voorspelling, kandidaten: Kandi
 }
 
 export function determineWinnaarPunten(voorspelling: Voorspelling, kandidaten: Kandidaat[], winnaar: Kandidaat) {
-    if (voorspelling && voorspelling.winnaar && voorspelling.winnaar.id === winnaar.id) return winnaarPunten;
+    if (voorspelling && winnaar && voorspelling.winnaar && voorspelling.winnaar.id === winnaar.id) return winnaarPunten;
 
     if (voorspelling && voorspelling.winnaar && kandidaten.find(kandidaat => kandidaat.aflevering === voorspelling.aflevering &&
             voorspelling.winnaar.id === kandidaat.id && kandidaat.afgevallen)) {
