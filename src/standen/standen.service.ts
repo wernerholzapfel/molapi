@@ -21,6 +21,7 @@ export class StandenService {
     constructor(@InjectRepository(Afleveringpunten)
                 private readonly afleveringpuntRepository: Repository<Afleveringpunten>,
                 public readonly cacheService: CacheService) {
+        this.findAll().then(value => this.logger.log('stand opgeslagen in cache na opstarten applicatie'));
     }
 
     createStandenFile: boolean = false;
@@ -97,7 +98,7 @@ export class StandenService {
                 molpunten: standenhelper.determineMolPunten(voorspelling, kandidatenlijst, mol),
                 previousmolpunten: standenhelper.determineMolPunten(voorspelling, kandidatenlijst, previousmol),
                 winnaarpunten: standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, winnaar),
-                previouswinnaarpunten:  standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar),
+                previouswinnaarpunten: standenhelper.determineWinnaarPunten(voorspelling, kandidatenlijst, previouswinnaar),
                 afvallerpunten: standenhelper.determineAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering),
                 previousafvallerpunten: voorspelling.aflevering < aflevering ? standenhelper.determinePreviousAfvallerPunten(voorspelling, kandidatenlijst, voorspelling.aflevering) : 0,
                 quizpunten: standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()) ? standenhelper.hasResultaatForAflevering(quizStand, voorspelling.aflevering.toString()).quizpunten : 0,
@@ -375,21 +376,21 @@ export class StandenService {
 
     private async getGemaakteTests(aflevering): Promise<Quizresultaat[]> {
         if (aflevering > 1) {
-        return await getConnection()
-            .createQueryBuilder()
-            .select('quizresultaat')
-            .from(Quizresultaat, 'quizresultaat')
-            .where('quizresultaat.aflevering < :aflevering', {aflevering})
-            .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
-            .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
-            .getMany()
-            .then(response => response)
-            .catch((err) => {
-                throw new HttpException({
-                    message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                }, HttpStatus.BAD_REQUEST);
-            });
+            return await getConnection()
+                .createQueryBuilder()
+                .select('quizresultaat')
+                .from(Quizresultaat, 'quizresultaat')
+                .where('quizresultaat.aflevering < :aflevering', {aflevering})
+                .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
+                .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
+                .getMany()
+                .then(response => response)
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
         } else {
             return null;
         }
