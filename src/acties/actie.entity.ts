@@ -18,4 +18,7 @@ export class Actie {
     @Column({nullable: true})
     alwaysUpdate: boolean;
 
+    @Column({nullable: true})
+    isSeasonFinished: boolean;
+
 }

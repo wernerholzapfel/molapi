@@ -27,6 +27,7 @@ export class ActiesService {
                     voorspellingDeadlineDatetime: this.getDeadlineDatetime(response.voorspellingaflevering, afleveringen),
                     updatedDate: response.updatedDate,
                     alwaysUpdate: response.alwaysUpdate,
+                    isSeasonFinished: response.isSeasonFinished,
                 };
             }).catch((err) => {
                 throw new HttpException({
@@ -37,11 +38,11 @@ export class ActiesService {
     }
 
     getDeadlineDatetime(afleveringnummer: number, afleveringen: Aflevering[]) {
-        if (afleveringnummer > 0) {
+        if (afleveringnummer > 0 && afleveringnummer < 10) {
             return afleveringen.find(aflevering => aflevering.aflevering === afleveringnummer).deadlineDatetime;
         }
         else {
-            return null;
+            return new Date('2019-03-09T19:30:00.000Z');
         }
     }
 
