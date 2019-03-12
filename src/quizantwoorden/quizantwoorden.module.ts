@@ -1,14 +1,12 @@
 import {Module} from '@nestjs/common';
-
-import {DBModule} from '../db/db.module';
-import {quizantwoordenProviders} from './quizantwoord.providers';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Quizantwoord} from './quizantwoord.entity';
 
 @Module({
-    modules: [DBModule],
+    imports: [TypeOrmModule.forFeature([Quizantwoord])],
     controllers: [],
-    components: [
-        ...quizantwoordenProviders,
-    ],
+    providers: [],
 })
 
-export class QuizvragenModule {}
+export class QuizvragenModule {
+}

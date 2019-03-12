@@ -1,9 +1,9 @@
-import {IsBoolean, IsDate, IsDateString, IsNumber} from 'class-validator';
+import {IsBoolean, IsDateString, IsNumber} from 'class-validator';
 
 export class CreateAfleveringDto {
     readonly id: string;
     @IsNumber() readonly aflevering: number;
-    @IsBoolean() readonly laatseAflevering: boolean;
+    @IsBoolean() readonly laatsteAflevering: boolean;
     @IsDateString() readonly deadlineDatetime: Date;
     @IsBoolean() readonly uitgezonden: boolean;
     @IsBoolean() readonly hasVoorspelling: boolean;

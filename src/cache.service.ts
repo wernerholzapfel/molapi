@@ -1,12 +1,14 @@
 import * as NodeCache from 'node-cache';
-import {Component} from '@nestjs/common';
+import {Stats} from 'node-cache';
+import {Injectable, Logger} from '@nestjs/common';
 
 const myCache = new NodeCache();
 
-@Component()
+@Injectable()
 export class CacheService {
+    private readonly logger = new Logger('CacheService', true);
 
-    constructor( ) {
+    constructor() {
     }
 
     async get(key): Promise<any> {
@@ -15,6 +17,16 @@ export class CacheService {
 
     async set(key, value): Promise<any> {
         return myCache.set(key.replace(/^\/|\/$/g, ''), value);
+    }
+
+    async getStats(): Promise<Stats> {
+        const stats = await myCache.getStats();
+
+        return stats;
+    }
+
+    async getKeys(): Promise<string[]> {
+        return myCache.keys(keys => keys);
     }
 
     async flushAll(): Promise<any> {

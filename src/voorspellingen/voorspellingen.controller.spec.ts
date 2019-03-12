@@ -10,7 +10,7 @@
 //   beforeEach(async () => {
 //     const module = await Test.createTestingModule({
 //       controllers: [PostsController],
-//       components: [VoorspellingenService],
+//       providers: [VoorspellingenService],
 //     }).compile();
 //
 //     postsService = module.get<VoorspellingenService>(VoorspellingenService);

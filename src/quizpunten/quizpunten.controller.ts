@@ -1,5 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
-import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
+import {Controller, Get, Logger, Req} from '@nestjs/common';
 import {QuizpuntenService} from './quizpunten.service';
 import {Quizpunt} from './quizpunt.entity';
 
@@ -17,8 +16,8 @@ export class QuizquizpuntenController {
 
     @Get('loggedInDeelnemer')
     async findAllForDeelnemer(@Req() req): Promise<Quizpunt[]> {
-        this.logger.log(req.user.user_id);
+        this.logger.log(req.user.uid);
 
-        return this.quizpuntenService.findAllForDeelnemer(req.user.user_id);
+        return this.quizpuntenService.findAllForDeelnemer(req.user.uid);
     }
 }
