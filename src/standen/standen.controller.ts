@@ -2,6 +2,7 @@ import {Controller, Get, Param, UseInterceptors} from '@nestjs/common';
 import {StandenService} from './standen.service';
 import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
 import {CacheInterceptor} from '../cache.interceptor';
+import {Stand} from './standen.interface';
 
 @UseInterceptors(CacheInterceptor)
 @Controller('standen')
@@ -11,13 +12,13 @@ export class StandenController {
     }
 
     @Get()
-    async findAll(): Promise<Afleveringpunten[]> {
-        const stand = await this.standenService.findAll();
+    async findAll(): Promise<Stand[]> {
+        return this.standenService.findAll();
+    }
 
-        for (const deelnemer of stand) {
-            this.findByDeelnemer(deelnemer.deelnemerId);
-        }
-        return stand;
+    @Get('aflevering/:aflevering')
+    async getStandByAflevering(@Param('aflevering') aflevering): Promise<Stand[]> {
+        return this.standenService.getStandByAflevering(aflevering);
     }
 
     @Get('getpossiblestand/:molId/:winnaarId')
@@ -30,8 +31,13 @@ export class StandenController {
         return this.standenService.getStatistieken();
     }
 
-    @Get(':deelnemerId')
+    @Get('deelnemer/:deelnemerId')
     async findByDeelnemer(@Param('deelnemerId') deelnemerId): Promise<Afleveringpunten[]> {
         return this.standenService.findByDeelnemer(deelnemerId);
+    }
+
+    @Get('deelnemer/:deelnemerId/aflevering/:aflevering')
+    async findByDeelnemerAndAflevering(@Param('deelnemerId') deelnemerId, @Param('aflevering') aflevering): Promise<Afleveringpunten[]> {
+        return this.standenService.findByDeelnemerAndAflevering(deelnemerId, aflevering);
     }
 }

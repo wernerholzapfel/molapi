@@ -1,18 +1,15 @@
-import { Module } from '@nestjs/common';
+import {Module} from '@nestjs/common';
 
-import { DBModule } from '../db/db.module';
-import { DeelnemersController } from './deelnemers.controller';
-import { DeelnemersService } from './deelnemers.service';
-import { deelnemerProviders } from './deelnemer.providers';
-import {VoorspellingenModule} from '../voorspellingen/voorspellingen.module';
+import {DeelnemersController} from './deelnemers.controller';
+import {DeelnemersService} from './deelnemers.service';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Deelnemer} from './deelnemer.entity';
 
 @Module({
-  modules: [DBModule, VoorspellingenModule],
-  controllers: [DeelnemersController],
-  components: [
-    ...deelnemerProviders,
-    DeelnemersService,
-  ],
+    imports: [TypeOrmModule.forFeature([Deelnemer])],
+    providers: [DeelnemersService],
+    controllers: [DeelnemersController],
 })
 
-export class DeelnemersModule { }
+export class DeelnemersModule {
+}

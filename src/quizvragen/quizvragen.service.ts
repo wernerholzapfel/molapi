@@ -1,23 +1,78 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {getConnection, getRepository, Repository} from 'typeorm';
 import {Quizvraag} from './quizvraag.entity';
-import {HttpException} from '@nestjs/core';
-import {Aflevering} from '../afleveringen/aflevering.entity';
-import * as _ from 'lodash';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 import {Actie} from '../acties/actie.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
-@Component()
+@Injectable()
 export class QuizvragenService {
     private readonly logger = new Logger('quizvragenService', true);
 
-    constructor(@Inject('QuizvragenRepositoryToken') private readonly quizvraagRepository: Repository<Quizvraag>) {
+    constructor(@InjectRepository(Quizvraag)
+                private readonly quizvraagRepository: Repository<Quizvraag>) {
     }
 
-    async find(auth0Identifier: string): Promise<any> {
+    async aantalOnbeantwoordeVragen(firebaseIdentifier: string): Promise<any> {
+        const acties = await getRepository(Actie).findOne().catch((err) => {
+            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+        });
+
+        const aflevering: number = acties.testaflevering;
+        this.logger.log('dit is de huidige aflevering: ' + aflevering);
+
+        const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
+
+        this.logger.log('dit is de huidige deelnemer: ' + firebaseIdentifier);
+
+        const answeredQuestions = await getRepository(Quizresultaat)
+            .createQueryBuilder('resultaat')
+            .leftJoinAndSelect('resultaat.vraag', 'vraag')
+            .where('resultaat.aflevering = :aflevering', {aflevering})
+            .andWhere('resultaat.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+        this.logger.log('answeredQuestions: ' + answeredQuestions.length);
+
+        const afleveringQuestions = await getRepository(Quizvraag)
+            .createQueryBuilder('quizvraag')
+            .leftJoinAndSelect('quizvraag.antwoorden', 'antwoorden')
+            .where('quizvraag.aflevering = :aflevering', {aflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+        this.logger.log('afleveringQuestions: ' + afleveringQuestions.length);
+
+        answeredQuestions.forEach(answer => {
+            const index = afleveringQuestions.findIndex(question => {
+                return question.id === answer.vraag.id;
+            });
+            afleveringQuestions.splice(index, 1);
+        });
+
+        this.logger.log(deelnemer.display_name + ' heeft nog ' + afleveringQuestions.length + ' vragen te beantwoorden');
+        const activeQuestion = afleveringQuestions.sort((a, b) => 0.5 - Math.random())[0];
+        if (activeQuestion) {
+            return {
+                aantalOpenVragen: afleveringQuestions.length,
+            };
+        }
+        return {aantalOpenVragen: 0};
+    }
+
+    async find(firebaseIdentifier: string): Promise<any> {
 
         const acties = await getRepository(Actie).findOne().catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
@@ -27,9 +82,9 @@ export class QuizvragenService {
         const aflevering: number = acties.testaflevering;
         this.logger.log('dit is de huidige aflevering: ' + aflevering);
 
-        const deelnemer = await getRepository(Deelnemer).findOne({where: {auth0Identifier}});
+        const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
 
-        this.logger.log('dit is de huidige deelnemer: ' + auth0Identifier);
+        this.logger.log('dit is de huidige deelnemer: ' + firebaseIdentifier);
 
         const answeredQuestions = await getRepository(Quizresultaat)
             .createQueryBuilder('resultaat')

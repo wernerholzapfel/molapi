@@ -4,7 +4,7 @@
 // export interface Aflevering {
 //     id: string;
 //     aflevering: number;
-//     laatseAflevering: boolean;
+//     laatsteAflevering: boolean;
 //     uitgezonden: boolean;
 //     deadlineDatetime: Date;
 // }

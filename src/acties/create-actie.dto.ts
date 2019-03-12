@@ -1,9 +1,12 @@
-import {IsInt} from 'class-validator';
+import {IsBoolean, IsInt, IsOptional} from 'class-validator';
 
 export class CreateActiesDto {
     readonly id: string;
+    readonly updatedDate: Date;
 
-    @IsInt() readonly voorspellingaflevering: number;
-    @IsInt() readonly testaflevering: number;
+    @IsOptional() @IsInt() readonly voorspellingaflevering: number;
+    @IsOptional() @IsInt()  readonly testaflevering: number;
+    @IsOptional() @IsBoolean()  readonly alwaysUpdate: boolean;
+    @IsOptional() @IsBoolean()  readonly isSeasonFinished: boolean;
 
 }

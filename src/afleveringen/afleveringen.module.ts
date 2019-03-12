@@ -1,20 +1,16 @@
-import { Module } from '@nestjs/common';
+import {Module} from '@nestjs/common';
 
-import { DBModule } from '../db/db.module';
-import {VoorspellingenModule} from '../voorspellingen/voorspellingen.module';
 import {AfleveringenController} from './afleveringen.controller';
-import {afleveringProviders} from './aflevering.providers';
 import {AfleveringenService} from './afleveringen.service';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Aflevering} from './aflevering.entity';
 import {CacheService} from '../cache.service';
 
 @Module({
-    modules: [DBModule, VoorspellingenModule],
+    imports: [TypeOrmModule.forFeature([Aflevering])],
+    providers: [AfleveringenService, CacheService],
     controllers: [AfleveringenController],
-    components: [
-        ...afleveringProviders,
-        AfleveringenService,
-        CacheService,
-    ],
 })
 
-export class AfleveringenModule { }
+export class AfleveringenModule {
+}
