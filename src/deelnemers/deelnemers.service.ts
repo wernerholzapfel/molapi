@@ -1,17 +1,22 @@
-import {Component, HttpStatus, Inject, Logger} from '@nestjs/common';
-import {getRepository, Repository} from 'typeorm';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {getConnection, getRepository, Repository} from 'typeorm';
 
-import {Deelnemer} from './deelnemer.interface';
-import {HttpException} from '@nestjs/core';
 import {Aflevering} from '../afleveringen/aflevering.entity';
 import * as _ from 'lodash';
-import {Afleveringpunten} from '../afleveringpunten/afleveringpunt.entity';
+import {Poule} from '../poules/poule.entity';
+import {Deelnemer} from './deelnemer.entity';
+import {IDeelnemer} from './deelnemer.interface';
+import {Voorspelling} from '../voorspellingen/voorspelling.entity';
+import {Actie} from '../acties/actie.entity';
+import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
+import {InjectRepository} from '@nestjs/typeorm';
 
-@Component()
+@Injectable()
 export class DeelnemersService {
     private readonly logger = new Logger('deelnemerService', true);
 
-    constructor(@Inject('DeelnemerRepositoryToken') private readonly deelnemerRepository: Repository<Deelnemer>) {
+    constructor(@InjectRepository(Deelnemer)
+                private readonly deelnemerRepository: Repository<Deelnemer>) {
     }
 
     async findAll(): Promise<Deelnemer[]> {
@@ -29,24 +34,49 @@ export class DeelnemersService {
         });
     }
 
-    async getVoorspellingen(auth0Identifier): Promise<any[]> {
-        const deelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+    async getTests(firebaseIdentifier): Promise<any[]> {
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
+        const acties = await getRepository(Actie).findOne();
+
+        this.logger.log('acties.voorspellingaflevering: ' + acties.testaflevering);
+        const test: any = await getRepository(Quizresultaat)
+            .createQueryBuilder('quizresultaat')
+            .leftJoinAndSelect('quizresultaat.vraag', 'vraag')
+            .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
+            .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
+            .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
+            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.testaflevering})
+            .getMany()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return _.sortBy(test, [v => -v.aflevering]);
+    }
+
+    async getVoorspellingen(firebaseIdentifier): Promise<any[]> {
+        this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 
         const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
 
-        const laatsteAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
-        if (laatsteAflevering) {
-            const voorspellingen: any = await getRepository(Afleveringpunten)
-                .createQueryBuilder('afleveringpunten')
-                .leftJoinAndSelect('afleveringpunten.deelnemer', 'deelnemer')
-                .leftJoinAndSelect('afleveringpunten.voorspelling', 'voorspelling')
+        const laatstUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+        if (laatstUitgezondenAflevering) {
+            this.logger.log(laatstUitgezondenAflevering.aflevering);
+
+            const voorspellingen: any = await getRepository(Voorspelling)
+                .createQueryBuilder('voorspelling')
+                .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
                 .leftJoinAndSelect('voorspelling.mol', 'mol')
                 .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
                 .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
-                .where('afleveringpunten.afleveringstand = :aflevering', {aflevering: laatsteAflevering.aflevering})
-                .andWhere('afleveringpunten.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
+                .andWhere('voorspelling.aflevering <= :aflevering', {aflevering: laatstUitgezondenAflevering.aflevering})
                 .getMany()
                 .catch((err) => {
                     throw new HttpException({
@@ -55,11 +85,6 @@ export class DeelnemersService {
                     }, HttpStatus.BAD_REQUEST);
                 });
 
-            const aflevering = await getRepository(Aflevering).find();
-
-            voorspellingen.forEach(voorspelling => {
-                voorspelling.voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
-            });
             return _.sortBy(voorspellingen, [v => -v.aflevering]);
         }
         else {
@@ -70,14 +95,16 @@ export class DeelnemersService {
         }
     }
 
-    async create(deelnemer: Deelnemer, auth0Identifier: string) {
-        const oldDeelnemer = await this.deelnemerRepository.findOne({where: {auth0Identifier}});
+    async create(deelnemer: IDeelnemer, firebaseIdentifier: string) {
+        const oldDeelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
         if (oldDeelnemer) deelnemer = {
             id: oldDeelnemer.id,
             display_name: deelnemer.display_name,
-            auth0Identifier: oldDeelnemer.auth0Identifier,
+            firebaseIdentifier,
             email: oldDeelnemer.email,
-        };
+        }; else {
+            deelnemer.firebaseIdentifier = firebaseIdentifier;
+        }
         return await this.deelnemerRepository.save(deelnemer)
             .catch((err) => {
                 throw new HttpException({
@@ -87,33 +114,100 @@ export class DeelnemersService {
             });
     }
 
-    async findVoorspellingen(deelnemerId: string) {
-        this.logger.log('vind voorspelling van deelnemer: ' + deelnemerId);
-        return await this.deelnemerRepository.findOneById(deelnemerId)
+    // todo
+    async oldfindVoorspellingen(firebaseIdentifier: string) {
+        this.logger.log('vind voorspelling van deelnemer: ' + firebaseIdentifier);
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}})
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
                     statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
+
+        return deelnemer;
     }
 
-    async findLoggedInDeelnemer(user_id) {
-        this.logger.log(user_id);
-        const deelnemerResponse: any = await this.deelnemerRepository.findOne({where: {auth0Identifier: user_id}}).then(deelnemer => {
+    async findVoorspellingen(firebaseIdentifier: string) {
+
+        const deelnemer = await getConnection().manager.findOne(Deelnemer, {where: {firebaseIdentifier}});
+
+        if (deelnemer) {
+
+            const afleveringen = await getRepository(Aflevering).find({where: {uitgezonden: true}}).catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+            let laatsteUitgezondenAfleveringAflevering = 0;
+            const laatstUitgezondenAflevering: Aflevering = _.maxBy(afleveringen, 'aflevering');
+            if (laatstUitgezondenAflevering) {
+                laatsteUitgezondenAfleveringAflevering = laatstUitgezondenAflevering.aflevering;
+            }
+
+            deelnemer.poules = await getConnection()
+                .createQueryBuilder()
+                .select('poule')
+                .from(Poule, 'poule')
+                .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
+                .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen', 'voorspellingen.aflevering <= :laatsteVoorspellingAflevering', {laatsteVoorspellingAflevering: laatsteUitgezondenAfleveringAflevering})
+                .leftJoinAndSelect('deelnemers.tests', 'test', 'test.aflevering <= :laatsteTestAflevering', {laatsteTestAflevering: laatsteUitgezondenAfleveringAflevering - 1})
+                .leftJoinAndSelect('test.vraag', 'vraag')
+                .leftJoinAndSelect('test.antwoord', 'tests')
+                .leftJoinAndSelect('voorspellingen.mol', 'mol')
+                .leftJoinAndSelect('voorspellingen.afvaller', 'afvaller')
+                .leftJoinAndSelect('voorspellingen.winnaar', 'winnaar')
+                .leftJoinAndSelect('poule.admins', 'admins')
+                .where(qb => {
+                    const subQuery = qb.subQuery()
+                        .select('poule.id')
+                        .from(Poule, 'poule')
+                        .leftJoin('poule.deelnemers', 'deelnemers')
+                        .where('deelnemers.id = :deelnemerId', {deelnemerId: deelnemer.id})
+                        .getQuery();
+                    return 'poule.id IN ' + subQuery;
+                })
+                .getMany()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+
             return deelnemer;
-        }, (err) => {
-            throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
-        });
+        } else {
+            throw new HttpException({
+                statusCode: HttpStatus.NO_CONTENT,
+            }, HttpStatus.NO_CONTENT);
+        }
+    }
 
-        const aflevering = await getRepository(Aflevering).find();
+    async actualvoorspelling(firebaseIdentifier) {
+        this.logger.log('get voorspellingen wordt werkelijk aangeroepen');
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
 
-        deelnemerResponse.voorspellingen.forEach(voorspelling => {
-            voorspelling.aflevering = _.find(aflevering, {aflevering: voorspelling.aflevering});
-        });
+        if (deelnemer) {
+            const voorspelling: any = await getRepository(Voorspelling)
+                .createQueryBuilder('voorspelling')
+                .leftJoinAndSelect('voorspelling.deelnemer', 'deelnemer')
+                .leftJoinAndSelect('voorspelling.mol', 'mol')
+                .leftJoinAndSelect('voorspelling.afvaller', 'afvaller')
+                .leftJoinAndSelect('voorspelling.winnaar', 'winnaar')
+                .where('voorspelling.deelnemer = :deelnemerId', {deelnemerId: deelnemer.id})
+                .getMany()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
 
-        deelnemerResponse.voorspellingen =  _.sortBy(deelnemerResponse.voorspellingen, [v => -v.aflevering.aflevering]);
-        return deelnemerResponse;
-
+            return _.maxBy(voorspelling, 'aflevering');
+        } else {
+            return [];
+        }
     }
 }

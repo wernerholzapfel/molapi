@@ -1,17 +1,16 @@
 import {Module} from '@nestjs/common';
-
-import {DBModule} from '../db/db.module';
-import {quizvragenProviders} from './quizvraag.providers';
 import {QuizvragenService} from './quizvragen.service';
 import {QuizvragenController} from './quizvragen.controller';
+import {Quizvraag} from './quizvraag.entity';
+import {TypeOrmModule} from '@nestjs/typeorm';
 
 @Module({
-    modules: [DBModule],
+    imports: [TypeOrmModule.forFeature([Quizvraag])],
     controllers: [QuizvragenController],
-    components: [
-        ...quizvragenProviders,
+    providers: [
         QuizvragenService,
     ],
 })
 
-export class QuizvragenModule {}
+export class QuizvragenModule {
+}

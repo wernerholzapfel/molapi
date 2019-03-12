@@ -1,18 +1,14 @@
-import { Module } from '@nestjs/common';
-
-import { DBModule } from '../db/db.module';
-import {VoorspellingenModule} from '../voorspellingen/voorspellingen.module';
+import {Module} from '@nestjs/common';
 import {ActiesController} from './acties.controller';
-import {actieProviders} from './actie.providers';
 import {ActiesService} from './acties.service';
+import {Actie} from './actie.entity';
+import {TypeOrmModule} from '@nestjs/typeorm';
 
 @Module({
-    modules: [DBModule, VoorspellingenModule],
+    imports: [TypeOrmModule.forFeature([Actie])],
+    providers: [ActiesService],
     controllers: [ActiesController],
-    components: [
-        ...actieProviders,
-        ActiesService,
-    ],
 })
 
-export class ActiesModule { }
+export class ActiesModule {
+}

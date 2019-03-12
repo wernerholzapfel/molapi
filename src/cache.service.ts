@@ -1,10 +1,10 @@
 import * as NodeCache from 'node-cache';
-import {Component, Logger} from '@nestjs/common';
 import {Stats} from 'node-cache';
+import {Injectable, Logger} from '@nestjs/common';
 
 const myCache = new NodeCache();
 
-@Component()
+@Injectable()
 export class CacheService {
     private readonly logger = new Logger('CacheService', true);
 
@@ -21,11 +21,6 @@ export class CacheService {
 
     async getStats(): Promise<Stats> {
         const stats = await myCache.getStats();
-        // this.logger.log('cache keys: ' + stats.keys);
-        // this.logger.log('cache ksize: ' + stats.ksize);
-        // this.logger.log('cache hits: ' + stats.hits);
-        // this.logger.log('cache misses: ' + stats.misses);
-        // this.logger.log('cache vsize: ' + stats.vsize);
 
         return stats;
     }

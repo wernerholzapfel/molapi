@@ -1,19 +1,18 @@
 import {Module} from '@nestjs/common';
 
-import {DBModule} from '../db/db.module';
 import {KandidatenController} from './kandidaten.controller';
 import {KandidatenService} from './kandidaten.service';
-import {kandidaatProviders} from './kandidaat.providers';
 import {CacheService} from '../cache.service';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {Kandidaat} from './kandidaat.entity';
 
 @Module({
-    modules: [DBModule],
-    controllers: [KandidatenController],
-    components: [
-        ...kandidaatProviders,
+    imports: [TypeOrmModule.forFeature([Kandidaat])],
+    providers: [
         KandidatenService,
         CacheService,
     ],
+    controllers: [KandidatenController],
 })
 
 export class KandidatenModule {

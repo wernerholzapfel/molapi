@@ -1,10 +1,9 @@
-import {Body, Controller, Get, HttpStatus, Logger, Param, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Req} from '@nestjs/common';
 import {QuizvragenService} from './quizvragen.service';
 import {CreateQuizvraagDto} from './create-quizvraag.dto';
 import {Quizvraag} from './quizvraag.entity';
 import {getRepository} from 'typeorm';
 import {Quizantwoord} from '../quizantwoorden/quizantwoord.entity';
-import {HttpException} from '@nestjs/core';
 
 @Controller('quizvragen')
 export class QuizvragenController {
@@ -15,7 +14,11 @@ export class QuizvragenController {
 
     @Get()
     async find(@Req() req): Promise<any> {
-        return this.quizvragenService.find(req.user.user_id);
+        return this.quizvragenService.find(req.user.uid);
+    }
+   @Get('aantalopenvragen')
+    async aantalOnbeantwoordeVragen(@Req() req): Promise<any> {
+        return this.quizvragenService.aantalOnbeantwoordeVragen(req.user.uid);
     }
 
     @Get('aflevering/:afleveringId')
@@ -29,40 +32,48 @@ export class QuizvragenController {
         const quizvraag = await this.quizvragenService.create(newQuizvraag);
         this.logger.log(quizvraag.id);
         createQuizvraagDto.antwoorden.forEach(async antwoord => {
-            const opgeslagenAntwoord = await getRepository(Quizantwoord).save({
+            await getRepository(Quizantwoord).save({
                 antwoord: antwoord.antwoord,
                 vraag: {id: quizvraag.id},
                 kandidaten: antwoord.kandidaten,
             }).catch((err) => {
-                throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
             });
         });
         return quizvraag;
     }
+
     @Post('update')
     async update(@Req() req, @Body() createQuizvraagDto: CreateQuizvraagDto) {
         const newQuizvraag = Object.assign({}, createQuizvraagDto, {});
         const quizvraag = await this.quizvragenService.create(newQuizvraag);
-        this.logger.log('quizvraag.id');
         this.logger.log('quizvraag.id: ' + quizvraag.id);
         createQuizvraagDto.antwoorden.forEach(async antwoord => {
-            this.quizvragenService.updateAntwoorden(antwoord).then(async response => {
-                this.quizvragenService.deleteKandidaten(antwoord).then(async success => {
-                    antwoord.kandidaten.forEach(kandidaat => {
-                        this.quizvragenService.updateKandidaten(antwoord, kandidaat);
+            if (antwoord.id) {
+
+                this.quizvragenService.updateAntwoorden(antwoord).then(async () => {
+                    this.quizvragenService.deleteKandidaten(antwoord).then(async () => {
+                        antwoord.kandidaten.forEach(kandidaat => {
+                            this.quizvragenService.updateKandidaten(antwoord, kandidaat);
+                        });
                     });
                 });
-                //     const opgeslagenAntwoord = await getRepository(Quizantwoord).save({
-                //         antwoord: antwoord.antwoord,
-                //         vraag: {id: quizvraag.id},
-                //         kandidaten: antwoord.kandidaten,
-                //     }).catch((err) => {
-                //         throw new HttpException({
-                //             message: err.message,
-                //             statusCode: HttpStatus.BAD_REQUEST
-                //         }, HttpStatus.BAD_REQUEST);
-                //     });
-            });
+            }
+            else {
+                await getRepository(Quizantwoord).save({
+                    antwoord: antwoord.antwoord,
+                    vraag: {id: quizvraag.id},
+                    kandidaten: antwoord.kandidaten,
+                }).catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+            }
         });
         return quizvraag;
     }
