@@ -1,4 +1,3 @@
-import * as newrelic from 'newrelic';
 import {NestFactory} from '@nestjs/core';
 import * as bodyParser from 'body-parser';
 
