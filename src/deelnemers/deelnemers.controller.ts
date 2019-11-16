@@ -5,9 +5,6 @@ import {DeelnemersService} from './deelnemers.service';
 import 'dotenv/config';
 import {Deelnemer} from './deelnemer.entity';
 
-const auth0Token = process.env.AUTH0_TOKEN;
-const auth0Domain = process.env.AUTH0_DOMAIN;
-
 @Controller('deelnemers')
 export class DeelnemersController {
     private readonly logger = new Logger('deelnemersController', true);

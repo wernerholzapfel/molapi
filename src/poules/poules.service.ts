@@ -15,9 +15,7 @@ export class PoulesService {
             .select('poule')
             .from(Poule, 'poule')
             .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
-            // .leftJoinAndSelect('poule.deelnemers', 'deelnemers', 'deelnemers.poules = poule.id')
             .leftJoinAndSelect('poule.admins', 'admins')
-            .printSql()
             .getMany()
             .catch((err) => {
                 throw new HttpException({
@@ -28,7 +26,23 @@ export class PoulesService {
     }
 
     async create(poule: Poule) {
-        return await this.pouleRepository.save(poule).catch((err) => {
+        return await this.pouleRepository.save(poule).then(async response => {
+            return await getConnection()
+                .createQueryBuilder()
+                .select('poule')
+                .from(Poule, 'poule')
+                .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
+                .leftJoinAndSelect('poule.admins', 'admins')
+                .where('poule.id = :id', {id: response.id})
+                .getOne()
+                .catch((err) => {
+                    throw new HttpException({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                    }, HttpStatus.BAD_REQUEST);
+                });
+
+        }).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
     }

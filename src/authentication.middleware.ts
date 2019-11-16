@@ -2,7 +2,6 @@ import {ForbiddenException, Injectable, Logger, NestMiddleware, UnauthorizedExce
 import 'dotenv/config';
 import {getRepository} from 'typeorm';
 import {Deelnemer} from './deelnemers/deelnemer.entity';
-import {MiddlewareFunction} from '@nestjs/common/interfaces/middleware';
 import * as admin from 'firebase-admin';
 
 const logger = new Logger('authenticationMiddleware', true);
@@ -11,8 +10,7 @@ const logger = new Logger('authenticationMiddleware', true);
 export class AddFireBaseUserToRequest implements NestMiddleware {
     private readonly logger = new Logger('AddFireBaseUserToRequest', true);
 
-    async resolve(): Promise<MiddlewareFunction> {
-        return (req, res, next) => {
+    async use(req, res, next) {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 admin.auth().verifyIdToken(extractedToken)
@@ -38,16 +36,14 @@ export class AddFireBaseUserToRequest implements NestMiddleware {
                 next(new UnauthorizedException(
                     'We konden je niet verifieren, log opnieuw in.'));
             }
-        };
-    }
+        }
 }
 
 @Injectable()
 export class AdminMiddleware implements NestMiddleware {
     private readonly logger = new Logger('AdminMiddleware', true);
 
-    async resolve(): Promise<MiddlewareFunction> {
-        return (req, res, next) => {
+    async use(req, res, next) {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 admin.auth().verifyIdToken(extractedToken).then((claims) => {
@@ -62,7 +58,6 @@ export class AdminMiddleware implements NestMiddleware {
             } else {
                 next(new UnauthorizedException('We konden je niet verifieren, log opnieuw in.'));
             }
-        };
     }
 }
 
@@ -70,8 +65,7 @@ export class AdminMiddleware implements NestMiddleware {
 export class IsUserAllowedToPostMiddleware implements NestMiddleware {
     private readonly logger = new Logger('IsUserAllowedToPostMiddleware', true);
 
-    async resolve(): Promise<MiddlewareFunction> {
-        return async (req, res, next) => {
+    async use(req, res, next) {
             const extractedToken = getToken(req.headers);
             if (extractedToken) {
                 this.logger.log('dit is de extracted token in IsUserAllowedToPostMiddleware: ' + extractedToken);
@@ -93,7 +87,6 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                 this.logger.log('geen extracted token');
                 next(new UnauthorizedException('Kan deelnemer niet verifieren, log op nieuw in.'));
             }
-        };
     }
 }
 

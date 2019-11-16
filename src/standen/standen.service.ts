@@ -21,7 +21,7 @@ export class StandenService {
     constructor(@InjectRepository(Afleveringpunten)
                 private readonly afleveringpuntRepository: Repository<Afleveringpunten>,
                 public readonly cacheService: CacheService) {
-        this.findAll().then(value => this.logger.log('stand opgeslagen in cache na opstarten applicatie'));
+        // this.findAll().then(value => this.logger.log('stand opgeslagen in cache na opstarten applicatie'));
     }
 
     createStandenFile: boolean = false;

@@ -1,14 +1,13 @@
 import {ForbiddenException, HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {Aflevering} from './afleveringen/aflevering.entity';
 import {getRepository} from 'typeorm';
-import {MiddlewareFunction, NestMiddleware} from '@nestjs/common/interfaces/middleware';
+import {NestMiddleware} from '@nestjs/common/interfaces/middleware';
 
 @Injectable()
 export class QuizMiddleware implements NestMiddleware {
     private readonly logger = new Logger('QuizMiddleware', true);
 
-    async resolve(): Promise<MiddlewareFunction> {
-        return (req, res, next) => {
+    async use(req, res, next) {
             this.logger.log(req.body.aflevering);
 
             return getRepository(Aflevering).findOne({aflevering: req.body.aflevering + 1})
@@ -31,6 +30,5 @@ export class QuizMiddleware implements NestMiddleware {
                         status: HttpStatus.BAD_REQUEST,
                     }, HttpStatus.BAD_REQUEST));
                 });
-        };
     }
 }

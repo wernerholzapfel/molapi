@@ -20,13 +20,7 @@ export class CacheService {
     }
 
     async getStats(): Promise<Stats> {
-        const stats = await myCache.getStats();
-
-        return stats;
-    }
-
-    async getKeys(): Promise<string[]> {
-        return myCache.keys(keys => keys);
+        return await myCache.getStats();
     }
 
     async flushAll(): Promise<any> {

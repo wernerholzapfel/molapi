@@ -4,8 +4,6 @@ import {Aflevering} from './aflevering.entity';
 import {CreateAfleveringDto} from './create-aflevering.dto';
 import 'dotenv/config';
 
-const auth0Token = process.env.AUTH0_TOKEN;
-const auth0Domain = process.env.AUTH0_DOMAIN;
 
 @Controller('afleveringen')
 export class AfleveringenController {

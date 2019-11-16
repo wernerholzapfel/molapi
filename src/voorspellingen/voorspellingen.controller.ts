@@ -5,9 +5,6 @@ import {VoorspellingenService} from './voorspellingen.service';
 import {Voorspelling} from './voorspelling.entity';
 import 'dotenv/config';
 
-const auth0Token = process.env.AUTH0_TOKEN;
-const auth0Domain = process.env.AUTH0_DOMAIN;
-
 @Controller('voorspellingen')
 export class VoorspellingenController {
     private readonly logger = new Logger('voorspellingenController', true);
