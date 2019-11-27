@@ -20,7 +20,7 @@ export class DeelnemersController {
     @Post()
     async create(@Req() req, @Body() createDeelnemerDto: CreateDeelnemerDto) {
         const newEntry = Object.assign({}, createDeelnemerDto, {});
-        return await this.deelnemersService.create(newEntry, req.user.uid);
+        return await this.deelnemersService.create(newEntry, req.user.uid, req.user.displayName);
     }
 
     // @Get(':deelnemerId/voorspellingen')

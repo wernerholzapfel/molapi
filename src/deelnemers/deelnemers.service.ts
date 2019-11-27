@@ -86,8 +86,7 @@ export class DeelnemersService {
                 });
 
             return _.sortBy(voorspellingen, [v => -v.aflevering]);
-        }
-        else {
+        } else {
             throw new HttpException({
                 message: 'er zijn nog geen voorspellingen bekend',
                 statusCode: HttpStatus.NO_CONTENT,
@@ -95,15 +94,16 @@ export class DeelnemersService {
         }
     }
 
-    async create(deelnemer: IDeelnemer, firebaseIdentifier: string) {
+    async create(deelnemer: IDeelnemer, firebaseIdentifier: string, displayName: string) {
         const oldDeelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
         if (oldDeelnemer) deelnemer = {
             id: oldDeelnemer.id,
-            display_name: deelnemer.display_name,
+            display_name: deelnemer.display_name ? deelnemer.display_name : displayName,
             firebaseIdentifier,
             email: oldDeelnemer.email,
         }; else {
             deelnemer.firebaseIdentifier = firebaseIdentifier;
+            deelnemer.display_name = deelnemer.display_name ? deelnemer.display_name : displayName;
         }
         return await this.deelnemerRepository.save(deelnemer)
             .catch((err) => {
