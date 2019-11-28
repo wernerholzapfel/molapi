@@ -96,12 +96,14 @@ export class DeelnemersService {
 
     async create(deelnemer: IDeelnemer, firebaseIdentifier: string, displayName: string) {
         const oldDeelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
-        if (oldDeelnemer) deelnemer = {
-            id: oldDeelnemer.id,
-            display_name: deelnemer.display_name ? deelnemer.display_name : displayName,
-            firebaseIdentifier,
-            email: oldDeelnemer.email,
-        }; else {
+        if (oldDeelnemer) {
+            deelnemer = {
+                id: oldDeelnemer.id,
+                display_name: deelnemer.display_name ? deelnemer.display_name : displayName,
+                firebaseIdentifier,
+                email: oldDeelnemer.email,
+            };
+        } else {
             deelnemer.firebaseIdentifier = firebaseIdentifier;
             deelnemer.display_name = deelnemer.display_name ? deelnemer.display_name : displayName;
         }
