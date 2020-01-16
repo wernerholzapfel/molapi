@@ -11,7 +11,7 @@ export class CacheService {
     constructor() {
     }
 
-    async get(key): Promise<any> {
+    get(key): any {
         return myCache.get(key.replace(/^\/|\/$/g, ''));
     }
 

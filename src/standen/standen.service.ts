@@ -152,8 +152,7 @@ export class StandenService {
             this.cacheService.set('api/v1/standen', {data: standmetpositie});
 
             return standmetpositie;
-        }
-        else {
+        } else {
             throw new HttpException({
                 message: 'er is nog geen stand bekend',
                 statusCode: HttpStatus.NO_CONTENT,
@@ -192,7 +191,9 @@ export class StandenService {
             }))
             .value();
 
-        return _.orderBy(molPercentaPerKandidaat, 'count', 'desc');
+        const stats = _.orderBy(molPercentaPerKandidaat, 'count', 'desc');
+        // this.cacheService.set('api/v1/standen/statistieken', stats)
+        return stats;
     }
 
     async getPossibleStand(molId, winnaarId): Promise<any[]> {
@@ -225,8 +226,7 @@ export class StandenService {
 
             // this.cacheService.set('api/v1/standen/getpossiblestand', _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]));
             return _.sortBy(response, [o => -o.totaalpunten], [o => o.delta_totaalpunten], [o => o.display_name]);
-        }
-        else {
+        } else {
             throw new HttpException({
                 message: 'er is nog geen stand bekend',
                 statusCode: HttpStatus.NO_CONTENT,
@@ -453,8 +453,7 @@ export class StandenService {
                 return correctAnswer.id === quizresultaat.antwoord.id;
             })) {
                 quizresultaat.punten = vragenPunten;
-            }
-            else {
+            } else {
                 quizresultaat.punten = 0;
             }
 
