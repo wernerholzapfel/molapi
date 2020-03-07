@@ -38,11 +38,11 @@ export class ActiesService {
     }
 
     getDeadlineDatetime(afleveringnummer: number, afleveringen: Aflevering[]) {
-        if (afleveringnummer > 0 && afleveringnummer < 10) {
+        if (afleveringnummer > 0 && afleveringnummer < 11) {
             return afleveringen.find(aflevering => aflevering.aflevering === afleveringnummer).deadlineDatetime;
         }
         else {
-            return new Date('2019-03-09T19:30:00.000Z');
+            return new Date('2020-03-14T19:30:00.000Z');
         }
     }
 
