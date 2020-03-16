@@ -32,7 +32,7 @@ import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
     imports: [TypeOrmModule.forRoot({
         type: 'postgres',
         url: process.env.DATABASE_URL,
-        // ssl: process.env.DB_SSL,
+        ssl: true,
         entities: [
             Voorspelling,
             Deelnemer,
