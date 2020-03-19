@@ -10,6 +10,7 @@ import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 import {Actie} from '../acties/actie.entity';
 import {Quizresultaat} from '../quizresultaten/quizresultaat.entity';
 import {InjectRepository} from '@nestjs/typeorm';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class DeelnemersService {
@@ -32,6 +33,45 @@ export class DeelnemersService {
         ).catch((err) => {
             throw new HttpException({message: err.message, statusCode: HttpStatus.BAD_REQUEST}, HttpStatus.BAD_REQUEST);
         });
+    }
+
+    async sync(): Promise<string> {
+        const deelnemers = await this.deelnemerRepository.createQueryBuilder('deelnemer')
+            .select(['deelnemer.firebaseIdentifier', 'deelnemer.display_name'])
+            .getMany()
+            // const deelnemers = await this.deelnemerRepository.find()
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        let counter = 0;
+        await deelnemers.forEach(dbUser => {
+            admin.auth().getUser(dbUser.firebaseIdentifier)
+                .then(async firebaseUser => {
+                    if (!firebaseUser.displayName) {
+                        this.logger.log(firebaseUser.uid);
+                        this.logger.log(firebaseUser.displayName);
+                        this.logger.log(dbUser.display_name);
+
+                        // See the UserRecord reference doc for the contents of userRecord.
+                        await admin.auth().updateUser(firebaseUser.uid, {
+                            displayName: dbUser.display_name,
+                        })
+                            .then(updatedRecord => {
+                                //         See the UserRecord reference doc for the contents of userRecord.
+                                counter++;
+                                this.logger.log(updatedRecord);
+                            });
+                    }
+                })
+                .catch(error => {
+                    this.logger.log(error);
+                });
+        });
+        return `Displayname gezet voor ${counter} deelnemers`;
     }
 
     async getTests(firebaseIdentifier): Promise<any[]> {

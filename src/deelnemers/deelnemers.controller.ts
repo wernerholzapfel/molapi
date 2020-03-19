@@ -17,6 +17,11 @@ export class DeelnemersController {
         return this.deelnemersService.findAll();
     }
 
+    @Get('sync')
+    async synchronize(): Promise<string> {
+        return this.deelnemersService.sync();
+    }
+
     @Post()
     async create(@Req() req, @Body() createDeelnemerDto: CreateDeelnemerDto) {
         const newEntry = Object.assign({}, createDeelnemerDto, {});

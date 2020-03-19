@@ -28,10 +28,10 @@ export class AfleveringenController {
     }
 
     @Post()
-    async create(@Req() req, @Body() createAfleveringDto: CreateAfleveringDto) {
+    async create(@Req() req, @Body() createAfleveringDto: CreateAfleveringDto): Promise<any> {
         this.logger.log('post aflevering');
         const newAflevering = Object.assign({}, createAfleveringDto);
-        return await this.afleveringenService.create(newAflevering);
+        return this.afleveringenService.create(newAflevering);
     }
 
 }
