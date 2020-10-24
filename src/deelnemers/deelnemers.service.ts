@@ -85,7 +85,7 @@ export class DeelnemersService {
             .leftJoinAndSelect('quizresultaat.deelnemer', 'deelnemer')
             .leftJoinAndSelect('quizresultaat.antwoord', 'antwoord')
             .where('deelnemer.id = :deelnemerId', {deelnemerId: deelnemer.id})
-            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.testaflevering})
+            .andWhere('quizresultaat.aflevering < :aflevering', {aflevering: acties.isSeasonFinished ? acties.testaflevering + 1 : acties.testaflevering})
             .getMany()
             .catch((err) => {
                 throw new HttpException({
