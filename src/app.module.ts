@@ -49,7 +49,7 @@ import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
         ],
         logging: false,
         synchronize: false, // DEV only, do not use on PROD!
-    }) , ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, UitnodigingenModule],
+    }), ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, UitnodigingenModule],
 })
 
 export class ApplicationModule implements NestModule {

@@ -7,6 +7,8 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import {AppExceptionFilter} from './http-exception.filters';
 import * as admin from 'firebase-admin';
+import * as OneSignal from 'onesignal-node';
+
 
 admin.initializeApp({
     credential: admin.credential.cert({
@@ -14,8 +16,8 @@ admin.initializeApp({
             type: process.env.type,
             project_id: process.env.project_id,
             private_key_id: process.env.private_key_id,
-            // private_key: process.env.private_key,
-            private_key:  JSON.parse(process.env.private_key),
+            private_key: process.env.private_key,
+            // private_key:  JSON.parse(process.env.private_key),
             client_email: process.env.client_email,
             client_id: process.env.client_id,
             auth_uri: 'https://accounts.google.com/o/oauth2/auth',
@@ -35,8 +37,7 @@ let allowCrossDomain = function (req, res, next) {
     // intercept OPTIONS method
     if ('OPTIONS' == req.method) {
         res.sendStatus(200);
-    }
-    else {
+    } else {
         next();
     }
 };
@@ -54,3 +55,63 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// function listAllUsers(nextPageToken?) {
+//     // List batch of users, 1000 at a time.
+//     admin.auth().listUsers(1, nextPageToken)
+//         .then(listUsersResult => {
+//             console.log(listUsersResult.users.length);
+//
+//             listUsersResult.users.forEach(userRecord => {
+//                 setTimeout(revokeTokenuid, 1000, userRecord.uid);
+//             });
+//             if (listUsersResult.pageToken) {
+//                 // List next batch of users.
+//                 listAllUsers(listUsersResult.pageToken);
+//             }
+//         })
+//         .catch(error => {
+//             console.log('Error listing users:', error);
+//         });
+// }
+
+// Start listing users from the beginning, 1000 at a time.
+// listAllUsers();
+
+// function revokeTokenuid(uid) {
+//     console.log(uid);
+//     admin.auth().revokeRefreshTokens(uid)
+//         .then(() => {
+//             console.log('revoked');
+//         });
+// }
+// const client = new OneSignal.Client('c9e91d07-f6c6-480b-a9ac-8322418085f8', 'OWM3NDdkMWYtM2JhNC00YjMzLWEwNGMtYzNhOWMwN2QwZTgy');
+
+// function listAllOneSignalUsers() {
+//     console.log('start listering onesignalusers');
+//
+//     client.viewDevices({limit: 4000, offset: 2100}).then(response => {
+//         console.log(response.body.players.length);
+//         // console.log(response.body.players[0]);
+//         response.body.players
+//             .forEach(item => {
+//                 // console.log(item.tags);
+//                 revokeTags(item);
+//             });
+//     });
+// }
+
+// function revokeTags(item) {
+//
+//     // console.log(item.id);
+//     // console.log(item.tags);
+//     client.editDevice(item.id, {
+//         tags: {laatstIngevuldeTest: null, laatsteVoorspelling: null},
+//     }).then(update => {
+//         // console.log(update);
+//     }).catch(err => {
+//         console.log(err);
+//     });
+// }
+
+// listAllOneSignalUsers();
