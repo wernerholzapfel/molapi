@@ -27,6 +27,13 @@ export class UitnodigingenService {
                 }, HttpStatus.BAD_REQUEST);
             });
 
+        if (!deelnemer) {
+            throw new HttpException({
+                message: 'We konden je niet vinden in de database. Log uit en opnieuw in en probeer nog een keer',
+                statusCode: HttpStatus.UNAUTHORIZED,
+            }, HttpStatus.UNAUTHORIZED);
+        }
+
         return await getRepository(Uitnodiging)
             .createQueryBuilder('uitnodiging')
             .leftJoinAndSelect('uitnodiging.poule', 'poule')

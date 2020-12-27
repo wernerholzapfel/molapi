@@ -35,6 +35,18 @@ export class DeelnemersService {
         });
     }
 
+    async findDeelnemer(firebaseIdentifier): Promise<Deelnemer> {
+        const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}})
+            .catch((err) => {
+                throw new HttpException({
+                    message: err.message,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                }, HttpStatus.BAD_REQUEST);
+            });
+
+        return  deelnemer;
+    }
+
     async sync(): Promise<string> {
         const deelnemers = await this.deelnemerRepository.createQueryBuilder('deelnemer')
             .select(['deelnemer.firebaseIdentifier', 'deelnemer.display_name'])
@@ -76,6 +88,13 @@ export class DeelnemersService {
 
     async getTests(firebaseIdentifier): Promise<any[]> {
         const deelnemer = await this.deelnemerRepository.findOne({where: {firebaseIdentifier}});
+
+        if (!deelnemer) {
+            throw new HttpException({
+                message: 'We konden je niet vinden in de database. Log uit en opnieuw in en probeer nog een keer',
+                statusCode: HttpStatus.UNAUTHORIZED,
+            }, HttpStatus.UNAUTHORIZED);
+        }
         const acties = await getRepository(Actie).findOne();
 
         this.logger.log('acties.voorspellingaflevering: ' + acties.testaflevering);

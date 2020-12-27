@@ -26,6 +26,12 @@ export class QuizvragenService {
 
         const deelnemer = await getRepository(Deelnemer).findOne({where: {firebaseIdentifier}});
 
+        if (!deelnemer) {
+            throw new HttpException({
+                message: 'We konden je niet vinden in de database. Log uit en opnieuw in en probeer nog een keer',
+                statusCode: HttpStatus.UNAUTHORIZED,
+            }, HttpStatus.UNAUTHORIZED);
+        }
         this.logger.log('dit is de huidige deelnemer: ' + firebaseIdentifier);
 
         const answeredQuestions = await getRepository(Quizresultaat)

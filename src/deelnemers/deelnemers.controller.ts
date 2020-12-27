@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Req} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Logger, Post, Req, Res} from '@nestjs/common';
 
 import {CreateDeelnemerDto} from './create-deelnemer.dto';
 import {DeelnemersService} from './deelnemers.service';
@@ -13,8 +13,9 @@ export class DeelnemersController {
     }
 
     @Get()
-    async findAll(): Promise<Deelnemer[]> {
-        return this.deelnemersService.findAll();
+    async findAll(@Req() req, @Res() res): Promise<Deelnemer> {
+        const response = await this.deelnemersService.findDeelnemer(req.user.uid);
+        return res.status(response ? HttpStatus.OK : HttpStatus.NO_CONTENT).json(response);
     }
 
     @Get('sync')

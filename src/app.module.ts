@@ -48,7 +48,7 @@ import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
             Uitnodiging,
         ],
         logging: false,
-        synchronize: false, // DEV only, do not use on PROD!
+        synchronize: true, // DEV only, do not use on PROD!
     }), ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, UitnodigingenModule],
 })
 
@@ -67,6 +67,7 @@ export class ApplicationModule implements NestModule {
         // );
         consumer.apply(AddFireBaseUserToRequest).forRoutes(
             {path: '/**', method: RequestMethod.POST},
+            {path: 'deelnemers', method: RequestMethod.GET},
             {path: 'deelnemers/loggedIn', method: RequestMethod.GET},
             {path: 'deelnemers/tests', method: RequestMethod.GET},
             {path: 'deelnemers/voorspellingen', method: RequestMethod.GET},
