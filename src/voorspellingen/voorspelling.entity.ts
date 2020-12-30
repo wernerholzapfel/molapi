@@ -1,4 +1,13 @@
-import {Column, Entity, Index, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    JoinTable,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn, VersionColumn,
+} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
@@ -32,7 +41,13 @@ export class Voorspelling {
     @ManyToOne(type => Deelnemer, deelnemer => deelnemer.voorspellingen)
     deelnemer: Deelnemer;
 
-    @Column({select: false})
-    created_at: Date;
+    @CreateDateColumn({select: false})
+    createdDate?: Date;
+
+    @UpdateDateColumn({select: false})
+    updatedDate?: Date;
+
+    @VersionColumn({select: false, default: 1})
+    version?: number;
 
 }

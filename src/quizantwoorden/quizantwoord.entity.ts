@@ -1,5 +1,13 @@
 import {Entity} from 'typeorm/decorator/entity/Entity';
-import {Column, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn, VersionColumn,
+} from 'typeorm';
 import {Quizvraag} from '../quizvragen/quizvraag.entity';
 import {Kandidaat} from '../kandidaten/kandidaat.entity';
 
@@ -24,4 +32,13 @@ export class Quizantwoord {
 
     @Column({nullable: true})
     is_niet_meer_mogelijk_sinds: number;
+
+    @CreateDateColumn({select: false})
+    createdDate?: Date;
+
+    @UpdateDateColumn({select: false})
+    updatedDate?: Date;
+
+    @VersionColumn({select: false, default: 1})
+    version?: number;
 }

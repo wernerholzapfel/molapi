@@ -1,4 +1,13 @@
-import {Column, JoinTable, Index, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    JoinTable,
+    Index,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    CreateDateColumn,
+    UpdateDateColumn,
+    VersionColumn,
+} from 'typeorm';
 import {Entity} from 'typeorm/decorator/entity/Entity';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Quizvraag} from '../quizvragen/quizvraag.entity';
@@ -34,8 +43,13 @@ export class Quizresultaat {
 
     @Column({nullable: true})
     punten: number;
-    // todo weghalen
-    @Column({nullable: true})
-    created_at: Date;
 
+    @CreateDateColumn({select: false})
+    createdDate?: Date;
+
+    @UpdateDateColumn({select: false})
+    updatedDate?: Date;
+
+    @VersionColumn({select: false, default: 1})
+    version?: number;
 }

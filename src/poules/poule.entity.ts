@@ -1,5 +1,15 @@
-import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn, VersionColumn,
+} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
+import {PouleInvitation} from '../poule_invitations/poule-invitation.entity';
 
 @Entity()
 export class Poule {
@@ -16,4 +26,17 @@ export class Poule {
     @ManyToMany(type => Deelnemer)
     @JoinTable()
     admins: Deelnemer[];
+
+    @OneToMany(type => PouleInvitation, pouleInvitation => pouleInvitation.poule)
+    @JoinTable()
+    pouleInvitations: PouleInvitation[];
+
+    @CreateDateColumn({select: false})
+    createdDate?: Date;
+
+    @UpdateDateColumn({select: false})
+    updatedDate?: Date;
+
+    @VersionColumn({select: false, default: 1})
+    version?: number;
 }

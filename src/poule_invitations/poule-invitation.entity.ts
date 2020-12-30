@@ -1,32 +1,22 @@
 import {
-    Column,
     CreateDateColumn,
     Entity,
-    JoinTable,
     ManyToOne,
     PrimaryGeneratedColumn,
-    UpdateDateColumn, VersionColumn,
+    UpdateDateColumn,
+    VersionColumn,
 } from 'typeorm';
 import {Poule} from '../poules/poule.entity';
 
-// todo remove entity
 @Entity()
-export class Uitnodiging {
+export class PouleInvitation {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
-    uniqueIdentifier: string;
-
-    @ManyToOne(type => Poule, poule => Poule)
-    @JoinTable()
+    @ManyToOne(type => Poule, poule => poule.id, {
+        eager: true,
+    })
     poule: Poule;
-
-    @Column({default: false})
-    isAccepted: boolean;
-
-    @Column({default: false})
-    isDeclined: boolean;
 
     @CreateDateColumn({select: false})
     createdDate?: Date;

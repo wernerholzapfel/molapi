@@ -1,4 +1,13 @@
-import {Column, Entity, Index, JoinTable, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    JoinTable,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn, VersionColumn,
+} from 'typeorm';
 import {Deelnemer} from '../deelnemers/deelnemer.entity';
 import {Voorspelling} from '../voorspellingen/voorspelling.entity';
 
@@ -34,4 +43,13 @@ export class Afleveringpunten {
     })
     @JoinTable()
     voorspelling: Voorspelling;
+
+    @CreateDateColumn({select: false})
+    createdDate?: Date;
+
+    @UpdateDateColumn({select: false})
+    updatedDate?: Date;
+
+    @VersionColumn({select: false, default: 1})
+    version?: number;
 }

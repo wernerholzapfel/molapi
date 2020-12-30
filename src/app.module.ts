@@ -27,6 +27,8 @@ import {Quizpunt} from './quizpunten/quizpunt.entity';
 import {Actie} from './acties/actie.entity';
 import {Poule} from './poules/poule.entity';
 import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
+import {PouleInvitation} from './poule_invitations/poule-invitation.entity';
+import {PouleInvitationModule} from './poule_invitations/poule-invitation.module';
 
 @Module({
     imports: [TypeOrmModule.forRoot({
@@ -45,11 +47,12 @@ import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
             Quizpunt,
             Actie,
             Poule,
+            PouleInvitation,
             Uitnodiging,
         ],
         logging: false,
         synchronize: true, // DEV only, do not use on PROD!
-    }), ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, UitnodigingenModule],
+    }), ActiesModule, QuizpuntenModule, QuizresultatenModule, QuizvragenModule, VoorspellingenModule, StandenModule, DeelnemersModule, KandidatenModule, AfleveringenModule, PoulesModule, PouleInvitationModule, UitnodigingenModule],
 })
 
 export class ApplicationModule implements NestModule {
@@ -79,6 +82,7 @@ export class ApplicationModule implements NestModule {
             {path: '/uitnodigingen', method: RequestMethod.GET},
             {path: '/uitnodigingen/**', method: RequestMethod.GET},
             {path: '/voorspellingen/huidig', method: RequestMethod.GET},
+            {path: '/poules/invitation/accept', method: RequestMethod.POST},
         );
         consumer.apply(AdminMiddleware).forRoutes(
             {path: '/acties', method: RequestMethod.POST},

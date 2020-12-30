@@ -13,7 +13,7 @@ export class Actie {
     testaflevering: number;
 
     @UpdateDateColumn()
-    updatedDate: Date;
+    updatedDate?: Date;
 
     @Column({nullable: true})
     alwaysUpdate: boolean;

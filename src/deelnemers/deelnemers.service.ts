@@ -55,7 +55,7 @@ export class DeelnemersService {
             .catch((err) => {
                 throw new HttpException({
                     message: err.message,
-                    statusCode: HttpStatus.BAD_REQUEST
+                    statusCode: HttpStatus.BAD_REQUEST,
                 }, HttpStatus.BAD_REQUEST);
             });
 
@@ -213,6 +213,7 @@ export class DeelnemersService {
                 .select('poule')
                 .from(Poule, 'poule')
                 .leftJoinAndSelect('poule.deelnemers', 'deelnemers')
+                .leftJoinAndSelect('poule.pouleInvitations', 'pouleInvitations')
                 .leftJoinAndSelect('deelnemers.voorspellingen', 'voorspellingen', 'voorspellingen.aflevering <= :laatsteVoorspellingAflevering', {laatsteVoorspellingAflevering: laatsteUitgezondenAfleveringAflevering})
                 .leftJoinAndSelect('deelnemers.tests', 'test', 'test.aflevering <= :laatsteTestAflevering', {laatsteTestAflevering: laatsteUitgezondenAfleveringAflevering - 1})
                 .leftJoinAndSelect('test.vraag', 'vraag')
