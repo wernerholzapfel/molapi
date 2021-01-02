@@ -47,7 +47,7 @@ async function bootstrap() {
     const app = await NestFactory.create(ApplicationModule);
     app.use(bodyParser.json());
     app.use(allowCrossDomain);
-    app.useGlobalPipes(new ValidationPipe());
+    // app.useGlobalPipes(new ValidationPipe());
     app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new AppExceptionFilter());
     const port = parseInt(process.env.PORT, 10) || 3000;
