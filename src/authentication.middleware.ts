@@ -74,6 +74,7 @@ export class IsUserAllowedToPostMiddleware implements NestMiddleware {
                         await getRepository(Deelnemer).findOne({firebaseIdentifier: userRecord.uid})
                             .then(async deelnemer => {
                                 if (req && req.body && req.body.deelnemer && deelnemer.id !== req.body.deelnemer.id) {
+                                    this.logger.log(req.body);
                                     next(new ForbiddenException(deelnemer.id + ' probeert voorspellingen van ' + req.body.deelnemer.id + ' op te slaan'));
                                 }
                                 next();
