@@ -112,7 +112,7 @@ export class StandenService {
             const response: any[] = await _(voorspellingenPunten).groupBy('deelnemer.id')
                 .map((objs, key) => ({
                     id: key,
-                    display_name: _.head(objs).deelnemer.display_name,
+                    display_name: _.head(objs).deelnemer ? _.head(objs).deelnemer.display_name : '',
                     molpunten: _.sumBy(objs, 'molpunten'),
                     afvallerpunten: _.sumBy(objs, 'afvallerpunten'),
                     winnaarpunten: _.sumBy(objs, 'winnaarpunten'),

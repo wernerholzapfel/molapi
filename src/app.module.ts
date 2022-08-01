@@ -29,6 +29,7 @@ import {Poule} from './poules/poule.entity';
 import {Uitnodiging} from './uitnodigingen/uitnodiging.entity';
 import {PouleInvitation} from './poule_invitations/poule-invitation.entity';
 import {PouleInvitationModule} from './poule_invitations/poule-invitation.module';
+import * as admin from 'firebase-admin';
 
 @Module({
     imports: [TypeOrmModule.forRoot({
@@ -105,7 +106,7 @@ export class ApplicationModule implements NestModule {
         // middleware toevoegen dat create uitnodigingen checkt
         // middleware toevoegen dat accept uitnodigingen checkt
 
-        // admin.auth().setCustomUserClaims('YJQKN3IjdqPyNGtLuARrxtqq0If1', {admin: true}).then(() => {
+        // admin.auth().setCustomUserClaims('mG9ZMMeVeJhML6LFjdBm16t0ipc2', {admin: true}).then(() => {
         //     this.logger.log('customerset');
         // });
     }
